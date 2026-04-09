@@ -16,6 +16,8 @@
     "coverage": "vitest run --coverage",
     "test:watch": "vitest",
     "format": "prettier --write \"src/**/*.ts\" \"tests/**/*.ts\"",
+    "check": "npm run lint && npm run test && npm run build",
+    "release": "npm run check && npm version patch -m \"chore(release): %s\"",
     "start": "npm run build && node dist/index.js"
   },
   "author": "",

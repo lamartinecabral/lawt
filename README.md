@@ -2,7 +2,7 @@
 
 A Node.js CLI coding agent scaffold aligned with the project specification in `docs/specification.md`.
 
-This repository is the starting point for a local-first CLI agent that can inspect a codebase, build plans, execute tool-augmented edits, run validation commands, and summarize results.
+This repository contains a local-first CLI coding agent implementation with a working `agent` command surface and persistence paths for recorded runs.
 
 > Model runtime is not included in this repo. The agent is designed for use with a user-provided local model backend such as Ollama.
 
@@ -16,11 +16,20 @@ This repository is the starting point for a local-first CLI agent that can inspe
 
 ## Recommended Usage
 
-This repository now includes a Phase 1 CLI bootstrap for the `agent` command shell. After installing dependencies, build the project and run the command driver.
+This repository includes a working `agent` CLI with the following commands:
+
+- `agent run <task>` — execute a task with planning, validation, and summary reporting
+- `agent plan <task>` — generate a deterministic plan without applying changes
+- `agent apply <plan-file>` — apply a saved plan to the repository
+- `agent doctor` — inspect environment and repository health
+- `agent replay <run-id>` — replay a previously recorded run summary
+- `agent chat` — start an interactive chat session for iterative coding assistance
+
+After installing dependencies, build the CLI and run one of the commands.
 
 - `docs/specification.md` — full project requirements and architecture
-- `docs/implementation-plan.md` — phased roadmap for the CLI agent
-- `agent run`, `agent plan`, `agent apply`, `agent doctor`, `agent replay`, `agent chat`
+- `docs/implementation-plan.md` — phased roadmap for building the agent
+- `docs/release.md` — packaging, release readiness, and documentation guidance
 
 ## Installation
 
@@ -39,11 +48,13 @@ npm run coverage
 
 ## Development
 
-This repo is intended to be extended into a TypeScript-based CLI agent. Proposed packages include:
+The project is implemented using TypeScript and includes a complete CLI command flow, persistence, provider adapter scaffolding, and test coverage for core modules.
 
-- `commander`, `enquirer`, `chalk`, `ora`
-- `execa`, `fast-glob`, `ignore`, `zod`, `cosmiconfig`
-- `pino`, `nanoid`, `vitest`, `eslint`, `prettier`
+Key packages in use:
+
+- `commander`, `chalk`, `cosmiconfig`, `zod`
+- `pino`, `nanoid`, `better-sqlite3`
+- `vitest`, `eslint`, `prettier`, `tsup`
 
 ## Project Structure
 
@@ -81,11 +92,11 @@ Tracking implementation progress against the Implementation Plan:
 - [x] **Phase 7: Safety and approval hardening**
 - [x] **Phase 8: Validation loop and change summary quality**
 - [x] **Phase 9: Testing and performance verification**
-- [ ] **Phase 10: Documentation and release readiness**
+- [x] **Phase 10: Documentation and release readiness**
 
 ## Notes
 
-- This repo currently contains only the spec and minimal scaffold.
-- Run metadata, artifacts, and replay history are now persisted under the workspace directory in `.minicode/runstore.sqlite`.
+- The repo now includes a working CLI with planning, execution, persistence, replay, and chat flow.
+- Run metadata, artifacts, and replay history are persisted under the workspace directory in `.minicode/runstore.sqlite`.
 - The local model provider and Ollama integration are intentionally left to the user.
-- Future work should implement the CLI, tool runtime, session memory, and validation hooks described in the spec.
+- Future work may add richer model adapters, shell sandboxing enforcement, and extended validation hooks.
