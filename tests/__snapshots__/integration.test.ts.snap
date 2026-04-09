@@ -1,0 +1,109 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`integration tests > agent doctor produces a healthy diagnostic summary 1`] = `
+{
+  "artifacts": [
+    "inspect-repository:Inspect the workspace repository; run-sanity-checks:Run quick validation checks",
+    "command:npm test",
+  ],
+  "command": "dry-run:doctor",
+  "commandsExecuted": [
+    "npm test",
+  ],
+  "runId": "<runId>",
+  "status": "ok",
+  "steps": [
+    {
+      "description": "Gather git repository metadata for doctor checks",
+      "id": "inspect-repository",
+      "inputs": {},
+      "result": {
+        "toolCall": {
+          "arguments": {},
+          "endedAt": "<endedAt>",
+          "name": "git",
+          "output": {
+            "message": "Git inspection skipped during dry run",
+            "status": "dry-run",
+          },
+          "startedAt": "<startedAt>",
+          "success": true,
+        },
+      },
+      "status": "completed",
+      "title": "Inspect the workspace repository",
+      "tool": "git",
+    },
+    {
+      "description": "Execute a quick validation pass for the workspace",
+      "id": "run-sanity-checks",
+      "inputs": {
+        "command": "npm test",
+      },
+      "result": {
+        "toolCall": {
+          "arguments": {
+            "command": "npm test",
+          },
+          "endedAt": "<endedAt>",
+          "name": "run-tests",
+          "output": {
+            "command": "npm test",
+            "dryRun": true,
+            "message": "Dry-run test execution skipped",
+          },
+          "startedAt": "<startedAt>",
+          "success": true,
+        },
+      },
+      "status": "completed",
+      "title": "Run quick validation checks",
+      "tool": "run-tests",
+    },
+  ],
+}
+`;
+
+exports[`integration tests > agent plan returns a valid summary against a git fixture 1`] = `
+{
+  "artifacts": [
+    "analyze-task:Analyze repository and requested task; draft-plan:Draft the execution plan",
+  ],
+  "command": "dry-run:plan",
+  "runId": "<runId>",
+  "status": "ok",
+  "steps": [
+    {
+      "description": "Scan repository of 3 files and analyze the goal: update docs",
+      "id": "analyze-task",
+      "inputs": {
+        "query": "update docs",
+      },
+      "result": {
+        "toolCall": {
+          "arguments": {
+            "query": "update docs",
+          },
+          "endedAt": "<endedAt>",
+          "name": "file-search",
+          "output": {
+            "query": "update docs",
+            "results": [],
+          },
+          "startedAt": "<startedAt>",
+          "success": true,
+        },
+      },
+      "status": "completed",
+      "title": "Analyze repository and requested task",
+      "tool": "file-search",
+    },
+    {
+      "description": "Plan the ordered steps that satisfy the task",
+      "id": "draft-plan",
+      "status": "completed",
+      "title": "Draft the execution plan",
+    },
+  ],
+}
+`;

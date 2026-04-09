@@ -13,6 +13,7 @@
     "dev": "npm run build -- --watch",
     "lint": "eslint \"src/**/*.ts\" \"tests/**/*.ts\"",
     "test": "vitest run",
+    "coverage": "vitest run --coverage",
     "test:watch": "vitest",
     "format": "prettier --write \"src/**/*.ts\" \"tests/**/*.ts\"",
     "start": "npm run build && node dist/index.js"

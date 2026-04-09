@@ -31,6 +31,12 @@ npm install
 npm run build
 ```
 
+Run the test suite with coverage:
+
+```bash
+npm run coverage
+```
+
 ## Development
 
 This repo is intended to be extended into a TypeScript-based CLI agent. Proposed packages include:
@@ -74,7 +80,7 @@ Tracking implementation progress against the Implementation Plan:
 - [x] **Phase 6: Add memory store and artifact persistence**
 - [x] **Phase 7: Safety and approval hardening**
 - [x] **Phase 8: Validation loop and change summary quality**
-- [ ] **Phase 9: Testing and performance verification**
+- [x] **Phase 9: Testing and performance verification**
 - [ ] **Phase 10: Documentation and release readiness**
 
 ## Notes
