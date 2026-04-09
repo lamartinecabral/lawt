@@ -56,7 +56,7 @@ export const openaiCompatibleProviderAdapter: ProviderAdapter = {
 
     const model = (request.metadata as any)?.model ?? openaiCfg?.model ?? 'gpt-4o-mini';
     const timeoutMs = openaiCfg?.timeoutMs ?? 60000;
-    const reasoningEffort = openaiCfg?.reasoningEffort ?? 'medium';
+    const reasoningEffort = openaiCfg?.reasoningEffort ?? 'default';
 
     const payload: any = {
       model,
@@ -65,7 +65,7 @@ export const openaiCompatibleProviderAdapter: ProviderAdapter = {
       max_tokens: 1500,
     };
 
-    if (reasoningEffort && reasoningEffort !== 'none' && reasoningEffort !== 'default') {
+    if (reasoningEffort && reasoningEffort !== 'default') {
       payload.reasoning_effort = reasoningEffort;
     }
 
@@ -80,6 +80,7 @@ export const openaiCompatibleProviderAdapter: ProviderAdapter = {
     const url = buildChatCompletionsUrl(baseUrl);
     let res: Response;
     try {
+      console.log({url,apiKey,payload})
       res = await fetchImpl(url, {
         method: 'POST',
         headers: {

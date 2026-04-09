@@ -17,7 +17,7 @@ export const CliConfigSchema = z.object({
           model: z.string().optional().default('gpt-4o-mini'),
           timeoutMs: z.coerce.number().optional().default(60000),
           requestsPerMinute: z.coerce.number().optional().default(15),
-          reasoningEffort: z.enum(['default', 'none', 'low', 'medium', 'high']).optional().default('medium'),
+          reasoningEffort: z.enum(['default', 'none', 'low', 'medium', 'high']).optional(),
         })
         .optional(),
     })

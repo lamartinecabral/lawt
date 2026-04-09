@@ -2,7 +2,7 @@ import fs from 'fs/promises';
 import readline from 'readline';
 import { stdin as input, stdout as output } from 'node:process';
 import { Command, Option } from 'commander';
-import { nanoid } from 'nanoid';
+import { customAlphabet } from 'nanoid';
 import { createLogger } from './logger';
 import { loadConfig } from './config';
 import { createBuiltinToolRegistry } from './tool-registry';
@@ -23,6 +23,7 @@ import type {
 
 const COMMAND_VERSION = '0.1.0';
 const approvalModes = ['auto', 'on-request', 'strict'] as const;
+const createId = customAlphabet('0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ', 21);
 
 type PartialCliOptions = Partial<CliConfig> & {
   config?: string;
@@ -77,8 +78,8 @@ async function executeCommand(command: string, target?: string, rawOptions?: Par
   const memoryStore = MemoryStore.open(config.cwd);
   try {
     const context: RunContext = {
-      runId: nanoid(),
-      sessionId: nanoid(),
+      runId: createId(),
+      sessionId: createId(),
       startedAt: new Date().toISOString(),
       config,
     };
@@ -141,7 +142,10 @@ async function executeCommand(command: string, target?: string, rawOptions?: Par
       steps = await createDeterministicPlan(command, target, repositoryContext, context);
     }
 
-    if (provider) {
+    const shouldRequestProviderGuidance =
+      provider !== undefined && (command === 'plan' || command === 'run');
+
+    if (shouldRequestProviderGuidance) {
       const modelRequest = {
         prompt: `Create a plan for command=${command} target=${target ?? 'n/a'}`,
         tools: toolRegistry.list().map((tool) => tool.name),
@@ -162,7 +166,7 @@ async function executeCommand(command: string, target?: string, rawOptions?: Par
         'Provider generated plan guidance',
       );
 
-      if ((command === 'plan' || command === 'run') && steps.length > 0) {
+      if (steps.length > 0) {
         steps[0].result = {
           summary: providerResponse.text,
           metadata: providerResponse.metadata,
