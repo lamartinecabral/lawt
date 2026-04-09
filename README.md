@@ -98,8 +98,8 @@ Tracking implementation progress against the Implementation Plan:
 **Provider Integration Plan**
 
 - [x] **Phase 1: Configuration and Validation** — add `.env` loading, extend config schema, validate `OPENAI_BASE_URL` and `OPENAI_API_KEY`.
-- [ ] **Phase 2: Provider Adapter Implementation** — implement OpenAI-compatible adapter and map responses to existing model response types.
-- [ ] **Phase 3: CLI Wiring and Adapter Selection** — wire the new adapter into `agent run`, `plan`, and `chat` flows.
+- [x] **Phase 2: Provider Adapter Implementation** — implement OpenAI-compatible adapter and map responses to existing model response types.
+- [x] **Phase 3: CLI Wiring and Adapter Selection** — wire the new adapter into `agent run`, `plan`, and `chat` flows.
 - [ ] **Phase 4: Security, Logging, and Persistence Hardening** — redact secrets from logs and avoid persisting API keys.
 - [ ] **Phase 5: Test Coverage** — add unit and integration tests for config and provider behavior.
 - [ ] **Phase 6: Documentation & Developer Experience** — add `.env.example` and README setup docs for providers.
@@ -110,3 +110,27 @@ Tracking implementation progress against the Implementation Plan:
 - Run metadata, artifacts, and replay history are persisted under the workspace directory in `.minicode/runstore.sqlite`.
 - The local model provider and Ollama integration are intentionally left to the user.
 - Future work may add richer model adapters, shell sandboxing enforcement, and extended validation hooks.
+
+## Provider Setup (Quickstart)
+
+- Copy the example environment file and set your OpenAI credentials:
+
+```bash
+cp .env.example .env
+# Edit .env and set OPENAI_API_KEY (and OPENAI_BASE_URL if different)
+```
+
+- Build and run the CLI (examples):
+
+```bash
+# Build once
+npm run build
+
+# Run interactive chat using environment variables from your shell
+OPENAI_API_KEY=sk-... node dist/index.js chat
+
+# Or, after installing the CLI globally or using npm link, run the packaged binary
+agent chat
+```
+
+Note: When both `OPENAI_BASE_URL` and `OPENAI_API_KEY` are present, the CLI automatically selects the OpenAI-compatible provider. The CLI validates these settings at startup and will error if only one is set. Secrets are not logged or persisted by default.

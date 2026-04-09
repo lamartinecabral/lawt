@@ -7,7 +7,7 @@ import { nanoid } from 'nanoid';
 import { createLogger } from './logger';
 import { loadConfig } from './config';
 import { createBuiltinToolRegistry } from './tool-registry';
-import { localProviderAdapter } from './provider';
+import { selectProviderAdapter } from './provider';
 import { buildRepositoryContext } from './context';
 import { createDeterministicPlan, executePlanSteps } from './orchestrator';
 import { CommandEnvelopeSchema, ResultEnvelopeSchema, PlanStepSchema } from './schemas';
@@ -71,7 +71,7 @@ async function executeCommand(command: string, target?: string, rawOptions?: Par
   const config = await loadConfig(resolveCliOptions(rawOptions ?? {}));
   const logger = createLogger(config);
   const toolRegistry = createBuiltinToolRegistry();
-  const provider = localProviderAdapter;
+  const provider = selectProviderAdapter(config);
   const memoryStore = MemoryStore.open(config.cwd);
   try {
     const repositoryContext = await buildRepositoryContext(config.cwd, config.ignorePatterns ?? []);

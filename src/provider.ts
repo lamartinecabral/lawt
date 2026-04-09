@@ -1,4 +1,5 @@
-import type { ModelRequest, ModelResponse, ProviderAdapter, RunContext } from './types';
+import type { ModelRequest, ModelResponse, ProviderAdapter, RunContext, CliConfig } from './types';
+import { openaiProviderAdapter } from './provider/openai';
 
 export const localProviderAdapter: ProviderAdapter = {
   name: 'local-model',
@@ -13,3 +14,10 @@ export const localProviderAdapter: ProviderAdapter = {
     };
   },
 };
+
+export function selectProviderAdapter(config: CliConfig): ProviderAdapter {
+  if (config.provider?.openai?.apiKey) {
+    return openaiProviderAdapter;
+  }
+  return localProviderAdapter;
+}
