@@ -89,8 +89,15 @@ export interface PolicyDecision {
   details?: Record<string, unknown>;
 }
 
+export type ModelMessageRole = 'system' | 'user' | 'assistant' | 'tool';
+
+export interface ModelMessage {
+  role: ModelMessageRole;
+  content: string;
+}
+
 export interface ModelRequest {
-  prompt: string;
+  messages: ModelMessage[];
   tools?: string[];
   metadata?: Record<string, unknown>;
 }

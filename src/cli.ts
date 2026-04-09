@@ -147,7 +147,12 @@ async function executeCommand(command: string, target?: string, rawOptions?: Par
 
     if (shouldRequestProviderGuidance) {
       const modelRequest = {
-        prompt: `Create a plan for command=${command} target=${target ?? 'n/a'}`,
+        messages: [
+          {
+            role: 'user' as const,
+            content: `Create a plan for command=${command} target=${target ?? 'n/a'}`,
+          },
+        ],
         tools: toolRegistry.list().map((tool) => tool.name),
         metadata: {
           dryRun: config.dryRun,
@@ -231,7 +236,7 @@ async function runChatSession(
 
       const response = await provider.execute(
         {
-          prompt: normalized,
+          messages: [{ role: 'user', content: normalized }],
           metadata: { chat: true, dryRun: context.config.dryRun },
         },
         context,

@@ -61,7 +61,7 @@ export const openaiCompatibleProviderAdapter: ProviderAdapter = {
 
     const payload: any = {
       model,
-      messages: [{ role: 'user', content: request.prompt }],
+      messages: request.messages,
       temperature: 0.2,
       max_tokens: 1500,
       tools,
@@ -82,7 +82,6 @@ export const openaiCompatibleProviderAdapter: ProviderAdapter = {
     const url = buildChatCompletionsUrl(baseUrl);
     let res: Response;
     try {
-      console.log({url,apiKey,payload})
       res = await fetchImpl(url, {
         method: 'POST',
         headers: {

@@ -85,8 +85,13 @@ export const PolicyDecisionSchema = z.object({
   details: z.record(z.string(), z.unknown()).optional(),
 });
 
+export const ModelMessageSchema = z.object({
+  role: z.enum(['system', 'user', 'assistant', 'tool']),
+  content: z.string(),
+});
+
 export const ModelRequestSchema = z.object({
-  prompt: z.string(),
+  messages: z.array(ModelMessageSchema).min(1),
   tools: z.array(z.string()).optional(),
   metadata: z.record(z.string(), z.unknown()).optional(),
 });

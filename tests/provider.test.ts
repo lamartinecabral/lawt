@@ -41,9 +41,9 @@ describe('OpenAI-compatible provider adapter', () => {
         provider: { openai: { baseUrl: 'https://api.openai.com' } },
       },
     } as RunContext;
-    await expect(openaiCompatibleProviderAdapter.execute({ prompt: 'hi' }, ctx)).rejects.toThrow(
-      /OPENAI_API_KEY is required/
-    );
+    await expect(
+      openaiCompatibleProviderAdapter.execute({ messages: [{ role: 'user', content: 'hi' }] }, ctx),
+    ).rejects.toThrow(/OPENAI_API_KEY is required/);
   });
 
   it('throws when base URL not configured', async () => {
@@ -54,9 +54,9 @@ describe('OpenAI-compatible provider adapter', () => {
         provider: { openai: { apiKey: 'sk-test' } },
       },
     } as RunContext;
-    await expect(openaiCompatibleProviderAdapter.execute({ prompt: 'hi' }, ctx)).rejects.toThrow(
-      /OPENAI_BASE_URL is required/
-    );
+    await expect(
+      openaiCompatibleProviderAdapter.execute({ messages: [{ role: 'user', content: 'hi' }] }, ctx),
+    ).rejects.toThrow(/OPENAI_BASE_URL is required/);
   });
 
   it('maps chat completion choices to ModelResponse.text', async () => {
@@ -76,7 +76,10 @@ describe('OpenAI-compatible provider adapter', () => {
       },
     } as RunContext;
 
-    const res = await openaiCompatibleProviderAdapter.execute({ prompt: 'say hi' }, ctx);
+    const res = await openaiCompatibleProviderAdapter.execute(
+      { messages: [{ role: 'user', content: 'say hi' }] },
+      ctx,
+    );
     const requestedUrl = fetchSpy.mock.calls[0]?.[0];
 
     expect(res.text).toContain('Hello from model');
@@ -102,7 +105,10 @@ describe('OpenAI-compatible provider adapter', () => {
       },
     } as RunContext;
 
-    await openaiCompatibleProviderAdapter.execute({ prompt: 'say hi' }, ctx);
+    await openaiCompatibleProviderAdapter.execute(
+      { messages: [{ role: 'user', content: 'say hi' }] },
+      ctx,
+    );
     const requestedUrl = fetchSpy.mock.calls[0]?.[0];
 
     expect(requestedUrl).toBe('https://api.openai.com/v1/chat/completions');

@@ -476,7 +476,7 @@ test('workspace-boundary denials do not write to console.error', async () => {
 
 test('local provider adapter returns a stubbed response', async () => {
   const response = await localProviderAdapter.execute(
-    { prompt: 'hello world' },
+    { messages: [{ role: 'user', content: 'hello world' }] },
     {
       runId: 'run-1',
       sessionId: 'session-1',

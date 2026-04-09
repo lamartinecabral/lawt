@@ -1,12 +1,17 @@
 import type { ModelRequest, ModelResponse, ProviderAdapter, RunContext, CliConfig } from './types';
 import { openaiCompatibleProviderAdapter } from './provider/openai';
 
+function getLastMessageContent(messages: ModelRequest['messages']): string {
+  const lastUserMessage = [...messages].reverse().find((message) => message.role === 'user');
+  return lastUserMessage?.content ?? messages[messages.length - 1]?.content ?? '';
+}
+
 export const localProviderAdapter: ProviderAdapter = {
   name: 'local-model',
   description: 'Primary local model provider adapter placeholder for MVP',
   async execute(request: ModelRequest, context: RunContext): Promise<ModelResponse> {
     return {
-      text: `Stubbed local provider response for prompt: ${request.prompt}`,
+      text: `Stubbed local provider response for message: ${getLastMessageContent(request.messages)}`,
       metadata: {
         provider: 'local-model',
         dryRun: context.config.dryRun,

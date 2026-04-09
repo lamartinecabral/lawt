@@ -106,7 +106,7 @@ Scope:
 Behavior:
 
 - Input mapping:
-  - `ModelRequest.prompt` becomes user content in chat completion request.
+  - `ModelRequest.messages` maps directly to chat completion request messages.
   - `RunContext` metadata can be included in system/user messages as needed.
   - If configured, `OPENAI_REASONING_EFFORT` is passed through to the provider request when supported by the selected model/backend.
 - Output mapping:
