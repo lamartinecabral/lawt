@@ -5,6 +5,7 @@ import { loadConfig } from '../src/config';
 import { runCli } from '../src/cli';
 import { createBuiltinToolRegistry } from '../src/tool-registry';
 import { localProviderAdapter } from '../src/provider';
+import { MemoryStore } from '../src/memory';
 import { CommandEnvelopeSchema, RunSummarySchema, ToolCallSchema } from '../src/schemas';
 
 test('loads default cli configuration when no config file exists', async () => {
@@ -332,6 +333,54 @@ test('shell tool auto-approves review path in auto mode', async () => {
   expect(toolCall.output).toMatchObject({ command: 'echo hello', exitCode: 0 });
 });
 
+test('shell tool reports non-zero exit code as a failed tool call', async () => {
+  const registry = createBuiltinToolRegistry();
+
+  const toolCall = await registry.execute(
+    'shell',
+    { command: 'node -e "process.exit(2)"' },
+    {
+      runId: 'test-run',
+      sessionId: 'test-session',
+      startedAt: new Date().toISOString(),
+      config: {
+        cwd: process.cwd(),
+        dryRun: false,
+        json: false,
+        verbose: false,
+        approval: 'auto',
+      },
+    },
+  );
+
+  expect(toolCall.success).toBe(false);
+  expect(toolCall.error).toContain('Command failed');
+});
+
+test('run-tests tool reports command failures as failed tool calls', async () => {
+  const registry = createBuiltinToolRegistry();
+
+  const toolCall = await registry.execute(
+    'run-tests',
+    { command: 'node -e "process.exit(3)"' },
+    {
+      runId: 'test-run',
+      sessionId: 'test-session',
+      startedAt: new Date().toISOString(),
+      config: {
+        cwd: process.cwd(),
+        dryRun: false,
+        json: false,
+        verbose: false,
+        approval: 'auto',
+      },
+    },
+  );
+
+  expect(toolCall.success).toBe(false);
+  expect(toolCall.error).toContain('Command failed');
+});
+
 test('dry-run bypasses review gating for shell commands', async () => {
   const registry = createBuiltinToolRegistry();
 
@@ -354,6 +403,44 @@ test('dry-run bypasses review gating for shell commands', async () => {
 
   expect(toolCall.success).toBe(true);
   expect(toolCall.output).toMatchObject({ dryRun: true });
+});
+
+test('CLI closes memory store after command execution', async () => {
+  const closeSpy = vi.spyOn(MemoryStore.prototype, 'close');
+  const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+  const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+  try {
+    await expect(
+      runCli(['node', 'agent', 'plan', 'validate cleanup', '--dry-run', '--json']),
+    ).resolves.not.toThrow();
+    expect(closeSpy).toHaveBeenCalled();
+  } finally {
+    closeSpy.mockRestore();
+    logSpy.mockRestore();
+    errorSpy.mockRestore();
+  }
+});
+
+test('text summary includes executed command listings when present', async () => {
+  const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+  const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+  try {
+    await expect(
+      runCli(['node', 'agent', 'run', 'summarize command output', '--dry-run']),
+    ).resolves.not.toThrow();
+
+    const combinedOutput = logSpy.mock.calls
+      .map((args) => args.map((value) => String(value)).join(' '))
+      .join('\n');
+
+    expect(combinedOutput).toContain('Commands executed:');
+    expect(combinedOutput).toContain('npm test');
+  } finally {
+    logSpy.mockRestore();
+    errorSpy.mockRestore();
+  }
 });
 
 test('workspace-boundary denials do not write to console.error', async () => {

@@ -130,6 +130,10 @@ export interface ToolRegistryInterface {
   list(): ToolAdapter[];
 }
 
+export interface ToolRegistry extends ToolRegistryInterface {
+  execute(name: string, args: Record<string, unknown>, context: RunContext): Promise<ToolCall>;
+}
+
 export interface PlanningStrategy {
   name: string;
   createPlan(goal: string, context: RunContext): Promise<PlanStep[]>;

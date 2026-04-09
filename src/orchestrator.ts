@@ -1,5 +1,12 @@
 import type { Logger } from 'pino';
-import type { PlanStep, RepositoryContext, RunContext, RunSummary, ToolRegistry } from './types';
+import type {
+  PlanStep,
+  RepositoryContext,
+  RunContext,
+  RunSummary,
+  ToolCall,
+  ToolRegistry,
+} from './types';
 
 const MAX_RETRY = 1;
 
@@ -187,11 +194,24 @@ export async function executePlanSteps(
       step.status = 'in-progress';
       logger.info({ step: step.id, tool: step.tool }, `Starting step: ${step.title}`);
 
-      if (step.tool && step.inputs) {
+      if (step.tool) {
+        const stepInputs = step.inputs ?? {};
         let attempt = 0;
-        let toolCall;
+        let toolCall: ToolCall | undefined;
         while (attempt <= MAX_RETRY) {
-          toolCall = await toolRegistry.execute(step.tool, step.inputs, context);
+          try {
+            toolCall = await toolRegistry.execute(step.tool, stepInputs, context);
+          } catch (error) {
+            const timestamp = new Date().toISOString();
+            toolCall = {
+              name: step.tool,
+              arguments: stepInputs,
+              startedAt: timestamp,
+              endedAt: timestamp,
+              success: false,
+              error: error instanceof Error ? error.message : String(error),
+            };
+          }
           executedTools.push(step.tool);
 
           if (toolCall.success) {
@@ -204,22 +224,22 @@ export async function executePlanSteps(
           }
         }
 
-        step.result = { toolCall: toolCall as unknown };
-        if (!(toolCall as any).success) {
-          status = 'failed';
-          step.status = 'failed';
-          logger.error({ step: step.id, error: (toolCall as any).error }, 'Step execution failed');
-          break;
-        }
-
-        if ((toolCall as any).output && typeof (toolCall as any).output === 'object') {
-          const output = (toolCall as any).output;
+        if (toolCall?.output && typeof toolCall.output === 'object') {
+          const output = toolCall.output as Record<string, unknown>;
           if (output.command) {
             commandsExecuted.push(String(output.command));
           }
           if (output.path && output.updated) {
             filesChanged.push(String(output.path));
           }
+        }
+
+        step.result = { toolCall: toolCall as unknown };
+        if (!toolCall?.success) {
+          status = 'failed';
+          step.status = 'failed';
+          logger.error({ step: step.id, error: toolCall?.error }, 'Step execution failed');
+          break;
         }
 
         step.status = 'completed';

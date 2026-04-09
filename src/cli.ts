@@ -51,6 +51,20 @@ function renderSummary(summary: RunSummary, jsonOutput: boolean): void {
   summary.steps.forEach((step) => {
     console.log(`  - ${step.id}: ${step.title} (${step.status})`);
   });
+
+  if (summary.commandsExecuted?.length) {
+    console.log('Commands executed:');
+    summary.commandsExecuted.forEach((command) => {
+      console.log(`  - ${command}`);
+    });
+  }
+
+  if (summary.filesChanged?.length) {
+    console.log('Files changed:');
+    summary.filesChanged.forEach((filePath) => {
+      console.log(`  - ${filePath}`);
+    });
+  }
 }
 
 async function executeCommand(command: string, target?: string, rawOptions?: PartialCliOptions) {
@@ -59,103 +73,107 @@ async function executeCommand(command: string, target?: string, rawOptions?: Par
   const toolRegistry = createBuiltinToolRegistry();
   const provider = localProviderAdapter;
   const memoryStore = MemoryStore.open(config.cwd);
-  const repositoryContext = await buildRepositoryContext(config.cwd, config.ignorePatterns ?? []);
-  const context: RunContext = {
-    runId: nanoid(),
-    sessionId: nanoid(),
-    startedAt: new Date().toISOString(),
-    config,
-  };
-  const sessionMemory = new SessionMemory(context.runId);
-  context.memory = sessionMemory;
+  try {
+    const repositoryContext = await buildRepositoryContext(config.cwd, config.ignorePatterns ?? []);
+    const context: RunContext = {
+      runId: nanoid(),
+      sessionId: nanoid(),
+      startedAt: new Date().toISOString(),
+      config,
+    };
+    const sessionMemory = new SessionMemory(context.runId);
+    context.memory = sessionMemory;
 
-  logger.debug(
-    { root: repositoryContext.root, fileCount: repositoryContext.files.length },
-    'Loaded repository context',
-  );
+    logger.debug(
+      { root: repositoryContext.root, fileCount: repositoryContext.files.length },
+      'Loaded repository context',
+    );
 
-  const commandEnvelope: CommandEnvelope = {
-    command,
-    target,
-    config,
-    requestedAt: new Date().toISOString(),
-    runId: context.runId,
-    sessionId: context.sessionId,
-  };
-  CommandEnvelopeSchema.parse(commandEnvelope);
+    const commandEnvelope: CommandEnvelope = {
+      command,
+      target,
+      config,
+      requestedAt: new Date().toISOString(),
+      runId: context.runId,
+      sessionId: context.sessionId,
+    };
+    CommandEnvelopeSchema.parse(commandEnvelope);
 
-  logger.info(
-    { runId: context.runId, command, cwd: config.cwd, dryRun: config.dryRun },
-    'Starting command',
-  );
-  logger.debug({ config }, 'Resolved runtime configuration');
-  logger.debug({ tools: toolRegistry.list().map((tool) => tool.name) }, 'Available tools');
-  logger.debug({ provider: provider.name }, 'Selected provider adapter');
+    logger.info(
+      { runId: context.runId, command, cwd: config.cwd, dryRun: config.dryRun },
+      'Starting command',
+    );
+    logger.debug({ config }, 'Resolved runtime configuration');
+    logger.debug({ tools: toolRegistry.list().map((tool) => tool.name) }, 'Available tools');
+    logger.debug({ provider: provider.name }, 'Selected provider adapter');
 
-  if (command === 'replay') {
-    const replayTarget = String(target ?? '');
-    const recorded = memoryStore.loadRun(replayTarget);
-    if (!recorded) {
-      throw new Error(`No recorded run found for id ${replayTarget}`);
+    if (command === 'replay') {
+      const replayTarget = String(target ?? '');
+      const recorded = memoryStore.loadRun(replayTarget);
+      if (!recorded) {
+        throw new Error(`No recorded run found for id ${replayTarget}`);
+      }
+
+      logger.info({ replayTarget }, 'Replaying recorded run');
+      renderSummary(recorded.summary, config.json);
+      return;
     }
 
-    logger.info({ replayTarget }, 'Replaying recorded run');
-    renderSummary(recorded.summary, config.json);
-    return;
-  }
+    let steps: PlanStep[] = [];
+    let summary: RunSummary;
 
-  let steps: PlanStep[] = [];
-  let summary: RunSummary;
+    if (command === 'apply') {
+      const planFilePath = path.resolve(config.cwd, target ?? '');
+      const fileContents = await fs.readFile(planFilePath, 'utf8');
+      const parsed = JSON.parse(fileContents) as PlanStep[];
+      steps = parsed.map((step) => PlanStepSchema.parse(step));
+    } else {
+      steps = await createDeterministicPlan(command, target, repositoryContext, context);
+    }
 
-  if (command === 'apply') {
-    const planFilePath = path.resolve(config.cwd, target ?? '');
-    const fileContents = await fs.readFile(planFilePath, 'utf8');
-    const parsed = JSON.parse(fileContents) as PlanStep[];
-    steps = parsed.map((step) => PlanStepSchema.parse(step));
-  } else {
-    steps = await createDeterministicPlan(command, target, repositoryContext, context);
-  }
-
-  const modelRequest = {
-    prompt: `Create a plan for command=${command} target=${target ?? 'n/a'}`,
-    tools: toolRegistry.list().map((tool) => tool.name),
-    metadata: {
-      dryRun: config.dryRun,
-      approval: config.approval,
-      workspaceFileCount: repositoryContext.files.length,
-    },
-  };
-
-  const providerResponse = await provider.execute(modelRequest, context);
-  logger.debug({ providerResponse }, 'Provider generated plan guidance');
-
-  if (command === 'plan' || command === 'run') {
-    steps[0].result = {
-      summary: providerResponse.text,
-      metadata: providerResponse.metadata,
+    const modelRequest = {
+      prompt: `Create a plan for command=${command} target=${target ?? 'n/a'}`,
+      tools: toolRegistry.list().map((tool) => tool.name),
+      metadata: {
+        dryRun: config.dryRun,
+        approval: config.approval,
+        workspaceFileCount: repositoryContext.files.length,
+      },
     };
+
+    const providerResponse = await provider.execute(modelRequest, context);
+    logger.debug({ providerResponse }, 'Provider generated plan guidance');
+
+    if (command === 'plan' || command === 'run') {
+      steps[0].result = {
+        summary: providerResponse.text,
+        metadata: providerResponse.metadata,
+      };
+    }
+
+    if (!config.json) {
+      logger.info('Completed initial command bootstrap');
+    }
+
+    if (command === 'chat') {
+      summary = await runChatSession(provider, context, logger);
+    } else {
+      summary = await executePlanSteps(steps, toolRegistry, context, logger, command);
+    }
+
+    const resultEnvelope: ResultEnvelope = {
+      runId: context.runId,
+      status: summary.status,
+      summary,
+      completedAt: new Date().toISOString(),
+    };
+    ResultEnvelopeSchema.parse(resultEnvelope);
+    memoryStore.persistRun(commandEnvelope, resultEnvelope, sessionMemory);
+
+    renderSummary(summary, config.json);
+  } finally {
+    memoryStore.close();
   }
-
-  if (!config.json) {
-    logger.info('Completed initial command bootstrap');
-  }
-
-  if (command === 'chat') {
-    summary = await runChatSession(provider, context, logger);
-  } else {
-    summary = await executePlanSteps(steps, toolRegistry, context, logger, command);
-  }
-
-  const resultEnvelope: ResultEnvelope = {
-    runId: context.runId,
-    status: summary.status,
-    summary,
-    completedAt: new Date().toISOString(),
-  };
-  ResultEnvelopeSchema.parse(resultEnvelope);
-  memoryStore.persistRun(commandEnvelope, resultEnvelope, sessionMemory);
-
-  renderSummary(summary, config.json);
 }
 
 async function runChatSession(

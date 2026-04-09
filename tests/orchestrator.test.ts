@@ -113,4 +113,103 @@ describe('orchestrator', () => {
     expect(summary.commandsExecuted).toEqual(expect.arrayContaining(['npm test']));
     expect(summary.filesChanged).toBeUndefined();
   });
+
+  test('executePlanSteps executes tool steps when inputs are omitted', async () => {
+    const steps = [
+      {
+        id: 'inspect-version-control',
+        title: 'Inspect repository status with git',
+        description: 'Gather repository state before execution',
+        status: 'planned' as const,
+        tool: 'git',
+      },
+    ];
+
+    let observedArgs: Record<string, unknown> | undefined;
+    const registry: ToolRegistry = {
+      register: () => registry,
+      get: () => undefined,
+      list: () => [],
+      execute: async (name: string, args: Record<string, unknown>) => {
+        observedArgs = args;
+        return {
+          name,
+          arguments: args,
+          startedAt: new Date().toISOString(),
+          endedAt: new Date().toISOString(),
+          success: true,
+          output: { command: 'git status', exitCode: 0 },
+        };
+      },
+    } as ToolRegistry;
+
+    const summary = await executePlanSteps(steps, registry, stubContext, noopLogger, 'plan');
+
+    expect(summary.status).toBe('ok');
+    expect(observedArgs).toEqual({});
+    expect(summary.commandsExecuted).toEqual(expect.arrayContaining(['git status']));
+    expect(summary.steps[0].status).toBe('completed');
+  });
+
+  test('executePlanSteps gracefully fails when tool execution throws', async () => {
+    const steps = [
+      {
+        id: 'execute-broken-tool',
+        title: 'Execute broken tool',
+        description: 'Simulate a registry crash for this step',
+        status: 'planned' as const,
+        tool: 'broken-tool',
+      },
+    ];
+
+    const registry: ToolRegistry = {
+      register: () => registry,
+      get: () => undefined,
+      list: () => [],
+      execute: async () => {
+        throw new Error('adapter crashed');
+      },
+    } as ToolRegistry;
+
+    const summary = await executePlanSteps(steps, registry, stubContext, noopLogger, 'run');
+
+    expect(summary.status).toBe('failed');
+    expect(summary.steps[0].status).toBe('failed');
+    expect(summary.steps[0].result).toMatchObject({
+      toolCall: expect.objectContaining({ error: expect.stringContaining('adapter crashed') }),
+    });
+  });
+
+  test('executePlanSteps reports failed command attempts in command summary', async () => {
+    const steps = [
+      {
+        id: 'run-validation',
+        title: 'Run repository validation checks',
+        description: 'Execute validation and capture failures',
+        status: 'planned' as const,
+        tool: 'run-tests',
+        inputs: { command: 'npm test' },
+      },
+    ];
+
+    const registry: ToolRegistry = {
+      register: () => registry,
+      get: () => undefined,
+      list: () => [],
+      execute: async (name: string, args: Record<string, unknown>) => ({
+        name,
+        arguments: args,
+        startedAt: new Date().toISOString(),
+        endedAt: new Date().toISOString(),
+        success: false,
+        output: { command: 'npm test', exitCode: 1, error: 'tests failed' },
+        error: 'tests failed',
+      }),
+    } as ToolRegistry;
+
+    const summary = await executePlanSteps(steps, registry, stubContext, noopLogger, 'run');
+
+    expect(summary.status).toBe('failed');
+    expect(summary.commandsExecuted).toEqual(expect.arrayContaining(['npm test']));
+  });
 });

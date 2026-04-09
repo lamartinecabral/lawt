@@ -66,6 +66,39 @@ function buildPolicyDecision(
   return { action: 'allow', reason: 'Tool call is permitted under current policy' };
 }
 
+function inferToolFailure(output: unknown): string | undefined {
+  if (!output || typeof output !== 'object') {
+    return undefined;
+  }
+
+  const outputRecord = output as Record<string, unknown>;
+  if (outputRecord.error !== undefined && outputRecord.error !== null) {
+    return String(outputRecord.error);
+  }
+
+  if (outputRecord.exitCode !== undefined && outputRecord.exitCode !== null) {
+    const rawExitCode = outputRecord.exitCode;
+    const exitCode =
+      typeof rawExitCode === 'number'
+        ? rawExitCode
+        : typeof rawExitCode === 'string'
+          ? Number(rawExitCode)
+          : Number.NaN;
+    if (Number.isFinite(exitCode) && exitCode !== 0) {
+      const command =
+        typeof outputRecord.command === 'string' && outputRecord.command.trim().length > 0
+          ? outputRecord.command
+          : undefined;
+      if (command) {
+        return `Command failed with exit code ${exitCode}: ${command}`;
+      }
+      return `Command failed with exit code ${exitCode}`;
+    }
+  }
+
+  return undefined;
+}
+
 export class ToolRegistry {
   private adapters = new Map<string, ToolAdapter>();
 
@@ -141,13 +174,15 @@ export class ToolRegistry {
     try {
       const runtimeContext: ToolRuntimeContext = { runContext: context };
       const output = await adapter.execute(args, runtimeContext);
+      const inferredFailure = inferToolFailure(output);
       const toolCall: ToolCall = {
         name,
         arguments: args,
         startedAt,
         endedAt: new Date().toISOString(),
-        success: true,
+        success: inferredFailure === undefined,
         output,
+        error: inferredFailure,
       };
       ToolCallSchema.parse(toolCall);
       context.memory?.storeToolCall(toolCall);
