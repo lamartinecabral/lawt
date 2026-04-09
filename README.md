@@ -58,6 +58,22 @@ docs/
 ## Documentation
 
 - `docs/specification.md` — full specification for the Node.js CLI coding agent
+- `docs/implementation-plan.md` — step-by-step roadmap for building the agent
+
+## Project Status
+
+Tracking implementation progress against the Implementation Plan:
+
+- [ ] **Phase 1: Bootstrap project foundation**
+- [ ] **Phase 2: Define contracts and core module boundaries**
+- [ ] **Phase 3: Implement context engine and tool runtime**
+- [ ] **Phase 4: Implement orchestrator planning and execution loop**
+- [ ] **Phase 5: Implement CLI commands end to end**
+- [ ] **Phase 6: Add memory store and artifact persistence**
+- [ ] **Phase 7: Safety and approval hardening**
+- [ ] **Phase 8: Validation loop and change summary quality**
+- [ ] **Phase 9: Testing and performance verification**
+- [ ] **Phase 10: Documentation and release readiness**
 
 ## Notes
 
