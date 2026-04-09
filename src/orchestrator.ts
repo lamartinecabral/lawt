@@ -95,15 +95,14 @@ export async function createDeterministicPlan(
       createStep(
         'validate-plan',
         'Validate the supplied plan file',
-        undefined,
-        { goal: normalizedGoal },
+        'Check the plan structure and contents before execution',
       ),
     );
     planSteps.push(
       createStep(
         'execute-plan',
         'Execute the bound plan steps',
-        undefined,
+        'Run the loaded plan steps from the provided plan file',
       ),
     );
     return planSteps;
@@ -190,10 +189,7 @@ export async function executePlanSteps(
 
           attempt += 1;
           if (attempt <= MAX_RETRY) {
-            logger.warn(
-              { step: step.id, attempt, error: toolCall.error },
-              'Retrying failed step',
-            );
+            logger.warn({ step: step.id, attempt, error: toolCall.error }, 'Retrying failed step');
           }
         }
 
@@ -201,10 +197,7 @@ export async function executePlanSteps(
         if (!(toolCall as any).success) {
           status = 'failed';
           step.status = 'failed';
-          logger.error(
-            { step: step.id, error: (toolCall as any).error },
-            'Step execution failed',
-          );
+          logger.error({ step: step.id, error: (toolCall as any).error }, 'Step execution failed');
           break;
         }
 

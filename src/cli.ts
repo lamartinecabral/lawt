@@ -187,10 +187,7 @@ async function runChatSession(
     command: 'chat session',
     status: 'ok',
     steps,
-    artifacts: [
-      `chat-messages:${steps.length}`,
-      `startedAt:${context.startedAt}`,
-    ],
+    artifacts: [`chat-messages:${steps.length}`, `startedAt:${context.startedAt}`],
   };
 }
 

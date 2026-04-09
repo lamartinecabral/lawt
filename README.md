@@ -70,7 +70,7 @@ Tracking implementation progress against the Implementation Plan:
 - [x] **Phase 2: Define contracts and core module boundaries**
 - [x] **Phase 3: Implement context engine and tool runtime**
 - [x] **Phase 4: Implement orchestrator planning and execution loop**
-- [ ] **Phase 5: Implement CLI commands end to end**
+- [x] **Phase 5: Implement CLI commands end to end**
 - [ ] **Phase 6: Add memory store and artifact persistence**
 - [ ] **Phase 7: Safety and approval hardening**
 - [ ] **Phase 8: Validation loop and change summary quality**

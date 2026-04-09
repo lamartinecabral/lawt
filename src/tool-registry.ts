@@ -105,7 +105,11 @@ export class ToolRegistry {
       return deniedCall;
     }
 
-    if (policy.action === 'review' && !context.config.dryRun && context.config.approval !== 'auto') {
+    if (
+      policy.action === 'review' &&
+      !context.config.dryRun &&
+      context.config.approval !== 'auto'
+    ) {
       const reviewCall: ToolCall = {
         name,
         arguments: args,
