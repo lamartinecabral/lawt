@@ -16,17 +16,19 @@ This repository is the starting point for a local-first CLI agent that can inspe
 
 ## Recommended Usage
 
-For now, this repository is a specification and scaffold rather than a finished product. Use it as a reference for:
+This repository now includes a Phase 1 CLI bootstrap for the `agent` command shell. After installing dependencies, build the project and run the command driver.
 
 - `docs/specification.md` — full project requirements and architecture
-- Proposed CLI commands such as `agent chat`, `agent run`, `agent plan`, `agent apply`, `agent doctor`, and `agent replay`
+- `docs/implementation-plan.md` — phased roadmap for the CLI agent
+- `agent run`, `agent plan`, `agent apply`, `agent doctor`, `agent replay`, `agent chat`
 
 ## Installation
 
-Install dependencies once the implementation is scaffolded:
+Install dependencies and build the CLI:
 
 ```bash
 npm install
+npm run build
 ```
 
 ## Development
@@ -64,7 +66,7 @@ docs/
 
 Tracking implementation progress against the Implementation Plan:
 
-- [ ] **Phase 1: Bootstrap project foundation**
+- [x] **Phase 1: Bootstrap project foundation**
 - [ ] **Phase 2: Define contracts and core module boundaries**
 - [ ] **Phase 3: Implement context engine and tool runtime**
 - [ ] **Phase 4: Implement orchestrator planning and execution loop**
