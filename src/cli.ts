@@ -16,10 +16,14 @@ import type {
 
 const COMMAND_VERSION = '0.1.0';
 
-function mergeConfig(options: Partial<CliConfig>): CliConfig {
+type PartialCliOptions = Partial<CliConfig> & {
+  config?: string;
+};
+
+function mergeConfig(options: PartialCliOptions): CliConfig {
   return {
     cwd: options.cwd ?? process.cwd(),
-    configPath: options.configPath,
+    configPath: options.config ?? options.configPath,
     dryRun: options.dryRun ?? false,
     json: options.json ?? false,
     verbose: options.verbose ?? false,
@@ -123,12 +127,35 @@ async function executeCommand(command: string, target?: string, rawOptions?: Par
     steps,
   };
 
+  const modelRequest = {
+    prompt: `Create a plan for command=${command} target=${target ?? 'n/a'}`,
+    tools: toolRegistry.list().map((tool) => tool.name),
+    metadata: {
+      dryRun: config.dryRun,
+      approval: config.approval,
+    },
+  };
+
+  const providerResponse = await provider.execute(modelRequest, context);
+  logger.debug({ providerResponse }, 'Provider generated plan guidance');
+
+  if (command === 'plan' || command === 'run') {
+    steps[0].result = {
+      summary: providerResponse.text,
+      metadata: providerResponse.metadata,
+    };
+    steps[0].status = 'completed';
+  }
+
   if (!config.json) {
     logger.info('Completed initial command bootstrap');
   }
 
   if (command === 'run' && !config.dryRun) {
     await toolRegistry.execute('git', {}, context);
+    if (steps.length > 1) {
+      steps[1].status = 'completed';
+    }
   }
 
   const resultEnvelope: ResultEnvelope = {

@@ -1,3 +1,5 @@
+import fs from 'fs';
+import path from 'path';
 import { expect, test } from 'vitest';
 import { loadConfig } from '../src/config';
 import { createBuiltinToolRegistry } from '../src/tool-registry';
@@ -22,6 +24,32 @@ test('loads default cli configuration when no config file exists', async () => {
       approval: 'auto',
     }),
   );
+});
+
+test('accepts --config option as configPath during CLI load', async () => {
+  const configPath = './.minicode.json';
+  const absoluteConfigPath = path.resolve(process.cwd(), configPath);
+  fs.writeFileSync(
+    absoluteConfigPath,
+    JSON.stringify({ dryRun: true, json: true, verbose: true, approval: 'strict' }),
+  );
+
+  try {
+    const config = await loadConfig({
+      cwd: process.cwd(),
+      configPath,
+      dryRun: true,
+      json: true,
+      verbose: true,
+      approval: 'strict',
+    });
+
+    expect(config.configPath).toBe(configPath);
+    expect(config.dryRun).toBe(true);
+    expect(config.approval).toBe('strict');
+  } finally {
+    fs.unlinkSync(absoluteConfigPath);
+  }
 });
 
 test('builtin tool registry exposes core adapters and validates tool calls', async () => {
