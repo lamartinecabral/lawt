@@ -13,10 +13,13 @@ export async function loadConfig(cliOptions: Partial<CliConfig>): Promise<CliCon
   const fileConfig = (searchResult?.config ?? {}) as ConfigurationInput;
 
   const parseResult = CliConfigSchema.safeParse({
-    ...fileConfig,
-    ...cliOptions,
     cwd: cliOptions.cwd ?? fileConfig.cwd ?? process.cwd(),
-    ignorePatterns: cliOptions.ignorePatterns ?? fileConfig.ignorePatterns ?? [],
+    configPath: cliOptions.configPath ?? fileConfig.configPath,
+    dryRun: cliOptions.dryRun !== undefined ? cliOptions.dryRun : fileConfig.dryRun,
+    json: cliOptions.json !== undefined ? cliOptions.json : fileConfig.json,
+    verbose: cliOptions.verbose !== undefined ? cliOptions.verbose : fileConfig.verbose,
+    approval: cliOptions.approval ?? fileConfig.approval,
+    ignorePatterns: cliOptions.ignorePatterns ?? fileConfig.ignorePatterns,
   });
 
   if (!parseResult.success) {

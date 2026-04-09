@@ -21,14 +21,10 @@ type PartialCliOptions = Partial<CliConfig> & {
   config?: string;
 };
 
-function mergeConfig(options: PartialCliOptions): CliConfig {
+function resolveCliOptions(options: PartialCliOptions): Partial<CliConfig> {
   return {
-    cwd: options.cwd ?? process.cwd(),
+    ...options,
     configPath: options.config ?? options.configPath,
-    dryRun: options.dryRun ?? false,
-    json: options.json ?? false,
-    verbose: options.verbose ?? false,
-    approval: options.approval ?? 'auto',
   };
 }
 
@@ -89,9 +85,8 @@ function renderSummary(summary: RunSummary, jsonOutput: boolean): void {
   });
 }
 
-async function executeCommand(command: string, target?: string, rawOptions?: Partial<CliConfig>) {
-  const defaultConfig = mergeConfig(rawOptions ?? {});
-  const config = await loadConfig(defaultConfig);
+async function executeCommand(command: string, target?: string, rawOptions?: PartialCliOptions) {
+  const config = await loadConfig(resolveCliOptions(rawOptions ?? {}));
   const logger = createLogger(config);
   const toolRegistry = createBuiltinToolRegistry();
   const provider = localProviderAdapter;
@@ -188,7 +183,7 @@ export async function runCli(argv: string[] = process.argv): Promise<void> {
     .option('--dry-run', 'prevent side effects')
     .option('--json', 'emit machine-readable JSON output')
     .option('--verbose', 'enable verbose logging')
-    .option('--approval <mode>', 'approval mode', 'auto');
+    .option('--approval <mode>', 'approval mode');
 
   program
     .command('run')

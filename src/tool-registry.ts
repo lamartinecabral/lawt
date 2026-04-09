@@ -39,6 +39,8 @@ function buildPolicyDecision(
     if (isDangerousShellCommand(command)) {
       return { action: 'deny', reason: 'Shell command matches blocked dangerous patterns' };
     }
+
+    return { action: 'review', reason: 'Shell command execution requires approval' };
   }
 
   if (toolName === 'file-read' || toolName === 'file-edit') {
@@ -46,8 +48,16 @@ function buildPolicyDecision(
     try {
       resolveRepositoryPath(config.cwd, candidate);
     } catch (error) {
-      console.error(error)
-      return { action: 'deny', reason: 'File path is outside the workspace boundary' };
+      return {
+        action: 'deny',
+        reason: `File path is outside the workspace boundary: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      };
+    }
+
+    if (toolName === 'file-edit') {
+      return { action: 'review', reason: 'File edits require approval' };
     }
   }
 
@@ -95,14 +105,14 @@ export class ToolRegistry {
       return deniedCall;
     }
 
-    if (policy.action === 'review' && context.config.approval !== 'auto') {
+    if (policy.action === 'review' && !context.config.dryRun && context.config.approval !== 'auto') {
       const reviewCall: ToolCall = {
         name,
         arguments: args,
         startedAt,
         endedAt: new Date().toISOString(),
         success: false,
-        error: `Tool call requires review under approval mode: ${context.config.approval}`,
+        error: `Tool call requires approval under ${context.config.approval} mode: ${policy.reason}`,
       };
       ToolCallSchema.parse(reviewCall);
       return reviewCall;

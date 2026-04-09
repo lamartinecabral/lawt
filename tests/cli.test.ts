@@ -53,6 +53,56 @@ test('accepts --config option as configPath during CLI load', async () => {
   }
 });
 
+test('preserves config file values when CLI flags are omitted', async () => {
+  const configPath = './.minicode-precedence.json';
+  const absoluteConfigPath = path.resolve(process.cwd(), configPath);
+  fs.writeFileSync(
+    absoluteConfigPath,
+    JSON.stringify({ dryRun: true, json: true, verbose: true, approval: 'strict' }),
+  );
+
+  try {
+    const config = await loadConfig({
+      cwd: process.cwd(),
+      configPath,
+    });
+
+    expect(config.dryRun).toBe(true);
+    expect(config.json).toBe(true);
+    expect(config.verbose).toBe(true);
+    expect(config.approval).toBe('strict');
+  } finally {
+    fs.unlinkSync(absoluteConfigPath);
+  }
+});
+
+test('explicit CLI options override config file values', async () => {
+  const configPath = './.minicode-precedence-override.json';
+  const absoluteConfigPath = path.resolve(process.cwd(), configPath);
+  fs.writeFileSync(
+    absoluteConfigPath,
+    JSON.stringify({ dryRun: true, json: true, verbose: true, approval: 'strict' }),
+  );
+
+  try {
+    const config = await loadConfig({
+      cwd: process.cwd(),
+      configPath,
+      dryRun: false,
+      json: false,
+      verbose: false,
+      approval: 'auto',
+    });
+
+    expect(config.dryRun).toBe(false);
+    expect(config.json).toBe(false);
+    expect(config.verbose).toBe(false);
+    expect(config.approval).toBe('auto');
+  } finally {
+    fs.unlinkSync(absoluteConfigPath);
+  }
+});
+
 test('agent CLI accepts --config and runs plan command with a specified config path', async () => {
   const configPath = './custom-config.json';
   const absoluteConfigPath = path.resolve(process.cwd(), configPath);
@@ -108,7 +158,7 @@ test('builtin tool registry exposes core adapters and validates tool calls', asy
 });
 
 test('buildRepositoryContext scans repository and honors ignore patterns', async () => {
-  const { buildRepositoryContext } = await import('../src/context');
+  const { buildRepositoryContext } = await import('../src/context.js');
   const context = await buildRepositoryContext(process.cwd(), ['tests/fixtures']);
 
   expect(context.root).toBe(process.cwd());
@@ -159,6 +209,109 @@ test('shell tool respects dry-run and rejects dangerous commands', async () => {
 
   expect(dangerousCall.success).toBe(false);
   expect(dangerousCall.error).toContain('Policy denied');
+});
+
+test('shell tool requires approval in on-request mode', async () => {
+  const registry = createBuiltinToolRegistry();
+
+  const toolCall = await registry.execute(
+    'shell',
+    { command: 'echo hello' },
+    {
+      runId: 'test-run',
+      sessionId: 'test-session',
+      startedAt: new Date().toISOString(),
+      config: {
+        cwd: process.cwd(),
+        dryRun: false,
+        json: false,
+        verbose: false,
+        approval: 'on-request',
+      },
+    },
+  );
+
+  expect(toolCall.success).toBe(false);
+  expect(toolCall.error).toContain('requires approval');
+  expect(toolCall.error).toContain('on-request');
+});
+
+test('shell tool auto-approves review path in auto mode', async () => {
+  const registry = createBuiltinToolRegistry();
+
+  const toolCall = await registry.execute(
+    'shell',
+    { command: 'echo hello' },
+    {
+      runId: 'test-run',
+      sessionId: 'test-session',
+      startedAt: new Date().toISOString(),
+      config: {
+        cwd: process.cwd(),
+        dryRun: false,
+        json: false,
+        verbose: false,
+        approval: 'auto',
+      },
+    },
+  );
+
+  expect(toolCall.success).toBe(true);
+  expect(toolCall.output).toMatchObject({ command: 'echo hello', exitCode: 0 });
+});
+
+test('dry-run bypasses review gating for shell commands', async () => {
+  const registry = createBuiltinToolRegistry();
+
+  const toolCall = await registry.execute(
+    'shell',
+    { command: 'echo hello' },
+    {
+      runId: 'test-run',
+      sessionId: 'test-session',
+      startedAt: new Date().toISOString(),
+      config: {
+        cwd: process.cwd(),
+        dryRun: true,
+        json: false,
+        verbose: false,
+        approval: 'strict',
+      },
+    },
+  );
+
+  expect(toolCall.success).toBe(true);
+  expect(toolCall.output).toMatchObject({ dryRun: true });
+});
+
+test('workspace-boundary denials do not write to console.error', async () => {
+  const registry = createBuiltinToolRegistry();
+  const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+  try {
+    const toolCall = await registry.execute(
+      'file-read',
+      { path: '../../outside-workspace' },
+      {
+        runId: 'test-run',
+        sessionId: 'test-session',
+        startedAt: new Date().toISOString(),
+        config: {
+          cwd: process.cwd(),
+          dryRun: false,
+          json: false,
+          verbose: false,
+          approval: 'auto',
+        },
+      },
+    );
+
+    expect(toolCall.success).toBe(false);
+    expect(toolCall.error).toContain('workspace boundary');
+    expect(errorSpy).not.toHaveBeenCalled();
+  } finally {
+    errorSpy.mockRestore();
+  }
 });
 
 test('local provider adapter returns a stubbed response', async () => {
