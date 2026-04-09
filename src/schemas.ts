@@ -15,13 +15,13 @@ export const PlanStepSchema = z.object({
   description: z.string(),
   status: z.enum(['planned', 'not-started', 'in-progress', 'completed', 'failed', 'skipped']),
   tool: z.string().optional(),
-  inputs: z.record(z.unknown()).optional(),
-  result: z.record(z.unknown()).optional(),
+  inputs: z.record(z.string(), z.unknown()).optional(),
+  result: z.record(z.string(), z.unknown()).optional(),
 });
 
 export const ToolCallSchema = z.object({
   name: z.string(),
-  arguments: z.record(z.unknown()),
+  arguments: z.record(z.string(), z.unknown()),
   startedAt: z.string(),
   endedAt: z.string().optional(),
   success: z.boolean(),
@@ -65,17 +65,17 @@ export const ResultEnvelopeSchema = z.object({
 export const PolicyDecisionSchema = z.object({
   action: z.enum(['allow', 'deny', 'review']),
   reason: z.string(),
-  details: z.record(z.unknown()).optional(),
+  details: z.record(z.string(), z.unknown()).optional(),
 });
 
 export const ModelRequestSchema = z.object({
   prompt: z.string(),
   tools: z.array(z.string()).optional(),
-  metadata: z.record(z.unknown()).optional(),
+  metadata: z.record(z.string(), z.unknown()).optional(),
 });
 
 export const ModelResponseSchema = z.object({
   text: z.string(),
   toolCalls: z.array(ToolCallSchema).optional(),
-  metadata: z.record(z.unknown()).optional(),
+  metadata: z.record(z.string(), z.unknown()).optional(),
 });
