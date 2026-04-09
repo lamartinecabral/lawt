@@ -56,6 +56,7 @@ export const openaiCompatibleProviderAdapter: ProviderAdapter = {
 
     const model = (request.metadata as any)?.model ?? openaiCfg?.model ?? 'gpt-4o-mini';
     const timeoutMs = openaiCfg?.timeoutMs ?? 60000;
+    const tools = request.tools;
     const reasoningEffort = openaiCfg?.reasoningEffort ?? 'default';
 
     const payload: any = {
@@ -63,6 +64,7 @@ export const openaiCompatibleProviderAdapter: ProviderAdapter = {
       messages: [{ role: 'user', content: request.prompt }],
       temperature: 0.2,
       max_tokens: 1500,
+      tools,
     };
 
     if (reasoningEffort && reasoningEffort !== 'default') {
