@@ -67,7 +67,7 @@ docs/
 Tracking implementation progress against the Implementation Plan:
 
 - [x] **Phase 1: Bootstrap project foundation**
-- [ ] **Phase 2: Define contracts and core module boundaries**
+- [x] **Phase 2: Define contracts and core module boundaries**
 - [ ] **Phase 3: Implement context engine and tool runtime**
 - [ ] **Phase 4: Implement orchestrator planning and execution loop**
 - [ ] **Phase 5: Implement CLI commands end to end**

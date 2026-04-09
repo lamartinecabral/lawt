@@ -3,7 +3,16 @@ import { nanoid } from 'nanoid';
 import { createLogger } from './logger';
 import { loadConfig } from './config';
 import { createBuiltinToolRegistry } from './tool-registry';
-import type { CliConfig, PlanStep, RunSummary } from './types';
+import { localProviderAdapter } from './provider';
+import { CommandEnvelopeSchema, ResultEnvelopeSchema } from './schemas';
+import type {
+  CliConfig,
+  PlanStep,
+  RunSummary,
+  CommandEnvelope,
+  ResultEnvelope,
+  RunContext,
+} from './types';
 
 const COMMAND_VERSION = '0.1.0';
 
@@ -26,7 +35,7 @@ function buildPlan(command: string, target?: string): PlanStep[] {
         id: `plan-${now}`,
         title: 'Generate a plan for the requested task',
         description: `Create a high-level plan for: ${target ?? 'n/a'}`,
-        status: 'planned',
+        status: 'not-started',
       },
     ];
   }
@@ -37,7 +46,7 @@ function buildPlan(command: string, target?: string): PlanStep[] {
         id: `plan-${now}`,
         title: 'Analyze the task and create an execution plan',
         description: `Analyze and plan: ${target ?? 'n/a'}`,
-        status: 'planned',
+        status: 'not-started',
       },
       {
         id: `execute-${now}`,
@@ -80,12 +89,23 @@ async function executeCommand(command: string, target?: string, rawOptions?: Par
   const config = await loadConfig(defaultConfig);
   const logger = createLogger(config);
   const toolRegistry = createBuiltinToolRegistry();
-  const context = {
+  const provider = localProviderAdapter;
+  const context: RunContext = {
     runId: nanoid(),
     sessionId: nanoid(),
     startedAt: new Date().toISOString(),
     config,
   };
+
+  const commandEnvelope: CommandEnvelope = {
+    command,
+    target,
+    config,
+    requestedAt: new Date().toISOString(),
+    runId: context.runId,
+    sessionId: context.sessionId,
+  };
+  CommandEnvelopeSchema.parse(commandEnvelope);
 
   logger.info(
     { runId: context.runId, command, cwd: config.cwd, dryRun: config.dryRun },
@@ -93,6 +113,7 @@ async function executeCommand(command: string, target?: string, rawOptions?: Par
   );
   logger.debug({ config }, 'Resolved runtime configuration');
   logger.debug({ tools: toolRegistry.list().map((tool) => tool.name) }, 'Available tools');
+  logger.debug({ provider: provider.name }, 'Selected provider adapter');
 
   const steps = buildPlan(command, target);
   const summary: RunSummary = {
@@ -105,6 +126,18 @@ async function executeCommand(command: string, target?: string, rawOptions?: Par
   if (!config.json) {
     logger.info('Completed initial command bootstrap');
   }
+
+  if (command === 'run' && !config.dryRun) {
+    await toolRegistry.execute('git', {}, context);
+  }
+
+  const resultEnvelope: ResultEnvelope = {
+    runId: context.runId,
+    status: summary.status,
+    summary,
+    completedAt: new Date().toISOString(),
+  };
+  ResultEnvelopeSchema.parse(resultEnvelope);
 
   renderSummary(summary, config.json);
 }

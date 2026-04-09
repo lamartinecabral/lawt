@@ -1,8 +1,5 @@
-export interface ToolAdapter {
-  name: string;
-  description: string;
-  execute(args: Record<string, unknown>): Promise<unknown>;
-}
+import { ToolCallSchema } from './schemas';
+import type { RunContext, ToolAdapter, ToolCall, ToolRuntimeContext } from './types';
 
 export class ToolRegistry {
   private adapters = new Map<string, ToolAdapter>();
@@ -19,6 +16,44 @@ export class ToolRegistry {
   list(): ToolAdapter[] {
     return Array.from(this.adapters.values());
   }
+
+  async execute(
+    name: string,
+    args: Record<string, unknown>,
+    context: RunContext,
+  ): Promise<ToolCall> {
+    const adapter = this.adapters.get(name);
+    if (!adapter) {
+      throw new Error(`Tool adapter not found: ${name}`);
+    }
+
+    const startedAt = new Date().toISOString();
+    try {
+      const runtimeContext: ToolRuntimeContext = { runContext: context };
+      const output = await adapter.execute(args, runtimeContext);
+      const toolCall: ToolCall = {
+        name,
+        arguments: args,
+        startedAt,
+        endedAt: new Date().toISOString(),
+        success: true,
+        output,
+      };
+      ToolCallSchema.parse(toolCall);
+      return toolCall;
+    } catch (error) {
+      const toolCall: ToolCall = {
+        name,
+        arguments: args,
+        startedAt,
+        endedAt: new Date().toISOString(),
+        success: false,
+        error: error instanceof Error ? error.message : String(error),
+      };
+      ToolCallSchema.parse(toolCall);
+      return toolCall;
+    }
+  }
 }
 
 export function createBuiltinToolRegistry(): ToolRegistry {
@@ -28,7 +63,7 @@ export function createBuiltinToolRegistry(): ToolRegistry {
     name: 'file-read',
     description: 'Read a file from the repository workspace',
     execute: async ({ path }: Record<string, unknown>) => {
-      return { path, content: `Stubbed read of ${path}` };
+      return { path, content: `Stubbed read of ${String(path)}` };
     },
   });
 
@@ -36,7 +71,7 @@ export function createBuiltinToolRegistry(): ToolRegistry {
     name: 'shell',
     description: 'Run a shell command inside the workspace',
     execute: async ({ command }: Record<string, unknown>) => {
-      return { command, output: `Stubbed shell execution for ${command}` };
+      return { command, output: `Stubbed shell execution for ${String(command)}` };
     },
   });
 
