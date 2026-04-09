@@ -45,6 +45,8 @@ export const RunSummarySchema = z.object({
   status: z.enum(['ok', 'failed']),
   steps: z.array(PlanStepSchema),
   artifacts: z.array(z.string()).optional(),
+  commandsExecuted: z.array(z.string()).optional(),
+  filesChanged: z.array(z.string()).optional(),
 });
 
 export const CommandEnvelopeSchema = z.object({

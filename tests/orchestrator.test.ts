@@ -91,4 +91,26 @@ describe('orchestrator', () => {
       expect.arrayContaining([expect.stringContaining('analyze-task')]),
     );
   });
+
+  test('executePlanSteps appends a post-validation step for apply commands', async () => {
+    const steps = [
+      {
+        id: 'validate-plan',
+        title: 'Validate the supplied plan file',
+        description: 'Check the plan structure and contents before execution',
+        status: 'planned' as const,
+      },
+    ];
+    const registry = createStubRegistry({
+      name: 'run-tests',
+      description: 'stub validation',
+      execute: async () => ({ command: 'npm test', stdout: 'ok', stderr: '', exitCode: 0 }),
+    });
+
+    const summary = await executePlanSteps(steps, registry, stubContext, noopLogger, 'apply');
+
+    expect(summary.steps.some((step) => step.id === 'post-validation')).toBe(true);
+    expect(summary.commandsExecuted).toEqual(expect.arrayContaining(['npm test']));
+    expect(summary.filesChanged).toBeUndefined();
+  });
 });

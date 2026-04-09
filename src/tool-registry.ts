@@ -16,12 +16,14 @@ const exec = promisify(execCallback);
 function isDangerousShellCommand(command: string): boolean {
   const normalized = command.toLowerCase();
   return [
-    /rm\s+-rf\s+\//,
+    /rm\s+-rf\b/,
     /sudo\s+/,
     /shutdown\b/,
     /reboot\b/,
     /mkfs\b/,
     /dd\s+if=/,
+    /git\s+reset\s+--hard/,
+    /git\s+clean\s+-fdx?/,
     /:\(\)\s*\{\s*:\|\s*&\s*\};?\s*/,
   ].some((pattern) => pattern.test(normalized));
 }
@@ -106,22 +108,34 @@ export class ToolRegistry {
       return deniedCall;
     }
 
-    if (
-      policy.action === 'review' &&
-      !context.config.dryRun &&
-      context.config.approval !== 'auto'
-    ) {
-      const reviewCall: ToolCall = {
-        name,
-        arguments: args,
-        startedAt,
-        endedAt: new Date().toISOString(),
-        success: false,
-        error: `Tool call requires approval under ${context.config.approval} mode: ${policy.reason}`,
-      };
-      ToolCallSchema.parse(reviewCall);
-      context.memory?.storeToolCall(reviewCall);
-      return reviewCall;
+    if (policy.action === 'review' && !context.config.dryRun) {
+      if (context.config.approval === 'auto') {
+        // automatically approve low-risk review actions in trusted mode
+      } else if (context.config.approval === 'on-request') {
+        const reviewCall: ToolCall = {
+          name,
+          arguments: args,
+          startedAt,
+          endedAt: new Date().toISOString(),
+          success: false,
+          error: `Tool call requires approval under on-request mode: ${policy.reason}`,
+        };
+        ToolCallSchema.parse(reviewCall);
+        context.memory?.storeToolCall(reviewCall);
+        return reviewCall;
+      } else {
+        const deniedCall: ToolCall = {
+          name,
+          arguments: args,
+          startedAt,
+          endedAt: new Date().toISOString(),
+          success: false,
+          error: `Tool call denied under strict approval mode: ${policy.reason}`,
+        };
+        ToolCallSchema.parse(deniedCall);
+        context.memory?.storeToolCall(deniedCall);
+        return deniedCall;
+      }
     }
 
     try {

@@ -53,6 +53,8 @@ export interface RunSummary {
   status: 'ok' | 'failed';
   steps: PlanStep[];
   artifacts?: string[];
+  commandsExecuted?: string[];
+  filesChanged?: string[];
 }
 
 export interface CommandEnvelope {

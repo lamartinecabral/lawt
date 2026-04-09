@@ -151,6 +151,17 @@ export async function executePlanSteps(
   logger: Logger,
   command: string,
 ): Promise<RunSummary> {
+  if (command === 'apply' && !steps.some((step) => step.tool === 'run-tests')) {
+    steps.push({
+      id: 'post-validation',
+      title: 'Run validation checks after applying the plan',
+      description: 'Execute repository validation after the plan has been applied',
+      status: 'planned',
+      tool: 'run-tests',
+      inputs: { command: 'npm test' },
+    });
+  }
+
   let interrupted = false;
   const executedTools: string[] = [];
   const commandsExecuted: string[] = [];
@@ -237,6 +248,8 @@ export async function executePlanSteps(
       ...commandsExecuted.map((value) => `command:${value}`),
       ...filesChanged.map((value) => `file:${value}`),
     ],
+    commandsExecuted: commandsExecuted.length ? commandsExecuted : undefined,
+    filesChanged: filesChanged.length ? filesChanged : undefined,
   };
 
   return summary;

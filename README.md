@@ -72,8 +72,8 @@ Tracking implementation progress against the Implementation Plan:
 - [x] **Phase 4: Implement orchestrator planning and execution loop**
 - [x] **Phase 5: Implement CLI commands end to end**
 - [x] **Phase 6: Add memory store and artifact persistence**
-- [ ] **Phase 7: Safety and approval hardening**
-- [ ] **Phase 8: Validation loop and change summary quality**
+- [x] **Phase 7: Safety and approval hardening**
+- [x] **Phase 8: Validation loop and change summary quality**
 - [ ] **Phase 9: Testing and performance verification**
 - [ ] **Phase 10: Documentation and release readiness**
 

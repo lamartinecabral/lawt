@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import Database from 'better-sqlite3';
-import type { CommandEnvelope, ResultEnvelope, RunContext, ToolCall } from './types';
+import type { CommandEnvelope, ResultEnvelope, ToolCall } from './types';
 
 function collectToolCallsFromSummary(summary: ResultEnvelope): ToolCall[] {
   const toolCalls: ToolCall[] = [];

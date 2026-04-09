@@ -2,7 +2,7 @@ import fs from 'fs/promises';
 import path from 'path';
 import readline from 'readline';
 import { stdin as input, stdout as output } from 'node:process';
-import { Command } from 'commander';
+import { Command, Option } from 'commander';
 import { nanoid } from 'nanoid';
 import { createLogger } from './logger';
 import { loadConfig } from './config';
@@ -23,6 +23,7 @@ import type {
 } from './types';
 
 const COMMAND_VERSION = '0.1.0';
+const approvalModes = ['auto', 'on-request', 'strict'] as const;
 
 type PartialCliOptions = Partial<CliConfig> & {
   config?: string;
@@ -219,7 +220,7 @@ export async function runCli(argv: string[] = process.argv): Promise<void> {
     .option('--dry-run', 'prevent side effects')
     .option('--json', 'emit machine-readable JSON output')
     .option('--verbose', 'enable verbose logging')
-    .option('--approval <mode>', 'approval mode');
+    .addOption(new Option('--approval <mode>', 'approval mode').choices(approvalModes));
 
   program
     .command('run')

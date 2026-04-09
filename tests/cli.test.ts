@@ -236,6 +236,78 @@ test('shell tool requires approval in on-request mode', async () => {
   expect(toolCall.error).toContain('on-request');
 });
 
+test('shell tool denies review path in strict mode', async () => {
+  const registry = createBuiltinToolRegistry();
+
+  const toolCall = await registry.execute(
+    'shell',
+    { command: 'echo hello' },
+    {
+      runId: 'test-run',
+      sessionId: 'test-session',
+      startedAt: new Date().toISOString(),
+      config: {
+        cwd: process.cwd(),
+        dryRun: false,
+        json: false,
+        verbose: false,
+        approval: 'strict',
+      },
+    },
+  );
+
+  expect(toolCall.success).toBe(false);
+  expect(toolCall.error).toContain('denied under strict approval mode');
+});
+
+test('file-edit tool requires approval in on-request mode', async () => {
+  const registry = createBuiltinToolRegistry();
+
+  const toolCall = await registry.execute(
+    'file-edit',
+    { path: './phase7-test.txt', content: 'safe content' },
+    {
+      runId: 'test-run',
+      sessionId: 'test-session',
+      startedAt: new Date().toISOString(),
+      config: {
+        cwd: process.cwd(),
+        dryRun: false,
+        json: false,
+        verbose: false,
+        approval: 'on-request',
+      },
+    },
+  );
+
+  expect(toolCall.success).toBe(false);
+  expect(toolCall.error).toContain('requires approval');
+});
+
+test('file-edit tool denies review path in strict mode', async () => {
+  const registry = createBuiltinToolRegistry();
+
+  const toolCall = await registry.execute(
+    'file-edit',
+    { path: './phase7-test.txt', content: 'safe content' },
+    {
+      runId: 'test-run',
+      sessionId: 'test-session',
+      startedAt: new Date().toISOString(),
+      config: {
+        cwd: process.cwd(),
+        dryRun: false,
+        json: false,
+        verbose: false,
+        approval: 'strict',
+      },
+    },
+  );
+
+  expect(toolCall.success).toBe(false);
+  expect(toolCall.error).toContain('denied under strict approval mode');
+});
+
 test('shell tool auto-approves review path in auto mode', async () => {
   const registry = createBuiltinToolRegistry();
 
