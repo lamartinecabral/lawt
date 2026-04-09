@@ -1,12 +1,12 @@
 import type { Logger } from 'pino';
 import type {
   PlanStep,
-  RepositoryContext,
   RunContext,
   RunSummary,
   ToolCall,
   ToolRegistry,
 } from './types';
+import type { RepositoryContext } from './context';
 
 const MAX_RETRY = 1;
 
