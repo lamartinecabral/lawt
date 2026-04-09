@@ -7,6 +7,7 @@ export interface CliConfig {
   json: boolean;
   verbose: boolean;
   approval: ApprovalMode;
+  ignorePatterns?: string[];
 }
 
 export type PlanStepStatus =

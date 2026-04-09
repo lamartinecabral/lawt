@@ -78,8 +78,11 @@ test('agent CLI accepts --config and runs plan command with a specified config p
 test('builtin tool registry exposes core adapters and validates tool calls', async () => {
   const registry = createBuiltinToolRegistry();
   expect(registry.get('file-read')).toBeDefined();
+  expect(registry.get('file-search')).toBeDefined();
+  expect(registry.get('file-edit')).toBeDefined();
   expect(registry.get('shell')).toBeDefined();
   expect(registry.get('git')).toBeDefined();
+  expect(registry.get('run-tests')).toBeDefined();
 
   const toolCall = await registry.execute(
     'git',
@@ -102,6 +105,60 @@ test('builtin tool registry exposes core adapters and validates tool calls', asy
     name: 'git',
     success: true,
   });
+});
+
+test('buildRepositoryContext scans repository and honors ignore patterns', async () => {
+  const { buildRepositoryContext } = await import('../src/context');
+  const context = await buildRepositoryContext(process.cwd(), ['tests/fixtures']);
+
+  expect(context.root).toBe(process.cwd());
+  expect(context.files).toEqual(expect.any(Array));
+  expect(context.files.some((file) => file.relativePath === 'README.md')).toBe(true);
+  expect(context.files.every((file) => !file.relativePath.includes('tests/fixtures'))).toBe(true);
+});
+
+test('shell tool respects dry-run and rejects dangerous commands', async () => {
+  const registry = createBuiltinToolRegistry();
+
+  const safeCall = await registry.execute(
+    'shell',
+    { command: 'echo hello' },
+    {
+      runId: 'test-run',
+      sessionId: 'test-session',
+      startedAt: new Date().toISOString(),
+      config: {
+        cwd: process.cwd(),
+        dryRun: true,
+        json: false,
+        verbose: false,
+        approval: 'auto',
+      },
+    },
+  );
+
+  expect(safeCall.success).toBe(true);
+  expect(safeCall.output).toMatchObject({ dryRun: true });
+
+  const dangerousCall = await registry.execute(
+    'shell',
+    { command: 'rm -rf /' },
+    {
+      runId: 'test-run',
+      sessionId: 'test-session',
+      startedAt: new Date().toISOString(),
+      config: {
+        cwd: process.cwd(),
+        dryRun: false,
+        json: false,
+        verbose: false,
+        approval: 'auto',
+      },
+    },
+  );
+
+  expect(dangerousCall.success).toBe(false);
+  expect(dangerousCall.error).toContain('Policy denied');
 });
 
 test('local provider adapter returns a stubbed response', async () => {

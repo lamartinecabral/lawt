@@ -7,6 +7,7 @@ export const CliConfigSchema = z.object({
   json: z.boolean().optional().default(false),
   verbose: z.boolean().optional().default(false),
   approval: z.enum(['auto', 'on-request', 'strict']).optional().default('auto'),
+  ignorePatterns: z.array(z.string()).optional().default([]),
 });
 
 export const PlanStepSchema = z.object({

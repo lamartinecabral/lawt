@@ -4,6 +4,7 @@ import { createLogger } from './logger';
 import { loadConfig } from './config';
 import { createBuiltinToolRegistry } from './tool-registry';
 import { localProviderAdapter } from './provider';
+import { buildRepositoryContext } from './context';
 import { CommandEnvelopeSchema, ResultEnvelopeSchema } from './schemas';
 import type {
   CliConfig,
@@ -94,12 +95,18 @@ async function executeCommand(command: string, target?: string, rawOptions?: Par
   const logger = createLogger(config);
   const toolRegistry = createBuiltinToolRegistry();
   const provider = localProviderAdapter;
+  const repositoryContext = await buildRepositoryContext(config.cwd, config.ignorePatterns ?? []);
   const context: RunContext = {
     runId: nanoid(),
     sessionId: nanoid(),
     startedAt: new Date().toISOString(),
     config,
   };
+
+  logger.debug(
+    { root: repositoryContext.root, fileCount: repositoryContext.files.length },
+    'Loaded repository context',
+  );
 
   const commandEnvelope: CommandEnvelope = {
     command,
@@ -133,6 +140,7 @@ async function executeCommand(command: string, target?: string, rawOptions?: Par
     metadata: {
       dryRun: config.dryRun,
       approval: config.approval,
+      workspaceFileCount: repositoryContext.files.length,
     },
   };
 

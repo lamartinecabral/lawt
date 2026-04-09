@@ -16,6 +16,7 @@ export async function loadConfig(cliOptions: Partial<CliConfig>): Promise<CliCon
     ...fileConfig,
     ...cliOptions,
     cwd: cliOptions.cwd ?? fileConfig.cwd ?? process.cwd(),
+    ignorePatterns: cliOptions.ignorePatterns ?? fileConfig.ignorePatterns ?? [],
   });
 
   if (!parseResult.success) {
@@ -33,5 +34,6 @@ export async function loadConfig(cliOptions: Partial<CliConfig>): Promise<CliCon
     json: config.json,
     verbose: config.verbose,
     approval: config.approval as ApprovalMode,
+    ignorePatterns: config.ignorePatterns ?? [],
   };
 }
