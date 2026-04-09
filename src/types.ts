@@ -89,11 +89,21 @@ export interface ModelResponse {
   metadata?: Record<string, unknown>;
 }
 
+export interface SessionMemory {
+  runId: string;
+  createdAt: string;
+  storeToolCall(toolCall: ToolCall): void;
+  getToolCalls(): ToolCall[];
+  set(key: string, value: unknown): void;
+  get(key: string): unknown;
+}
+
 export interface RunContext {
   runId: string;
   sessionId: string;
   startedAt: string;
   config: CliConfig;
+  memory?: SessionMemory;
 }
 
 export interface ProviderAdapter {

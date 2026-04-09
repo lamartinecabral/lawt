@@ -11,6 +11,7 @@ import { localProviderAdapter } from './provider';
 import { buildRepositoryContext } from './context';
 import { createDeterministicPlan, executePlanSteps } from './orchestrator';
 import { CommandEnvelopeSchema, ResultEnvelopeSchema, PlanStepSchema } from './schemas';
+import { MemoryStore, SessionMemory } from './memory';
 import type {
   CliConfig,
   PlanStep,
@@ -56,6 +57,7 @@ async function executeCommand(command: string, target?: string, rawOptions?: Par
   const logger = createLogger(config);
   const toolRegistry = createBuiltinToolRegistry();
   const provider = localProviderAdapter;
+  const memoryStore = MemoryStore.open(config.cwd);
   const repositoryContext = await buildRepositoryContext(config.cwd, config.ignorePatterns ?? []);
   const context: RunContext = {
     runId: nanoid(),
@@ -63,6 +65,8 @@ async function executeCommand(command: string, target?: string, rawOptions?: Par
     startedAt: new Date().toISOString(),
     config,
   };
+  const sessionMemory = new SessionMemory(context.runId);
+  context.memory = sessionMemory;
 
   logger.debug(
     { root: repositoryContext.root, fileCount: repositoryContext.files.length },
@@ -86,6 +90,18 @@ async function executeCommand(command: string, target?: string, rawOptions?: Par
   logger.debug({ config }, 'Resolved runtime configuration');
   logger.debug({ tools: toolRegistry.list().map((tool) => tool.name) }, 'Available tools');
   logger.debug({ provider: provider.name }, 'Selected provider adapter');
+
+  if (command === 'replay') {
+    const replayTarget = String(target ?? '');
+    const recorded = memoryStore.loadRun(replayTarget);
+    if (!recorded) {
+      throw new Error(`No recorded run found for id ${replayTarget}`);
+    }
+
+    logger.info({ replayTarget }, 'Replaying recorded run');
+    renderSummary(recorded.summary, config.json);
+    return;
+  }
 
   let steps: PlanStep[] = [];
   let summary: RunSummary;
@@ -136,6 +152,7 @@ async function executeCommand(command: string, target?: string, rawOptions?: Par
     completedAt: new Date().toISOString(),
   };
   ResultEnvelopeSchema.parse(resultEnvelope);
+  memoryStore.persistRun(commandEnvelope, resultEnvelope, sessionMemory);
 
   renderSummary(summary, config.json);
 }

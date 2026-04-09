@@ -102,6 +102,7 @@ export class ToolRegistry {
         error: `Policy denied tool call: ${policy.reason}`,
       };
       ToolCallSchema.parse(deniedCall);
+      context.memory?.storeToolCall(deniedCall);
       return deniedCall;
     }
 
@@ -119,6 +120,7 @@ export class ToolRegistry {
         error: `Tool call requires approval under ${context.config.approval} mode: ${policy.reason}`,
       };
       ToolCallSchema.parse(reviewCall);
+      context.memory?.storeToolCall(reviewCall);
       return reviewCall;
     }
 
@@ -134,6 +136,7 @@ export class ToolRegistry {
         output,
       };
       ToolCallSchema.parse(toolCall);
+      context.memory?.storeToolCall(toolCall);
       return toolCall;
     } catch (error) {
       const toolCall: ToolCall = {
@@ -145,6 +148,7 @@ export class ToolRegistry {
         error: error instanceof Error ? error.message : String(error),
       };
       ToolCallSchema.parse(toolCall);
+      context.memory?.storeToolCall(toolCall);
       return toolCall;
     }
   }

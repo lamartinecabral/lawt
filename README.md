@@ -71,7 +71,7 @@ Tracking implementation progress against the Implementation Plan:
 - [x] **Phase 3: Implement context engine and tool runtime**
 - [x] **Phase 4: Implement orchestrator planning and execution loop**
 - [x] **Phase 5: Implement CLI commands end to end**
-- [ ] **Phase 6: Add memory store and artifact persistence**
+- [x] **Phase 6: Add memory store and artifact persistence**
 - [ ] **Phase 7: Safety and approval hardening**
 - [ ] **Phase 8: Validation loop and change summary quality**
 - [ ] **Phase 9: Testing and performance verification**
@@ -80,5 +80,6 @@ Tracking implementation progress against the Implementation Plan:
 ## Notes
 
 - This repo currently contains only the spec and minimal scaffold.
+- Run metadata, artifacts, and replay history are now persisted under the workspace directory in `.minicode/runstore.sqlite`.
 - The local model provider and Ollama integration are intentionally left to the user.
 - Future work should implement the CLI, tool runtime, session memory, and validation hooks described in the spec.
