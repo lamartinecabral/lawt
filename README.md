@@ -100,9 +100,9 @@ Tracking implementation progress against the Implementation Plan:
 - [x] **Phase 1: Configuration and Validation** — add `.env` loading, extend config schema, validate `OPENAI_BASE_URL` and `OPENAI_API_KEY`.
 - [x] **Phase 2: Provider Adapter Implementation** — implement OpenAI-compatible adapter and map responses to existing model response types.
 - [x] **Phase 3: CLI Wiring and Adapter Selection** — wire the new adapter into `agent run`, `plan`, and `chat` flows.
-- [ ] **Phase 4: Security, Logging, and Persistence Hardening** — redact secrets from logs and avoid persisting API keys.
-- [ ] **Phase 5: Test Coverage** — add unit and integration tests for config and provider behavior.
-- [ ] **Phase 6: Documentation & Developer Experience** — add `.env.example` and README setup docs for providers.
+- [x] **Phase 4: Security, Logging, and Persistence Hardening** — redact secrets from logs and avoid persisting API keys.
+- [x] **Phase 5: Test Coverage** — add unit and integration tests for config and provider behavior.
+- [x] **Phase 6: Documentation & Developer Experience** — add `.env.example` and README setup docs for providers.
 
 ## Notes
 

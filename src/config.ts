@@ -1,11 +1,15 @@
 import { cosmiconfig } from 'cosmiconfig';
 import { z } from 'zod';
+import * as dotenv from 'dotenv';
 import type { CliConfig, ApprovalMode } from './types';
 import { CliConfigSchema } from './schemas';
 
 type ConfigurationInput = z.input<typeof CliConfigSchema>;
 
 export async function loadConfig(cliOptions: Partial<CliConfig>): Promise<CliConfig> {
+  // Load environment variables from .env file before resolving config
+  dotenv.config();
+
   const explorer = cosmiconfig('minicode');
   const searchResult = cliOptions.configPath
     ? await explorer.load(cliOptions.configPath)
@@ -25,6 +29,10 @@ export async function loadConfig(cliOptions: Partial<CliConfig>): Promise<CliCon
         baseUrl:
           process.env.OPENAI_BASE_URL ?? (fileConfig as any)?.provider?.openai?.baseUrl,
         apiKey: process.env.OPENAI_API_KEY ?? (fileConfig as any)?.provider?.openai?.apiKey,
+        model: process.env.OPENAI_MODEL ?? (fileConfig as any)?.provider?.openai?.model,
+        timeoutMs: process.env.OPENAI_TIMEOUT_MS ?? (fileConfig as any)?.provider?.openai?.timeoutMs,
+        requestsPerMinute: process.env.OPENAI_REQUESTS_PER_MINUTE ?? (fileConfig as any)?.provider?.openai?.requestsPerMinute,
+        reasoningEffort: process.env.OPENAI_REASONING_EFFORT ?? (fileConfig as any)?.provider?.openai?.reasoningEffort,
       },
     },
   });

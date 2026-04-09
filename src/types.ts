@@ -12,6 +12,10 @@ export interface CliConfig {
     openai?: {
       baseUrl?: string;
       apiKey?: string;
+      model?: string;
+      timeoutMs?: number;
+      requestsPerMinute?: number;
+      reasoningEffort?: 'default' | 'none' | 'low' | 'medium' | 'high';
     };
   };
 }

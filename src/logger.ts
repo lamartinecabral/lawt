@@ -4,6 +4,12 @@ import type { CliConfig } from './types';
 export function createLogger(config: CliConfig) {
   const options: pino.LoggerOptions = {
     level: config.verbose ? 'debug' : 'info',
+    redact: [
+      'config.provider.openai.apiKey',
+      'provider.openai.apiKey',
+      'apiKey',
+      '*.apiKey'
+    ],
   };
 
   if (!config.json) {

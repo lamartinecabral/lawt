@@ -103,14 +103,22 @@ export class MemoryStore {
     resultEnvelope: ResultEnvelope,
     sessionMemory?: SessionMemory,
   ): void {
+    // Redact sensitive configuration before persisting
+    const safeConfig = JSON.parse(JSON.stringify(commandEnvelope.config));
+    if (safeConfig.provider?.openai?.apiKey) {
+      safeConfig.provider.openai.apiKey = '***REDACTED***';
+    }
+
+    const safeCommandEnvelope = { ...commandEnvelope, config: safeConfig };
+
     const runId = commandEnvelope.runId;
     const command = commandEnvelope.command;
     const target = commandEnvelope.target ?? null;
     const status = resultEnvelope.status;
     const createdAt = commandEnvelope.requestedAt;
     const completedAt = new Date().toISOString();
-    const configJson = JSON.stringify(commandEnvelope.config);
-    const commandJson = JSON.stringify(commandEnvelope);
+    const configJson = JSON.stringify(safeConfig);
+    const commandJson = JSON.stringify(safeCommandEnvelope);
     const resultJson = JSON.stringify(resultEnvelope);
 
     const insertRun = this.db.prepare(

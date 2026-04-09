@@ -9,31 +9,52 @@ export const openaiProviderAdapter: ProviderAdapter = {
     const apiKey = openaiCfg?.apiKey;
 
     if (!apiKey) {
-      throw new Error('OpenAI API key not configured (OPENAI_API_KEY)');
+      throw new Error('OPENAI_API_KEY is required');
     }
 
-    const model = (request.metadata as any)?.model ?? 'gpt-3.5-turbo';
-    const payload = {
+    const model = (request.metadata as any)?.model ?? openaiCfg?.model ?? 'gpt-4o-mini';
+    const timeoutMs = openaiCfg?.timeoutMs ?? 60000;
+    const reasoningEffort = openaiCfg?.reasoningEffort ?? 'medium';
+
+    const payload: any = {
       model,
       messages: [{ role: 'user', content: request.prompt }],
       temperature: 0.2,
       max_tokens: 1500,
     };
 
+    if (reasoningEffort && reasoningEffort !== 'none' && reasoningEffort !== 'default') {
+      payload.reasoning_effort = reasoningEffort;
+    }
+
     const fetchImpl = (globalThis as any).fetch;
     if (!fetchImpl) {
       throw new Error('Fetch API not available in runtime');
     }
 
+    const abortController = new AbortController();
+    const timeoutId = setTimeout(() => abortController.abort(), timeoutMs);
+
     const url = `${baseUrl.replace(/\/$/, '')}/v1/chat/completions`;
-    const res = await fetchImpl(url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify(payload),
-    });
+    let res: Response;
+    try {
+      res = await fetchImpl(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${apiKey}`,
+        },
+        body: JSON.stringify(payload),
+        signal: abortController.signal,
+      });
+    } catch (e: any) {
+      if (e.name === 'AbortError') {
+        throw new Error(`OpenAI API request timed out after ${timeoutMs}ms`);
+      }
+      throw new Error(`OpenAI API network error: ${e.message}`);
+    } finally {
+      clearTimeout(timeoutId);
+    }
 
     let json: any;
     try {

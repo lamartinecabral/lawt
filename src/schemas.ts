@@ -12,8 +12,12 @@ export const CliConfigSchema = z.object({
     .object({
       openai: z
         .object({
-          baseUrl: z.string().url().optional(),
-          apiKey: z.string().optional(),
+          baseUrl: z.string().url('OPENAI_BASE_URL must be a valid URL').optional(),
+          apiKey: z.string().min(1, "OPENAI_API_KEY cannot be empty").optional(),
+          model: z.string().optional().default('gpt-4o-mini'),
+          timeoutMs: z.coerce.number().optional().default(60000),
+          requestsPerMinute: z.coerce.number().optional().default(15),
+          reasoningEffort: z.enum(['default', 'none', 'low', 'medium', 'high']).optional().default('medium'),
         })
         .optional(),
     })

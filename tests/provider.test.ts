@@ -36,7 +36,7 @@ describe('OpenAI provider adapter', () => {
   it('throws when API key not configured', async () => {
     const ctx = { ...baseContext, config: { ...baseConfig, provider: { openai: {} } } } as RunContext;
     await expect(openaiProviderAdapter.execute({ prompt: 'hi' }, ctx)).rejects.toThrow(
-      /OpenAI API key not configured/
+      /OPENAI_API_KEY is required/
     );
   });
 
@@ -59,15 +59,14 @@ describe('OpenAI provider adapter', () => {
     expect(res.metadata?.model).toBeDefined();
   });
 
-  it('selectProviderAdapter returns openai when apiKey present', () => {
-    const cfg = { ...baseConfig, provider: { openai: { apiKey: 'sk-abc' } } } as CliConfig;
+  it('selectProviderAdapter returns openai when apiKey and baseUrl present', () => {
+    const cfg = { ...baseConfig, provider: { openai: { apiKey: 'sk-abc', baseUrl: 'https://api.openai.com' } } } as CliConfig;
     const adapter = selectProviderAdapter(cfg);
     expect(adapter.name).toBe('openai');
   });
 
-  it('selectProviderAdapter returns local fallback when no apiKey', () => {
+  it('selectProviderAdapter throws when no apiKey or baseUrl is present', () => {
     const cfg = { ...baseConfig, provider: {} } as CliConfig;
-    const adapter = selectProviderAdapter(cfg);
-    expect(adapter.name).toBe('local-model');
+    expect(() => selectProviderAdapter(cfg)).toThrowError(/OPENAI_API_KEY is required/);
   });
 });
