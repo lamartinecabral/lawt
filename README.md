@@ -78,6 +78,7 @@ docs/
 
 - `docs/specification.md` — full specification for the Node.js CLI coding agent
 - `docs/implementation-plan.md` — step-by-step roadmap for building the agent
+ - `docs/openai-provider-integration-plan.md` — provider integration plan for OpenAI-compatible adapters and environment-driven configuration
 
 ## Project Status
 
@@ -93,6 +94,15 @@ Tracking implementation progress against the Implementation Plan:
 - [x] **Phase 8: Validation loop and change summary quality**
 - [x] **Phase 9: Testing and performance verification**
 - [x] **Phase 10: Documentation and release readiness**
+
+**Provider Integration Plan**
+
+- [ ] **Phase 1: Configuration and Validation** — add `.env` loading, extend config schema, validate `OPENAI_BASE_URL` and `OPENAI_API_KEY`.
+- [ ] **Phase 2: Provider Adapter Implementation** — implement OpenAI-compatible adapter and map responses to existing model response types.
+- [ ] **Phase 3: CLI Wiring and Adapter Selection** — wire the new adapter into `agent run`, `plan`, and `chat` flows.
+- [ ] **Phase 4: Security, Logging, and Persistence Hardening** — redact secrets from logs and avoid persisting API keys.
+- [ ] **Phase 5: Test Coverage** — add unit and integration tests for config and provider behavior.
+- [ ] **Phase 6: Documentation & Developer Experience** — add `.env.example` and README setup docs for providers.
 
 ## Notes
 
