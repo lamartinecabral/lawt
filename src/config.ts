@@ -20,6 +20,13 @@ export async function loadConfig(cliOptions: Partial<CliConfig>): Promise<CliCon
     verbose: cliOptions.verbose !== undefined ? cliOptions.verbose : fileConfig.verbose,
     approval: cliOptions.approval ?? fileConfig.approval,
     ignorePatterns: cliOptions.ignorePatterns ?? fileConfig.ignorePatterns,
+    provider: {
+      openai: {
+        baseUrl:
+          process.env.OPENAI_BASE_URL ?? (fileConfig as any)?.provider?.openai?.baseUrl,
+        apiKey: process.env.OPENAI_API_KEY ?? (fileConfig as any)?.provider?.openai?.apiKey,
+      },
+    },
   });
 
   if (!parseResult.success) {
@@ -38,5 +45,6 @@ export async function loadConfig(cliOptions: Partial<CliConfig>): Promise<CliCon
     verbose: config.verbose,
     approval: config.approval as ApprovalMode,
     ignorePatterns: config.ignorePatterns ?? [],
+    provider: config.provider ?? {},
   };
 }

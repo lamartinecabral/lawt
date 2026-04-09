@@ -97,7 +97,7 @@ Tracking implementation progress against the Implementation Plan:
 
 **Provider Integration Plan**
 
-- [ ] **Phase 1: Configuration and Validation** — add `.env` loading, extend config schema, validate `OPENAI_BASE_URL` and `OPENAI_API_KEY`.
+- [x] **Phase 1: Configuration and Validation** — add `.env` loading, extend config schema, validate `OPENAI_BASE_URL` and `OPENAI_API_KEY`.
 - [ ] **Phase 2: Provider Adapter Implementation** — implement OpenAI-compatible adapter and map responses to existing model response types.
 - [ ] **Phase 3: CLI Wiring and Adapter Selection** — wire the new adapter into `agent run`, `plan`, and `chat` flows.
 - [ ] **Phase 4: Security, Logging, and Persistence Hardening** — redact secrets from logs and avoid persisting API keys.

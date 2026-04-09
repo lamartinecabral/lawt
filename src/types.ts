@@ -8,6 +8,12 @@ export interface CliConfig {
   verbose: boolean;
   approval: ApprovalMode;
   ignorePatterns?: string[];
+  provider?: {
+    openai?: {
+      baseUrl?: string;
+      apiKey?: string;
+    };
+  };
 }
 
 export type PlanStepStatus =

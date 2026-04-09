@@ -8,6 +8,16 @@ export const CliConfigSchema = z.object({
   verbose: z.boolean().optional().default(false),
   approval: z.enum(['auto', 'on-request', 'strict']).optional().default('auto'),
   ignorePatterns: z.array(z.string()).optional().default([]),
+  provider: z
+    .object({
+      openai: z
+        .object({
+          baseUrl: z.string().url().optional(),
+          apiKey: z.string().optional(),
+        })
+        .optional(),
+    })
+    .optional(),
 });
 
 export const PlanStepSchema = z.object({
