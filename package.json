@@ -12,11 +12,12 @@
     "clean": "rimraf dist",
     "dev": "npm run build -- --watch",
     "lint": "eslint \"src/**/*.ts\" \"tests/**/*.ts\"",
+    "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "coverage": "vitest run --coverage",
     "test:watch": "vitest",
     "format": "prettier --write \"src/**/*.ts\" \"tests/**/*.ts\"",
-    "check": "npm run lint && npm run test && npm run build",
+    "check": "npm run lint && npm run typecheck && npm run test && npm run build",
     "release": "npm run check && npm version patch -m \"chore(release): %s\"",
     "start": "npm run build && node dist/index.js"
   },
@@ -37,11 +38,12 @@
     "@types/node": "^24.0.0",
     "@typescript-eslint/eslint-plugin": "8.58.1",
     "@typescript-eslint/parser": "8.58.1",
+    "@vitest/coverage-v8": "4.1.4",
     "eslint": "10.2.0",
     "prettier": "3.8.1",
     "rimraf": "6.1.3",
     "tsup": "8.5.1",
     "typescript": "6.0.2",
-    "vitest": "4.1.3"
+    "vitest": "4.1.4"
   }
 }

@@ -2,13 +2,14 @@ import { describe, expect, test } from 'vitest';
 import { createDeterministicPlan, executePlanSteps } from '../src/orchestrator';
 import { buildRepositoryContext } from '../src/context';
 import type { RunContext, ToolAdapter, ToolRegistry } from '../src/types';
+import type { Logger } from 'pino';
 
 const noopLogger = {
   info: () => undefined,
   warn: () => undefined,
   error: () => undefined,
   debug: () => undefined,
-} as const;
+} as unknown as Logger;
 
 const stubContext: RunContext = {
   runId: 'performance-test',

@@ -161,7 +161,7 @@ export class MemoryStore {
   public loadRun(runId: string): ResultEnvelope | null {
     const row = this.db
       .prepare('SELECT result_envelope_json FROM runs WHERE run_id = ?;')
-      .get(runId);
+      .get(runId) as { result_envelope_json: string } | undefined;
     if (!row) {
       return null;
     }

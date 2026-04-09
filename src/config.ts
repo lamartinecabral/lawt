@@ -23,15 +23,15 @@ export async function loadConfig(cliOptions: Partial<CliConfig>): Promise<CliCon
   });
 
   if (!parseResult.success) {
-    const details = parseResult.error.errors
-      .map((error) => `${error.path.join('.')}: ${error.message}`)
+    const details = parseResult.error.issues
+      .map((issue) => `${issue.path.join('.')}: ${issue.message}`)
       .join('; ');
     throw new Error(`Invalid configuration: ${details}`);
   }
 
   const config = parseResult.data;
   return {
-    cwd: config.cwd,
+    cwd: config.cwd ?? process.cwd(),
     configPath: cliOptions.configPath ?? fileConfig.configPath,
     dryRun: config.dryRun,
     json: config.json,
