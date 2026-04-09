@@ -1,3 +1,7 @@
+import fs from 'fs/promises';
+import path from 'path';
+import readline from 'readline';
+import { stdin as input, stdout as output } from 'node:process';
 import { Command } from 'commander';
 import { nanoid } from 'nanoid';
 import { createLogger } from './logger';
@@ -5,13 +9,15 @@ import { loadConfig } from './config';
 import { createBuiltinToolRegistry } from './tool-registry';
 import { localProviderAdapter } from './provider';
 import { buildRepositoryContext } from './context';
-import { CommandEnvelopeSchema, ResultEnvelopeSchema } from './schemas';
+import { createDeterministicPlan, executePlanSteps } from './orchestrator';
+import { CommandEnvelopeSchema, ResultEnvelopeSchema, PlanStepSchema } from './schemas';
 import type {
   CliConfig,
   PlanStep,
   RunSummary,
   CommandEnvelope,
   ResultEnvelope,
+  ProviderAdapter,
   RunContext,
 } from './types';
 
@@ -26,46 +32,6 @@ function resolveCliOptions(options: PartialCliOptions): Partial<CliConfig> {
     ...options,
     configPath: options.config ?? options.configPath,
   };
-}
-
-function buildPlan(command: string, target?: string): PlanStep[] {
-  const now = Date.now().toString();
-  if (command === 'plan') {
-    return [
-      {
-        id: `plan-${now}`,
-        title: 'Generate a plan for the requested task',
-        description: `Create a high-level plan for: ${target ?? 'n/a'}`,
-        status: 'not-started',
-      },
-    ];
-  }
-
-  if (command === 'run') {
-    return [
-      {
-        id: `plan-${now}`,
-        title: 'Analyze the task and create an execution plan',
-        description: `Analyze and plan: ${target ?? 'n/a'}`,
-        status: 'not-started',
-      },
-      {
-        id: `execute-${now}`,
-        title: 'Execute the generated plan',
-        description: 'Execute the step sequence using tool adapters',
-        status: 'planned',
-      },
-    ];
-  }
-
-  return [
-    {
-      id: `command-${now}`,
-      title: `Prepare to run the ${command} command`,
-      description: `${command} target: ${target ?? 'n/a'}`,
-      status: 'planned',
-    },
-  ];
 }
 
 function renderSummary(summary: RunSummary, jsonOutput: boolean): void {
@@ -121,13 +87,17 @@ async function executeCommand(command: string, target?: string, rawOptions?: Par
   logger.debug({ tools: toolRegistry.list().map((tool) => tool.name) }, 'Available tools');
   logger.debug({ provider: provider.name }, 'Selected provider adapter');
 
-  const steps = buildPlan(command, target);
-  const summary: RunSummary = {
-    runId: context.runId,
-    command: command === 'chat' ? 'chat session' : command,
-    status: 'ok',
-    steps,
-  };
+  let steps: PlanStep[] = [];
+  let summary: RunSummary;
+
+  if (command === 'apply') {
+    const planFilePath = path.resolve(config.cwd, target ?? '');
+    const fileContents = await fs.readFile(planFilePath, 'utf8');
+    const parsed = JSON.parse(fileContents) as PlanStep[];
+    steps = parsed.map((step) => PlanStepSchema.parse(step));
+  } else {
+    steps = await createDeterministicPlan(command, target, repositoryContext, context);
+  }
 
   const modelRequest = {
     prompt: `Create a plan for command=${command} target=${target ?? 'n/a'}`,
@@ -147,18 +117,16 @@ async function executeCommand(command: string, target?: string, rawOptions?: Par
       summary: providerResponse.text,
       metadata: providerResponse.metadata,
     };
-    steps[0].status = 'completed';
   }
 
   if (!config.json) {
     logger.info('Completed initial command bootstrap');
   }
 
-  if (command === 'run' && !config.dryRun) {
-    await toolRegistry.execute('git', {}, context);
-    if (steps.length > 1) {
-      steps[1].status = 'completed';
-    }
+  if (command === 'chat') {
+    summary = await runChatSession(provider, context, logger);
+  } else {
+    summary = await executePlanSteps(steps, toolRegistry, context, logger, command);
   }
 
   const resultEnvelope: ResultEnvelope = {
@@ -170,6 +138,60 @@ async function executeCommand(command: string, target?: string, rawOptions?: Par
   ResultEnvelopeSchema.parse(resultEnvelope);
 
   renderSummary(summary, config.json);
+}
+
+async function runChatSession(
+  provider: ProviderAdapter,
+  context: RunContext,
+  logger: ReturnType<typeof createLogger>,
+): Promise<RunSummary> {
+  const rl = readline.createInterface({ input, output, terminal: true });
+  const steps: PlanStep[] = [];
+  logger.info('Starting chat session. Type `exit` or `quit` to end.');
+
+  async function ask(question: string): Promise<string> {
+    return new Promise((resolve) => {
+      rl.question(question, resolve);
+    });
+  }
+
+  while (true) {
+    const userMessage = await ask('> ');
+    const normalized = userMessage.trim();
+    if (!normalized || normalized.toLowerCase() === 'exit' || normalized.toLowerCase() === 'quit') {
+      break;
+    }
+
+    const response = await provider.execute(
+      {
+        prompt: normalized,
+        metadata: { chat: true, dryRun: context.config.dryRun },
+      },
+      context,
+    );
+
+    console.log(response.text);
+    steps.push({
+      id: `chat-${Date.now()}`,
+      title: 'Chat interaction',
+      description: 'Interactive chat message exchange with provider',
+      status: 'completed',
+      result: { userMessage: normalized, response: response.text },
+    });
+  }
+
+  rl.close();
+
+  return {
+    runId: context.runId,
+    command: 'chat session',
+    status: 'ok',
+    steps,
+    artifacts: [
+      `chat-messages:${steps.length}`,
+      `startedAt:${context.startedAt}`,
+    ],
+  };
 }
 
 export async function runCli(argv: string[] = process.argv): Promise<void> {
