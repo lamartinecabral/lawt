@@ -1,8 +1,8 @@
-# OpenAI-Compatible Provider Integration Plan
+# OpenAI-Protocol Compatible Provider Integration Plan
 
 ## Objective
 
-Replace the current stub provider with a production-ready OpenAI-compatible provider integration that is configured primarily through environment variables (for example, from a `.env` file), with required `baseURL` and `apiKey` values.
+Replace the current stub provider with a production-ready provider integration compatible with the OpenAI Chat Completions API (supporting OpenAI, Ollama, LocalAI, etc.). This is configured primarily through environment variables with required `baseURL` and `apiKey` values.
 
 ## Current State
 

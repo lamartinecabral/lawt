@@ -1,5 +1,5 @@
 import type { ModelRequest, ModelResponse, ProviderAdapter, RunContext, CliConfig } from './types';
-import { openaiProviderAdapter } from './provider/openai';
+import { openaiCompatibleProviderAdapter } from './provider/openai';
 
 export const localProviderAdapter: ProviderAdapter = {
   name: 'local-model',
@@ -17,7 +17,7 @@ export const localProviderAdapter: ProviderAdapter = {
 
 export function selectProviderAdapter(config: CliConfig): ProviderAdapter {
   if (config.provider?.openai?.apiKey && config.provider?.openai?.baseUrl) {
-    return openaiProviderAdapter;
+    return openaiCompatibleProviderAdapter;
   }
   // The plan indicates that the OpenAI-compatible provider should replace the stub behavior
   // if env vars are present, but if we want to fail fast when using the CLI without required env vars,
@@ -28,5 +28,5 @@ export function selectProviderAdapter(config: CliConfig): ProviderAdapter {
   if (!config.provider?.openai?.baseUrl) {
     throw new Error('OPENAI_BASE_URL is required');
   }
-  return openaiProviderAdapter;
+  return openaiCompatibleProviderAdapter;
 }

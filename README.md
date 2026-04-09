@@ -113,11 +113,11 @@ Tracking implementation progress against the Implementation Plan:
 
 ## Provider Setup (Quickstart)
 
-- Copy the example environment file and set your OpenAI credentials:
+- Copy the example environment file and set your provider credentials (supports OpenAI, Ollama, LocalAI, etc.):
 
 ```bash
 cp .env.example .env
-# Edit .env and set OPENAI_API_KEY (and OPENAI_BASE_URL if different)
+# Edit .env and set OPENAI_API_KEY and OPENAI_BASE_URL
 ```
 
 - Build and run the CLI (examples):

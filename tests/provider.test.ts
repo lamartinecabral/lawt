@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { openaiProviderAdapter } from '../src/provider/openai';
+import { openaiCompatibleProviderAdapter } from '../src/provider/openai';
 import { selectProviderAdapter } from '../src/provider';
 import type { CliConfig, RunContext } from '../src/types';
 
@@ -21,7 +21,7 @@ const baseContext: RunContext = {
   memory: undefined as unknown as any,
 };
 
-describe('OpenAI provider adapter', () => {
+describe('OpenAI-compatible provider adapter', () => {
   let originalFetch: any;
 
   beforeEach(() => {
@@ -35,7 +35,7 @@ describe('OpenAI provider adapter', () => {
 
   it('throws when API key not configured', async () => {
     const ctx = { ...baseContext, config: { ...baseConfig, provider: { openai: {} } } } as RunContext;
-    await expect(openaiProviderAdapter.execute({ prompt: 'hi' }, ctx)).rejects.toThrow(
+    await expect(openaiCompatibleProviderAdapter.execute({ prompt: 'hi' }, ctx)).rejects.toThrow(
       /OPENAI_API_KEY is required/
     );
   });
@@ -53,16 +53,16 @@ describe('OpenAI provider adapter', () => {
       config: { ...baseConfig, provider: { openai: { apiKey: 'sk-test', baseUrl: 'https://api.openai.com' } } },
     } as RunContext;
 
-    const res = await openaiProviderAdapter.execute({ prompt: 'say hi' }, ctx);
+    const res = await openaiCompatibleProviderAdapter.execute({ prompt: 'say hi' }, ctx);
     expect(res.text).toContain('Hello from model');
-    expect(res.metadata?.provider).toBe('openai');
+    expect(res.metadata?.provider).toBe('openai-compatible');
     expect(res.metadata?.model).toBeDefined();
   });
 
-  it('selectProviderAdapter returns openai when apiKey and baseUrl present', () => {
+  it('selectProviderAdapter returns openai-compatible adapter when apiKey and baseUrl present', () => {
     const cfg = { ...baseConfig, provider: { openai: { apiKey: 'sk-abc', baseUrl: 'https://api.openai.com' } } } as CliConfig;
     const adapter = selectProviderAdapter(cfg);
-    expect(adapter.name).toBe('openai');
+    expect(adapter.name).toBe('openai-compatible');
   });
 
   it('selectProviderAdapter throws when no apiKey or baseUrl is present', () => {

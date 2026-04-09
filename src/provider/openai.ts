@@ -1,7 +1,7 @@
 import type { ProviderAdapter, ModelRequest, RunContext } from '../types';
 
-export const openaiProviderAdapter: ProviderAdapter = {
-  name: 'openai',
+export const openaiCompatibleProviderAdapter: ProviderAdapter = {
+  name: 'openai-compatible',
   description: 'OpenAI-compatible provider adapter',
   async execute(request: ModelRequest, context: RunContext) {
     const openaiCfg = context.config.provider?.openai;
@@ -49,9 +49,9 @@ export const openaiProviderAdapter: ProviderAdapter = {
       });
     } catch (e: any) {
       if (e.name === 'AbortError') {
-        throw new Error(`OpenAI API request timed out after ${timeoutMs}ms`);
+        throw new Error(`Provider API request timed out after ${timeoutMs}ms`);
       }
-      throw new Error(`OpenAI API network error: ${e.message}`);
+      throw new Error(`Provider API network error: ${e.message}`);
     } finally {
       clearTimeout(timeoutId);
     }
@@ -60,12 +60,12 @@ export const openaiProviderAdapter: ProviderAdapter = {
     try {
       json = await res.json();
     } catch (e) {
-      throw new Error(`Invalid JSON response from OpenAI: ${String(e)}`);
+      throw new Error(`Invalid JSON response from provider: ${String(e)}`);
     }
 
     if (!res.ok) {
       const errMsg = json?.error?.message ?? JSON.stringify(json);
-      throw new Error(`OpenAI API error: ${errMsg}`);
+      throw new Error(`Provider API error: ${errMsg}`);
     }
 
     // Prefer chat completions shape, fall back to Responses API style
@@ -96,7 +96,7 @@ export const openaiProviderAdapter: ProviderAdapter = {
     const response = {
       text: text ?? '',
       metadata: {
-        provider: 'openai',
+        provider: 'openai-compatible',
         model,
         raw: json,
       },
