@@ -4,7 +4,9 @@
 
 Replace the current stub provider with a production-ready provider integration compatible with the OpenAI Chat Completions API (supporting OpenAI, Ollama, LocalAI, etc.). This is configured primarily through environment variables with required `baseURL` and `apiKey` values.
 
-## Current State
+Status note: this document captures the integration plan and baseline assumptions used during implementation.
+
+## Baseline at Plan Time
 
 - `src/provider.ts` exports `localProviderAdapter`, which returns a hardcoded response.
 - `src/cli.ts` always selects the stub adapter via `const provider = localProviderAdapter`.
@@ -15,7 +17,7 @@ Replace the current stub provider with a production-ready provider integration c
 
 1. The CLI uses an OpenAI-compatible provider adapter for `run`, `plan`, and `chat` flows.
 2. Provider settings are loaded from environment variables, including `.env` files.
-3. `baseURL` and `apiKey` are required and validated at startup.
+3. `baseURL` and `apiKey` are required and validated when model-backed commands run.
 4. Secrets are never logged or persisted in plaintext.
 5. Existing command behavior and JSON/text output formats remain stable.
 6. Reasoning effort can be configured via environment variable.
@@ -25,7 +27,7 @@ Replace the current stub provider with a production-ready provider integration c
 Required:
 
 - `OPENAI_BASE_URL`
-  - Example: `https://api.openai.com/v1`
+  - Example: `https://api.openai.com` or `https://api.openai.com/v1`
   - Must be a valid absolute URL.
 - `OPENAI_API_KEY`
   - Example: `sk-...`

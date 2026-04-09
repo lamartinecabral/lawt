@@ -1,4 +1,5 @@
 import fs from 'fs';
+import os from 'os';
 import path from 'path';
 import { expect, test, vi } from 'vitest';
 import { loadConfig } from '../src/config';
@@ -530,4 +531,97 @@ test('run summary schema accepts valid run metadata', () => {
   };
 
   expect(() => RunSummarySchema.parse(summary)).not.toThrow();
+});
+
+test('doctor command does not invoke provider adapter selection', async () => {
+  const providerModule = await import('../src/provider.js');
+  const selectSpy = vi.spyOn(providerModule, 'selectProviderAdapter');
+  const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+
+  try {
+    await expect(
+      runCli(['node', 'agent', 'doctor', '--dry-run', '--json']),
+    ).resolves.not.toThrow();
+    expect(selectSpy).not.toHaveBeenCalled();
+  } finally {
+    selectSpy.mockRestore();
+    logSpy.mockRestore();
+  }
+});
+
+test('replay command does not invoke provider adapter selection', async () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'minicode-replay-'));
+  const store = MemoryStore.open(root);
+  const requestedAt = new Date().toISOString();
+  const completedAt = new Date().toISOString();
+
+  store.persistRun(
+    {
+      command: 'plan',
+      target: 'test replay',
+      config: {
+        cwd: root,
+        dryRun: true,
+        json: true,
+        verbose: false,
+        approval: 'auto',
+      },
+      requestedAt,
+      runId: 'replay-run-id',
+      sessionId: 'replay-session-id',
+    },
+    {
+      runId: 'replay-run-id',
+      status: 'ok',
+      completedAt,
+      summary: {
+        runId: 'replay-run-id',
+        command: 'dry-run:plan',
+        status: 'ok',
+        steps: [],
+      },
+    },
+  );
+  store.close();
+
+  const providerModule = await import('../src/provider.js');
+  const selectSpy = vi.spyOn(providerModule, 'selectProviderAdapter');
+  const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+
+  try {
+    await expect(
+      runCli(['node', 'agent', 'replay', 'replay-run-id', '--json', '--cwd', root]),
+    ).resolves.not.toThrow();
+    expect(selectSpy).not.toHaveBeenCalled();
+  } finally {
+    selectSpy.mockRestore();
+    logSpy.mockRestore();
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test('apply command rejects plan paths outside workspace boundary', async () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'minicode-apply-root-'));
+  const outside = fs.mkdtempSync(path.join(os.tmpdir(), 'minicode-apply-outside-'));
+  const outsidePlanPath = path.join(outside, 'plan.json');
+  fs.writeFileSync(outsidePlanPath, '[]');
+  const relativeOutsidePlanPath = path.relative(root, outsidePlanPath);
+
+  try {
+    await expect(
+      runCli([
+        'node',
+        'agent',
+        'apply',
+        relativeOutsidePlanPath,
+        '--json',
+        '--dry-run',
+        '--cwd',
+        root,
+      ]),
+    ).rejects.toThrow(/outside of the repository workspace/);
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+    fs.rmSync(outside, { recursive: true, force: true });
+  }
 });

@@ -133,4 +133,6 @@ OPENAI_API_KEY=sk-... node dist/index.js chat
 agent chat
 ```
 
-Note: When both `OPENAI_BASE_URL` and `OPENAI_API_KEY` are present, the CLI automatically selects the OpenAI-compatible provider. The CLI validates these settings at startup and will error if only one is set. Secrets are not logged or persisted by default.
+Note: Model-backed commands (`agent run`, `agent plan`, and `agent chat`) require both `OPENAI_BASE_URL` and `OPENAI_API_KEY`. The CLI validates these settings and errors if only one is set. Utility commands (`agent doctor`, `agent apply`, and `agent replay`) do not call the model provider. Secrets are not logged or persisted by default.
+
+Note: `OPENAI_BASE_URL` may be either a root API URL (for example `https://api.openai.com`) or a versioned URL ending in `/v1` (for example `https://api.openai.com/v1`).

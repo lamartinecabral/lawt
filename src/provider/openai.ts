@@ -1,12 +1,54 @@
 import type { ProviderAdapter, ModelRequest, RunContext } from '../types';
 
+function buildChatCompletionsUrl(baseUrl: string): string {
+  const normalized = baseUrl.replace(/\/+$/, '');
+
+  if (normalized.endsWith('/chat/completions')) {
+    return normalized;
+  }
+
+  if (/\/v\d+$/i.test(normalized)) {
+    return `${normalized}/chat/completions`;
+  }
+
+  return `${normalized}/v1/chat/completions`;
+}
+
+function extractMessageContent(content: unknown): string {
+  if (typeof content === 'string') {
+    return content;
+  }
+
+  if (!Array.isArray(content)) {
+    return '';
+  }
+
+  return content
+    .map((part) => {
+      if (typeof part === 'string') {
+        return part;
+      }
+
+      if (part && typeof part === 'object' && 'text' in part) {
+        return String((part as { text?: unknown }).text ?? '');
+      }
+
+      return '';
+    })
+    .join('');
+}
+
 export const openaiCompatibleProviderAdapter: ProviderAdapter = {
   name: 'openai-compatible',
   description: 'OpenAI-compatible provider adapter',
   async execute(request: ModelRequest, context: RunContext) {
     const openaiCfg = context.config.provider?.openai;
-    const baseUrl = openaiCfg?.baseUrl ?? 'https://api.openai.com';
+    const baseUrl = openaiCfg?.baseUrl;
     const apiKey = openaiCfg?.apiKey;
+
+    if (!baseUrl) {
+      throw new Error('OPENAI_BASE_URL is required');
+    }
 
     if (!apiKey) {
       throw new Error('OPENAI_API_KEY is required');
@@ -35,7 +77,7 @@ export const openaiCompatibleProviderAdapter: ProviderAdapter = {
     const abortController = new AbortController();
     const timeoutId = setTimeout(() => abortController.abort(), timeoutMs);
 
-    const url = `${baseUrl.replace(/\/$/, '')}/v1/chat/completions`;
+    const url = buildChatCompletionsUrl(baseUrl);
     let res: Response;
     try {
       res = await fetchImpl(url, {
@@ -73,7 +115,9 @@ export const openaiCompatibleProviderAdapter: ProviderAdapter = {
     if (Array.isArray(json.choices) && json.choices.length) {
       text = json.choices
         .map((c: any) => {
-          if (c.message && (c.message.content || c.message.role)) return String(c.message.content ?? '');
+          if (c.message && (c.message.content || c.message.role)) {
+            return extractMessageContent(c.message.content);
+          }
           if (c.text) return String(c.text);
           return '';
         })
@@ -98,7 +142,12 @@ export const openaiCompatibleProviderAdapter: ProviderAdapter = {
       metadata: {
         provider: 'openai-compatible',
         model,
-        raw: json,
+        id: typeof json?.id === 'string' ? json.id : undefined,
+        usage: json?.usage,
+        finishReason:
+          Array.isArray(json?.choices) && json.choices.length > 0
+            ? json.choices[0]?.finish_reason
+            : undefined,
       },
     };
 

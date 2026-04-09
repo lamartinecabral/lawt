@@ -1,5 +1,4 @@
 import fs from 'fs/promises';
-import path from 'path';
 import readline from 'readline';
 import { stdin as input, stdout as output } from 'node:process';
 import { Command, Option } from 'commander';
@@ -8,7 +7,7 @@ import { createLogger } from './logger';
 import { loadConfig } from './config';
 import { createBuiltinToolRegistry } from './tool-registry';
 import { selectProviderAdapter } from './provider';
-import { buildRepositoryContext } from './context';
+import { buildRepositoryContext, resolveRepositoryPath } from './context';
 import { createDeterministicPlan, executePlanSteps } from './orchestrator';
 import { CommandEnvelopeSchema, ResultEnvelopeSchema, PlanStepSchema } from './schemas';
 import { MemoryStore, SessionMemory } from './memory';
@@ -67,14 +66,16 @@ function renderSummary(summary: RunSummary, jsonOutput: boolean): void {
   }
 }
 
+function commandRequiresProvider(command: string): boolean {
+  return command === 'run' || command === 'plan' || command === 'chat';
+}
+
 async function executeCommand(command: string, target?: string, rawOptions?: PartialCliOptions) {
   const config = await loadConfig(resolveCliOptions(rawOptions ?? {}));
   const logger = createLogger(config);
   const toolRegistry = createBuiltinToolRegistry();
-  const provider = selectProviderAdapter(config);
   const memoryStore = MemoryStore.open(config.cwd);
   try {
-    const repositoryContext = await buildRepositoryContext(config.cwd, config.ignorePatterns ?? []);
     const context: RunContext = {
       runId: nanoid(),
       sessionId: nanoid(),
@@ -83,6 +84,20 @@ async function executeCommand(command: string, target?: string, rawOptions?: Par
     };
     const sessionMemory = new SessionMemory(context.runId);
     context.memory = sessionMemory;
+
+    if (command === 'replay') {
+      const replayTarget = String(target ?? '');
+      const recorded = memoryStore.loadRun(replayTarget);
+      if (!recorded) {
+        throw new Error(`No recorded run found for id ${replayTarget}`);
+      }
+
+      logger.info({ replayTarget }, 'Replaying recorded run');
+      renderSummary(recorded.summary, config.json);
+      return;
+    }
+
+    const repositoryContext = await buildRepositoryContext(config.cwd, config.ignorePatterns ?? []);
 
     logger.debug(
       { root: repositoryContext.root, fileCount: repositoryContext.files.length },
@@ -105,50 +120,54 @@ async function executeCommand(command: string, target?: string, rawOptions?: Par
     );
     logger.debug({ config }, 'Resolved runtime configuration');
     logger.debug({ tools: toolRegistry.list().map((tool) => tool.name) }, 'Available tools');
-    logger.debug({ provider: provider.name }, 'Selected provider adapter');
 
-    if (command === 'replay') {
-      const replayTarget = String(target ?? '');
-      const recorded = memoryStore.loadRun(replayTarget);
-      if (!recorded) {
-        throw new Error(`No recorded run found for id ${replayTarget}`);
-      }
-
-      logger.info({ replayTarget }, 'Replaying recorded run');
-      renderSummary(recorded.summary, config.json);
-      return;
+    const provider = commandRequiresProvider(command) ? selectProviderAdapter(config) : undefined;
+    if (provider) {
+      logger.debug({ provider: provider.name }, 'Selected provider adapter');
     }
 
     let steps: PlanStep[] = [];
     let summary: RunSummary;
 
     if (command === 'apply') {
-      const planFilePath = path.resolve(config.cwd, target ?? '');
+      const planFilePath = resolveRepositoryPath(config.cwd, String(target ?? ''));
       const fileContents = await fs.readFile(planFilePath, 'utf8');
-      const parsed = JSON.parse(fileContents) as PlanStep[];
+      const parsed = JSON.parse(fileContents) as unknown;
+      if (!Array.isArray(parsed)) {
+        throw new Error('Plan file must contain a JSON array of plan steps');
+      }
       steps = parsed.map((step) => PlanStepSchema.parse(step));
     } else {
       steps = await createDeterministicPlan(command, target, repositoryContext, context);
     }
 
-    const modelRequest = {
-      prompt: `Create a plan for command=${command} target=${target ?? 'n/a'}`,
-      tools: toolRegistry.list().map((tool) => tool.name),
-      metadata: {
-        dryRun: config.dryRun,
-        approval: config.approval,
-        workspaceFileCount: repositoryContext.files.length,
-      },
-    };
-
-    const providerResponse = await provider.execute(modelRequest, context);
-    logger.debug({ providerResponse }, 'Provider generated plan guidance');
-
-    if (command === 'plan' || command === 'run') {
-      steps[0].result = {
-        summary: providerResponse.text,
-        metadata: providerResponse.metadata,
+    if (provider) {
+      const modelRequest = {
+        prompt: `Create a plan for command=${command} target=${target ?? 'n/a'}`,
+        tools: toolRegistry.list().map((tool) => tool.name),
+        metadata: {
+          dryRun: config.dryRun,
+          approval: config.approval,
+          workspaceFileCount: repositoryContext.files.length,
+        },
       };
+
+      const providerResponse = await provider.execute(modelRequest, context);
+      logger.debug(
+        {
+          provider: provider.name,
+          responseTextLength: providerResponse.text.length,
+          metadataKeys: Object.keys(providerResponse.metadata ?? {}),
+        },
+        'Provider generated plan guidance',
+      );
+
+      if ((command === 'plan' || command === 'run') && steps.length > 0) {
+        steps[0].result = {
+          summary: providerResponse.text,
+          metadata: providerResponse.metadata,
+        };
+      }
     }
 
     if (!config.json) {
@@ -156,6 +175,9 @@ async function executeCommand(command: string, target?: string, rawOptions?: Par
     }
 
     if (command === 'chat') {
+      if (!provider) {
+        throw new Error('Provider adapter is not configured for chat command');
+      }
       summary = await runChatSession(provider, context, logger);
     } else {
       summary = await executePlanSteps(steps, toolRegistry, context, logger, command);
@@ -191,32 +213,38 @@ async function runChatSession(
     });
   }
 
-  while (true) {
-    const userMessage = await ask('> ');
-    const normalized = userMessage.trim();
-    if (!normalized || normalized.toLowerCase() === 'exit' || normalized.toLowerCase() === 'quit') {
-      break;
+  try {
+    while (true) {
+      const userMessage = await ask('> ');
+      const normalized = userMessage.trim();
+      if (
+        !normalized ||
+        normalized.toLowerCase() === 'exit' ||
+        normalized.toLowerCase() === 'quit'
+      ) {
+        break;
+      }
+
+      const response = await provider.execute(
+        {
+          prompt: normalized,
+          metadata: { chat: true, dryRun: context.config.dryRun },
+        },
+        context,
+      );
+
+      console.log(response.text);
+      steps.push({
+        id: `chat-${Date.now()}`,
+        title: 'Chat interaction',
+        description: 'Interactive chat message exchange with provider',
+        status: 'completed',
+        result: { userMessage: normalized, response: response.text },
+      });
     }
-
-    const response = await provider.execute(
-      {
-        prompt: normalized,
-        metadata: { chat: true, dryRun: context.config.dryRun },
-      },
-      context,
-    );
-
-    console.log(response.text);
-    steps.push({
-      id: `chat-${Date.now()}`,
-      title: 'Chat interaction',
-      description: 'Interactive chat message exchange with provider',
-      status: 'completed',
-      result: { userMessage: normalized, response: response.text },
-    });
+  } finally {
+    rl.close();
   }
-
-  rl.close();
 
   return {
     runId: context.runId,
