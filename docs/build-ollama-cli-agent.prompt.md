@@ -1,62 +1,154 @@
-You are an expert Node.js developer. I want you to autonomously build a full-featured, production-ready CLI AI agent powered by Ollama, complete with linting and End-to-End (E2E) tests. 
+Act as a senior Node.js engineer. Autonomously build a production-grade CLI AI agent powered by Ollama in the current directory.
 
-Please execute the following steps sequentially. Do not stop until the project is fully implemented, configured, tested, linted, and ready to run.
+Primary objective
+Build a Node.js CLI agent that can reason, call file-operation tools, and complete multi-step tasks in a workspace. Include linting, type-checking, and end-to-end tests. Do not stop until everything is implemented and all checks pass.
 
-### Step 1: Project Setup
-1. Initialize a new Node.js project. Generate a `package.json` with `"type": "module"`.
-2. Install the following dependencies:
-   - `ollama`: Official Ollama JavaScript client.
-   - `commander`: For parsing CLI arguments.
-   - `chalk`: For styling console output.
-   - `ora`: For loading spinners.
-   - `@inquirer/prompts` (or `readline` built-in): For the interactive chat REPL loop.
-3. Install the following `devDependencies`:
-   - `eslint` and `@eslint/js`: For code linting.
-4. Configure the `package.json` to include:
-   - A `"bin"` section pointing to the main CLI entry point (e.g., `"my-agent": "./bin/index.js"`) so it can be installed globally.
-   - A `"lint"` script (e.g., `"eslint ."`) to easily run the linter.
+Use this stack (unless there is a hard blocker)
+- Node.js 22+
+- TypeScript (strict mode), ESM
+- commander (CLI)
+- ollama (official JS client)
+- zod (tool schemas + validation)
+- fs-extra + fast-glob (file operations and search)
+- picocolors + ora (terminal UX)
+- pino (logging)
+- vitest + execa + @vitest/coverage-v8 (testing)
+- eslint flat config + @eslint/js + typescript-eslint + prettier
+- tsx + tsup + rimraf
 
-### Step 2: Architecture & File Structure
-Create the following modular structure:
-- `bin/index.js`: The executable entry point. Handles CLI arg parsing with `commander`.
-- `src/agent.js`: The core logic for communicating with the Ollama API, managing conversation history, and streaming responses.
-- `src/ui.js`: Helper functions for the CLI interface (spinners, formatted text, printing messages).
-- `src/config.js`: Default configurations (default model like `llama3` or `mistral`, default system prompt, API host).
+Implementation requirements
 
-### Step 3: Core Features to Implement
-1. **Model Management**: Before starting a chat, the agent should check if the requested model exists locally using the Ollama API. If it doesn't, automatically pull the model using a loading spinner to show progress.
-2. **Ollama Connection Check**: Implement a try/catch mechanism on startup to verify Ollama is running locally on port 11434. If it is not, print a helpful, user-friendly error message in red and exit gracefully.
-3. **Interactive REPL**: Create a continuous chat loop. 
-   - Prompt the user for input.
-   - Send the input + conversation history to Ollama.
-   - **Crucial:** Stream the response back to the terminal token-by-token so the user doesn't have to wait for the entire generation to finish.
-   - Save the assistant's response to the conversation history.
-   - Allow the user to type `exit`, `quit`, or `/bye` to end the session.
-4. **CLI Arguments**: Support the following flags via `commander`:
-   - `-m, --model <name>`: Specify the Ollama model to use (default: "llama3").
-   - `-s, --system <prompt>`: Provide a custom system prompt to dictate the agent's behavior.
-   - `-p, --prompt <text>`: Run in "single-shot" mode. If this flag is passed, the agent should answer the single prompt and exit, rather than entering the interactive loop.
+1. Bootstrap
+- Initialize package.json with type: module.
+- Set up tsconfig.json with strict settings.
+- Add scripts:
+  - dev
+  - build
+  - start
+  - lint
+  - lint:fix
+  - typecheck
+  - test
+  - test:e2e
+  - check (lint + typecheck + test)
+- Add a bin entry so the CLI can be installed with npm link.
 
-### Step 4: Code Quality, Linting & Error Handling
-- Use ES Modules (`import`/`export`) everywhere.
-- Use modern `async/await` syntax.
-- Ensure all API calls are wrapped in `try/catch` blocks.
-- Comment the code clearly, explaining what each function does.
-- Create an `eslint.config.js` (Flat Config) or `.eslintrc.json` enforcing standard JavaScript rules (e.g., no unused variables, requiring semicolons or enforcing a consistent style). Ensure the generated code complies with these rules.
+2. CLI
+- Command: chat
+  - Interactive REPL with streaming model tokens.
+- Command: run <task>
+  - Fully autonomous execution where the model can call tools repeatedly until completion or max steps.
+- Command: tools
+  - Print available tool names and schemas.
+- Global options:
+  - --model (default: qwen2.5-coder:14b)
+  - --host (default: http://127.0.0.1:11434)
+  - --cwd (default: process.cwd())
+  - --max-steps (default: 20)
+  - --json (machine-readable output)
+  - --verbose
 
-### Step 5: End-to-End (E2E) Testing
-1. Install testing dependencies as `devDependencies`: 
-   - `vitest`: As the test runner.
-   - `execa`: To securely execute the CLI command in test files.
-   - `nock` (optional, or standard Node.js mocking): To intercept and mock the Ollama local API responses.
-2. Create a `tests/` directory and add an `e2e.test.js` file.
-3. Implement the following E2E test cases:
-   - **Help Output:** Execute the CLI with the `--help` flag and assert that standard commander help text is printed to stdout.
-   - **Single-Shot Mode:** Execute the CLI with `-p "test prompt"`. Mock the Ollama API to return a deterministic dummy response, and assert that the CLI successfully prints that exact response to stdout and exits with code `0`.
-   - **Graceful Error Handling:** Mock a connection refusal (simulating Ollama being offline) while running the CLI, and assert that the CLI prints your friendly error message to stderr and exits with code `1`.
-4. Add a `"test"` script to `package.json` that runs `vitest run`.
+3. Ollama integration
+- On startup, verify Ollama connectivity and fail with a friendly actionable message if offline.
+- Verify model existence; if missing, pull the model with visible progress.
+- Use Ollama chat API with tool definitions.
+- Support response streaming.
+- Maintain structured conversation history and tool results.
 
-### Step 6: Finalization
-1. Write a `README.md` explaining how to install the CLI (`npm link`), how to ensure Ollama is running, how to run the E2E tests (`npm test`), how to run the linter (`npm run lint`), and providing examples of how to use the CLI commands.
-2. Ensure all files are saved.
-3. Autonomously run `npm run lint` and `npm test` in the terminal. If there are any linting errors or failing tests, fix them before completing the task.
+4. Tool system (mandatory)
+Implement a typed tool registry using zod schemas with these tools:
+- list_dir(path, recursive?, pattern?)
+- read_file(path, startLine?, endLine?, maxBytes?)
+- write_file(path, content, overwrite?)
+- append_file(path, content)
+- replace_in_file(path, search, replace, isRegex?, replaceAll?)
+- delete_file(path)
+- move_file(from, to)
+- mkdir(path, recursive?)
+- glob_search(pattern, cwd?)
+- grep_search(query, includePattern?)
+
+Safety constraints:
+- Hard sandbox all operations to --cwd.
+- Block path traversal and any path outside sandbox.
+- Resolve symlinks and block symlink escapes.
+- Reject binary files for text operations.
+- Enforce file size limits for read/write.
+- Every tool returns structured success/error payloads.
+
+5. Autonomous loop
+- Implement deterministic loop:
+  - send messages + tool schemas to model
+  - execute requested tools
+  - append tool outputs back into messages
+  - repeat until final assistant answer or max steps reached
+- In verbose mode, show per-step logs.
+- In json mode, output:
+  - finalResponse
+  - steps
+  - toolCalls
+  - changedFiles
+  - errors
+
+6. Code quality
+- ESLint flat config with practical strict rules.
+- Prettier config.
+- No loose typing; avoid any except isolated justified cases.
+- Keep modules small and testable.
+- Add concise comments only for non-obvious logic.
+
+7. Tests
+Create unit and e2e tests.
+
+Unit tests must cover:
+- sandbox path validation
+- tool schema input validation
+- replace_in_file behavior (single/multi/no match)
+- loop stop conditions and max-steps handling
+
+E2E tests must not require a real local model:
+- Spin up a lightweight mock Ollama HTTP server in tests using Node http.
+- Point CLI --host to that mock server.
+- Required e2e cases:
+  - help output
+  - single run task returns deterministic mocked response
+  - autonomous tool-calling flow creates/edits files correctly
+  - path traversal attempt is blocked
+  - offline host failure exits with code 1 and friendly message
+  - missing model triggers pull flow against mocked endpoints
+
+8. Project structure
+Create a clean structure along these lines:
+- bin/
+- src/
+- src/agent/
+- src/tools/
+- src/cli/
+- src/lib/
+- tests/unit/
+- tests/e2e/
+
+9. Documentation
+Write README.md with:
+- prerequisites
+- install + npm link
+- Ollama setup
+- usage examples for chat and run
+- safety model
+- dev/test/lint commands
+
+10. Completion gate (mandatory)
+Do not finish until all pass:
+- npm run lint
+- npm run typecheck
+- npm test
+- npm run build
+
+If a check fails, fix and rerun until all are green.
+
+At the end, provide:
+- architecture summary
+- key files created
+- test/lint/typecheck/build results
+- example commands for first run
+No TODO placeholders allowed.
