@@ -14,7 +14,7 @@ program
   .name("minicode")
   .description("CLI AI agent powered by Ollama")
   .version("1.0.0")
-  .option("--model <model>", "Ollama model to use", "qwen2.5-coder:14b")
+  .option("--model <model>", "Ollama model to use", "gpt-oss:20b")
   .option("--host <url>", "Ollama host URL", "http://127.0.0.1:11434")
   .option("--cwd <path>", "Working directory for file operations", process.cwd())
   .option("--max-steps <n>", "Maximum autonomous steps", "20")

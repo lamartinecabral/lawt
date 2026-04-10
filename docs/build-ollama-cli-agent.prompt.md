@@ -41,7 +41,7 @@ Implementation requirements
 - Command: tools
   - Print available tool names and schemas.
 - Global options:
-  - --model (default: qwen2.5-coder:14b)
+  - --model (default: gpt-oss:20b)
   - --host (default: http://127.0.0.1:11434)
   - --cwd (default: process.cwd())
   - --max-steps (default: 20)

@@ -24,7 +24,7 @@ npm link
    ```
 3. Pull a model (minicode will auto-pull if missing):
    ```bash
-   ollama pull qwen2.5-coder:14b
+   ollama pull gpt-oss:20b
    ```
 
 ## Usage
@@ -55,7 +55,7 @@ minicode --json tools
 
 | Option          | Default                    | Description                |
 |-----------------|----------------------------|----------------------------|
-| `--model`       | `qwen2.5-coder:14b`       | Ollama model               |
+| `--model`       | `gpt-oss:20b`             | Ollama model               |
 | `--host`        | `http://127.0.0.1:11434`  | Ollama server URL          |
 | `--cwd`         | Current directory          | Sandbox working directory  |
 | `--max-steps`   | `20`                       | Max autonomous loop steps  |
