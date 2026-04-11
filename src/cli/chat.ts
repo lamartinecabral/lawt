@@ -47,7 +47,7 @@ export async function chatCommand(opts: AgentOptions): Promise<void> {
     messages.push({ role: "user", content: input });
 
     const spinner = ora({
-      text: "thinking...",
+      text: "processing...",
       stream: process.stderr,
     }).start();
 
