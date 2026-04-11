@@ -2,6 +2,7 @@ import readline from "node:readline";
 import { createOllamaClient, streamChat, getSystemPrompt } from "../agent/index.js";
 import type { AgentOptions } from "../lib/types.js";
 import pc from "picocolors";
+import ora from "ora";
 
 export async function chatCommand(opts: AgentOptions): Promise<void> {
   const client = await createOllamaClient({ host: opts.host, model: opts.model });
@@ -34,14 +35,29 @@ export async function chatCommand(opts: AgentOptions): Promise<void> {
 
     messages.push({ role: "user", content: input });
 
-    process.stdout.write(pc.blue("assistant> "));
+    const spinner = ora({
+      stream: process.stderr,
+    }).start();
+
     let fullResponse = "";
+    let wrotePrefix = false;
     try {
       for await (const token of streamChat(client, messages, opts.model)) {
+        if (!wrotePrefix) {
+          spinner.stop();
+          process.stdout.write(pc.blue("bot> "));
+          wrotePrefix = true;
+        }
         process.stdout.write(token);
         fullResponse += token;
       }
+
+      if (!wrotePrefix) {
+        spinner.stop();
+        process.stdout.write(pc.blue("bot> "));
+      }
     } catch (err: unknown) {
+      spinner.stop();
       console.error(pc.red(`\nError: ${err instanceof Error ? err.message : String(err)}`));
     }
     console.log();

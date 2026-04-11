@@ -1,6 +1,7 @@
 import { createOllamaClient, runAgent } from "../agent/index.js";
 import type { AgentOptions } from "../lib/types.js";
 import pc from "picocolors";
+import ora from "ora";
 
 export async function runCommand(task: string, opts: AgentOptions): Promise<void> {
   const client = await createOllamaClient({ host: opts.host, model: opts.model });
@@ -10,7 +11,14 @@ export async function runCommand(task: string, opts: AgentOptions): Promise<void
     console.log(pc.dim(`Model: ${opts.model} | Max steps: ${opts.maxSteps} | CWD: ${opts.cwd}\n`));
   }
 
-  const result = await runAgent(client, task, opts);
+  const spinner =
+    opts.json || opts.verbose
+      ? undefined
+      : ora({ text: "working...", stream: process.stderr }).start();
+
+  const result = await runAgent(client, task, opts).finally(() => {
+    spinner?.stop();
+  });
 
   if (opts.json) {
     console.log(JSON.stringify(result, null, 2));
