@@ -56,6 +56,7 @@ export async function runAgent(
         content: m.content,
         ...(m.tool_calls ? { tool_calls: m.tool_calls } : {}),
       })),
+      think: opts.think,
       tools,
     });
 
@@ -172,11 +173,13 @@ export async function* streamChat(
   client: Ollama,
   messages: Array<{ role: string; content: string }>,
   model: string,
+  think: AgentOptions["think"],
 ): AsyncGenerator<string> {
   const response = await client.chat({
     model,
     messages: messages.map((m) => ({ role: m.role, content: m.content })),
     stream: true,
+    think,
   });
   for await (const chunk of response) {
     if (chunk.message?.content) {

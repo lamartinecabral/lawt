@@ -21,6 +21,7 @@ export function createMockOllamaServer() {
   const responseQueue: MockResponse[] = [];
   let modelName = "test-model:latest";
   let pullRequested = false;
+  let lastChatRequest: Record<string, unknown> | null = null;
 
   const server = http.createServer((req, res) => {
     const chunks: Buffer[] = [];
@@ -45,6 +46,17 @@ export function createMockOllamaServer() {
 
       // POST /api/chat — chat completion
       if (req.url === "/api/chat" && req.method === "POST") {
+        const rawBody = Buffer.concat(chunks).toString("utf-8");
+        if (rawBody.length > 0) {
+          try {
+            lastChatRequest = JSON.parse(rawBody) as Record<string, unknown>;
+          } catch {
+            lastChatRequest = null;
+          }
+        } else {
+          lastChatRequest = null;
+        }
+
         const nextResponse = responseQueue.shift();
         if (!nextResponse) {
           res.writeHead(200, { "Content-Type": "application/json" });
@@ -98,6 +110,12 @@ export function createMockOllamaServer() {
     },
     resetPull() {
       pullRequested = false;
+    },
+    getLastChatRequest() {
+      return lastChatRequest;
+    },
+    resetLastChatRequest() {
+      lastChatRequest = null;
     },
     async start(): Promise<string> {
       return new Promise((resolve) => {

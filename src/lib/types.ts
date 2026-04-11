@@ -33,11 +33,14 @@ export interface RunResult {
   errors: string[];
 }
 
+export type ThinkOption = boolean | "high" | "medium" | "low" | undefined;
+
 export interface AgentOptions {
   model: string;
   host: string;
   cwd: string;
   maxSteps: number;
+  think: ThinkOption;
   json: boolean;
   verbose: boolean;
 }

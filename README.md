@@ -40,6 +40,8 @@ minicode --model llama3.1:8b chat
 
 ```bash
 minicode run "Create a hello.ts file that exports a greet function"
+minicode --think run "Plan carefully, then update parser.ts"
+minicode --think high run "Plan deeply, then refactor parser.ts"
 minicode --verbose run "Refactor utils.ts to use async/await"
 minicode --json run "List all TypeScript files"
 ```
@@ -59,6 +61,7 @@ minicode --json tools
 | `--host`        | `http://127.0.0.1:11434`  | Ollama server URL          |
 | `--cwd`         | Current directory          | Sandbox working directory  |
 | `--max-steps`   | `20`                       | Max autonomous loop steps  |
+| `--think`       | `undefined`                | Thinking mode (`true`, `false`, `high`, `medium`, `low`) |
 | `--json`        | `false`                    | JSON output                |
 | `--verbose`     | `false`                    | Detailed step logs         |
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { Command } from "commander";
+import { Command, InvalidArgumentError } from "commander";
 import { initLogger } from "../lib/logger.js";
 import { chatCommand } from "../cli/chat.js";
 import { runCommand } from "../cli/run.js";
@@ -10,6 +10,22 @@ import pc from "picocolors";
 
 const program = new Command();
 
+function parseThinkOption(value: string | boolean): Exclude<AgentOptions["think"], undefined> {
+  if (typeof value === "boolean") {
+    return value;
+  }
+
+  const normalized = value.toLowerCase();
+  if (normalized === "true") return true;
+  if (normalized === "false") return false;
+  if (normalized === "high" || normalized === "medium" || normalized === "low") {
+    return normalized;
+  }
+  throw new InvalidArgumentError(
+    `Invalid value for --think: ${value}. Expected true, false, high, medium, or low.`,
+  );
+}
+
 program
   .name("minicode")
   .description("CLI AI agent powered by Ollama")
@@ -18,6 +34,11 @@ program
   .option("--host <url>", "Ollama host URL", "http://127.0.0.1:11434")
   .option("--cwd <path>", "Working directory for file operations", process.cwd())
   .option("--max-steps <n>", "Maximum autonomous steps", "20")
+  .option(
+    "--think [value]",
+    "Enable model thinking (true|false|high|medium|low)",
+    parseThinkOption,
+  )
   .option("--json", "Machine-readable JSON output", false)
   .option("--verbose", "Show detailed logs", false);
 
@@ -28,6 +49,7 @@ function resolveOpts(cmd: Command): AgentOptions {
     host: string;
     cwd: string;
     maxSteps: string;
+    think: AgentOptions["think"];
     json: boolean;
     verbose: boolean;
   };
@@ -36,6 +58,7 @@ function resolveOpts(cmd: Command): AgentOptions {
     host: rawOpts.host,
     cwd: path.resolve(rawOpts.cwd),
     maxSteps: parseInt(rawOpts.maxSteps, 10),
+    think: rawOpts.think,
     json: rawOpts.json,
     verbose: rawOpts.verbose,
   };

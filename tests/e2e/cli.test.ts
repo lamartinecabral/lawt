@@ -107,6 +107,22 @@ describe("with mock Ollama server", () => {
     expect(Array.isArray(parsed.toolCalls)).toBe(true);
   });
 
+  it("forwards --think level to Ollama chat requests", async () => {
+    mock.resetLastChatRequest();
+    mock.queueResponse({ content: "Thinking level enabled" });
+
+    const result = await runCli([
+      "--host", host,
+      "--model", "test-model:latest",
+      "--think", "high",
+      "run",
+      "Think deeply before answering",
+    ]);
+
+    expect(result.exitCode).toBe(0);
+    expect(mock.getLastChatRequest()?.think).toBe("high");
+  });
+
   it("missing model triggers pull flow", async () => {
     mock.setModelName("other-model:latest");
     mock.resetPull();
