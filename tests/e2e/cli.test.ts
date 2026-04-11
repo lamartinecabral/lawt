@@ -143,6 +143,54 @@ describe("with mock Ollama server", () => {
     // Restore model name
     mock.setModelName("test-model:latest");
   });
+
+  it("chat mode prints thinking and tool-call indicators", async () => {
+    const chatSandbox = await fs.mkdtemp(path.join(os.tmpdir(), "minicode-chat-e2e-"));
+    try {
+      mock.queueResponse({
+        content: "",
+        thinking: "I should create the requested file first.",
+        tool_calls: [
+          {
+            function: {
+              name: "write_file",
+              arguments: { path: "from-chat.txt", content: "chat output" },
+            },
+          },
+        ],
+      });
+      mock.queueResponse({
+        content: "Created from-chat.txt.",
+        thinking: "Task is complete.",
+      });
+
+      const result = await runCli(
+        [
+          "--host",
+          host,
+          "--model",
+          "test-model:latest",
+          "--cwd",
+          chatSandbox,
+          "chat",
+        ],
+        {
+          input: "Create from-chat.txt with chat output\nexit\n",
+          timeout: 20000,
+        },
+      );
+
+      expect(result.exitCode).toBe(0);
+      expect(result.stdout).toContain("think>");
+      expect(result.stdout).toContain("tool>");
+      expect(result.stdout).toContain("Created from-chat.txt.");
+      expect(await fs.readFile(path.join(chatSandbox, "from-chat.txt"), "utf-8")).toBe(
+        "chat output",
+      );
+    } finally {
+      await fs.remove(chatSandbox);
+    }
+  });
 });
 
 describe("autonomous tool-calling flow", () => {

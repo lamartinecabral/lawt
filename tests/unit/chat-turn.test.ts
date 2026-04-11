@@ -9,6 +9,7 @@ import type { AgentOptions } from "../../src/lib/types.js";
 interface MockAssistantMessage {
   role: "assistant";
   content: string;
+  thinking?: string;
   tool_calls?: Array<{
     function: {
       name: string;
@@ -81,8 +82,77 @@ describe("runChatTurn", () => {
     expect(result.toolCalls).toHaveLength(1);
     expect(result.toolCalls[0]?.name).toBe("write_file");
     expect(result.errors).toEqual([]);
+    expect(result.events).toEqual([
+      {
+        type: "tool_call",
+        name: "write_file",
+        args: { path: "chat.txt", content: "hello from chat" },
+      },
+    ]);
     expect(await fs.readFile(path.join(sandbox, "chat.txt"), "utf-8")).toBe("hello from chat");
     expect(Array.isArray(chatRequests[0]?.["tools"])).toBe(true);
     expect(messages.some((m) => m.role === "tool")).toBe(true);
+  });
+
+  it("captures thinking and tool-call events in order", async () => {
+    const responses: MockAssistantMessage[] = [
+      {
+        role: "assistant",
+        content: "",
+        thinking: "I should write a file before responding.",
+        tool_calls: [
+          {
+            function: {
+              name: "write_file",
+              arguments: { path: "events.txt", content: "event test" },
+            },
+          },
+        ],
+      },
+      {
+        role: "assistant",
+        content: "Done.",
+        thinking: "Now I can provide the final answer.",
+      },
+    ];
+
+    const client = {
+      async chat() {
+        const next = responses.shift();
+        if (!next) {
+          throw new Error("No queued response");
+        }
+        return { message: next };
+      },
+    } as unknown as Ollama;
+
+    const opts: AgentOptions = {
+      model: "test-model:latest",
+      host: "http://127.0.0.1:11434",
+      cwd: sandbox,
+      maxSteps: 5,
+      think: undefined,
+      json: false,
+      verbose: false,
+    };
+
+    const messages = [
+      { role: "system" as const, content: getSystemPrompt() },
+      { role: "user" as const, content: "Create events.txt" },
+    ];
+
+    const result = await runChatTurn(client, messages, opts);
+
+    expect(result.response).toBe("Done.");
+    expect(result.events).toEqual([
+      { type: "thinking", text: "I should write a file before responding." },
+      {
+        type: "tool_call",
+        name: "write_file",
+        args: { path: "events.txt", content: "event test" },
+      },
+      { type: "thinking", text: "Now I can provide the final answer." },
+    ]);
+    expect(await fs.readFile(path.join(sandbox, "events.txt"), "utf-8")).toBe("event test");
   });
 });

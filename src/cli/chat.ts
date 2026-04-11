@@ -54,12 +54,22 @@ export async function chatCommand(opts: AgentOptions): Promise<void> {
     try {
       const result = await runChatTurn(client, messages, opts);
       spinner.stop();
+
+      for (const event of result.events) {
+        if (event.type === "thinking") {
+          const formatted = event.text.replace(/\n/g, "\n       ");
+          process.stdout.write(pc.magenta("think> "));
+          process.stdout.write(pc.dim(formatted));
+          process.stdout.write("\n");
+          continue;
+        }
+
+        process.stdout.write(pc.yellow("tool> "));
+        process.stdout.write(`${event.name}(${JSON.stringify(event.args)})\n`);
+      }
+
       process.stdout.write(pc.blue("bot> "));
       process.stdout.write(result.response);
-      if (opts.verbose && result.toolCalls.length > 0) {
-        const names = result.toolCalls.map((call) => call.name).join(", ");
-        process.stdout.write(pc.dim(`\n  tools used: ${names}`));
-      }
       if (opts.verbose && result.errors.length > 0) {
         process.stdout.write(pc.red(`\n  tool errors: ${result.errors.join("; ")}`));
       }
@@ -83,7 +93,9 @@ export async function chatCommand(opts: AgentOptions): Promise<void> {
   });
 
   rl.on("close", () => {
-    console.log(pc.dim("\nGoodbye."));
-    process.exit(0);
+    void lineQueue.finally(() => {
+      console.log(pc.dim("\nGoodbye."));
+      process.exit(0);
+    });
   });
 }

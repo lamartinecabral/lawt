@@ -10,6 +10,7 @@ interface MockToolCall {
 
 interface MockResponse {
   content: string;
+  thinking?: string;
   tool_calls?: MockToolCall[];
 }
 
@@ -73,6 +74,11 @@ export function createMockOllamaServer() {
           message: {
             role: "assistant",
             content: nextResponse.content,
+            ...(nextResponse.thinking
+              ? {
+                  thinking: nextResponse.thinking,
+                }
+              : {}),
             ...(nextResponse.tool_calls
               ? {
                   tool_calls: nextResponse.tool_calls.map((tc) => ({

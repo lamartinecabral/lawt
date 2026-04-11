@@ -147,7 +147,19 @@ export interface ChatTurnResult {
   response: string;
   toolCalls: ToolCallRecord[];
   errors: string[];
+  events: ChatTurnEvent[];
 }
+
+export type ChatTurnEvent =
+  | {
+      type: "thinking";
+      text: string;
+    }
+  | {
+      type: "tool_call";
+      name: string;
+      args: Record<string, unknown>;
+    };
 
 export async function runChatTurn(
   client: Ollama,
@@ -157,6 +169,7 @@ export async function runChatTurn(
   const tools = toolsToOllamaFormat();
   const toolCalls: ToolCallRecord[] = [];
   const errors: string[] = [];
+  const events: ChatTurnEvent[] = [];
 
   for (let step = 0; step < opts.maxSteps; step++) {
     const response = await client.chat({
@@ -172,6 +185,10 @@ export async function runChatTurn(
 
     const assistantMsg = response.message;
     const rawToolCalls = assistantMsg.tool_calls as RawAssistantToolCall[] | undefined;
+    const thinking = extractThinking(assistantMsg);
+    if (thinking) {
+      events.push({ type: "thinking", text: thinking });
+    }
     const normalizedToolCalls = normalizeToolCallsForMessage(rawToolCalls);
 
     messages.push({
@@ -185,10 +202,17 @@ export async function runChatTurn(
         response: assistantMsg.content ?? "",
         toolCalls,
         errors,
+        events,
       };
     }
 
     for (const toolCall of rawToolCalls) {
+      events.push({
+        type: "tool_call",
+        name: toolCall.function.name,
+        args: parseToolArgsOrEmpty(toolCall.function.arguments),
+      });
+
       const record = await executeToolCall(toolCall.function.name, toolCall.function.arguments, opts.cwd);
       toolCalls.push(record);
       if (!record.result.success && record.result.error) {
@@ -204,6 +228,7 @@ export async function runChatTurn(
     response: maxStepMsg,
     toolCalls,
     errors,
+    events,
   };
 }
 
@@ -317,13 +342,7 @@ function normalizeToolCallsForMessage(
   }
 
   return rawToolCalls.map((tc) => {
-    let args: Record<string, unknown>;
-    try {
-      args = parseToolArgs(tc.function.arguments);
-    } catch {
-      // Preserve the tool call even when args are malformed.
-      args = {};
-    }
+    const args = parseToolArgsOrEmpty(tc.function.arguments);
 
     return {
       function: {
@@ -332,4 +351,27 @@ function normalizeToolCallsForMessage(
       },
     };
   });
+}
+
+function parseToolArgsOrEmpty(rawArgs: unknown): Record<string, unknown> {
+  try {
+    return parseToolArgs(rawArgs);
+  } catch {
+    // Preserve the tool call even when args are malformed.
+    return {};
+  }
+}
+
+function extractThinking(message: unknown): string | undefined {
+  if (!message || typeof message !== "object") {
+    return undefined;
+  }
+
+  const thinking = (message as { thinking?: unknown }).thinking;
+  if (typeof thinking !== "string") {
+    return undefined;
+  }
+
+  const trimmed = thinking.trim();
+  return trimmed.length > 0 ? trimmed : undefined;
 }
