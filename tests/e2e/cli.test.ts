@@ -7,12 +7,13 @@ import fs from "fs-extra";
 
 const CLI_PATH = path.resolve("src/bin/cli.ts");
 
-function runCli(args: string[], opts?: { timeout?: number }) {
+function runCli(args: string[], opts?: { timeout?: number; input?: string }) {
   return execaNode(CLI_PATH, args, {
     nodeOptions: ["--import", "tsx"],
     timeout: opts?.timeout ?? 15000,
     reject: false,
     env: { ...process.env, NODE_NO_WARNINGS: "1" },
+    input: opts?.input,
   });
 }
 
@@ -265,4 +266,5 @@ describe("autonomous tool-calling flow", () => {
     const content = await fs.readFile(path.join(sandbox, "data.txt"), "utf-8");
     expect(content).toBe("new value");
   });
+
 });

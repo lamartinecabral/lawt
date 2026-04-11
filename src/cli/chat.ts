@@ -1,5 +1,5 @@
 import readline from "node:readline";
-import { createOllamaClient, streamChat, getSystemPrompt } from "../agent/index.js";
+import { createOllamaClient, runChatTurn, getSystemPrompt } from "../agent/index.js";
 import type { AgentOptions } from "../lib/types.js";
 import pc from "picocolors";
 import ora from "ora";
@@ -21,7 +21,7 @@ export async function chatCommand(opts: AgentOptions): Promise<void> {
     ),
   );
 
-  const messages: Array<{ role: string; content: string }> = [
+  const messages: Array<{ role: "system" | "user" | "assistant" | "tool"; content: string }> = [
     { role: "system", content: getSystemPrompt() },
   ];
 
@@ -33,7 +33,7 @@ export async function chatCommand(opts: AgentOptions): Promise<void> {
 
   rl.prompt();
 
-  rl.on("line", async (line: string) => {
+  async function handleLine(line: string): Promise<void> {
     const input = line.trim();
     if (input === "exit" || input === "quit") {
       rl.close();
@@ -47,33 +47,39 @@ export async function chatCommand(opts: AgentOptions): Promise<void> {
     messages.push({ role: "user", content: input });
 
     const spinner = ora({
+      text: "thinking...",
       stream: process.stderr,
     }).start();
 
-    let fullResponse = "";
-    let wrotePrefix = false;
     try {
-      for await (const token of streamChat(client, messages, opts.model, opts.think)) {
-        if (!wrotePrefix) {
-          spinner.stop();
-          process.stdout.write(pc.blue("bot> "));
-          wrotePrefix = true;
-        }
-        process.stdout.write(token);
-        fullResponse += token;
+      const result = await runChatTurn(client, messages, opts);
+      spinner.stop();
+      process.stdout.write(pc.blue("bot> "));
+      process.stdout.write(result.response);
+      if (opts.verbose && result.toolCalls.length > 0) {
+        const names = result.toolCalls.map((call) => call.name).join(", ");
+        process.stdout.write(pc.dim(`\n  tools used: ${names}`));
       }
-
-      if (!wrotePrefix) {
-        spinner.stop();
-        process.stdout.write(pc.blue("bot> "));
+      if (opts.verbose && result.errors.length > 0) {
+        process.stdout.write(pc.red(`\n  tool errors: ${result.errors.join("; ")}`));
       }
     } catch (err: unknown) {
       spinner.stop();
       console.error(pc.red(`\nError: ${err instanceof Error ? err.message : String(err)}`));
     }
     console.log();
-    messages.push({ role: "assistant", content: fullResponse });
     rl.prompt();
+  }
+
+  let lineQueue = Promise.resolve();
+  rl.on("line", (line: string) => {
+    lineQueue = lineQueue
+      .then(async () => {
+        await handleLine(line);
+      })
+      .catch((err: unknown) => {
+        console.error(pc.red(`\nError: ${err instanceof Error ? err.message : String(err)}`));
+      });
   });
 
   rl.on("close", () => {

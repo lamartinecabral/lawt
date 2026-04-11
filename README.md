@@ -36,6 +36,8 @@ minicode chat
 minicode --model llama3.1:8b chat
 ```
 
+Chat mode has access to the same toolset as autonomous run mode, so it can execute file tasks directly from your prompts within `--cwd`.
+
 ### Autonomous Run
 
 ```bash
