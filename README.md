@@ -84,8 +84,10 @@ npm run test:watch
 
 ```
 src/
-  cli.mjs          # Main CLI entry point — REPL loop, tool dispatch, streaming output
-  tools.mjs        # Tool definitions and helper logic
+  cli.mjs          # Main CLI entry point — handles argument parsing and REPL loop
+  run.mjs          # Core execution logic — manages the LLM interaction loop and tool dispatch
+  tools.mjs        # Tool definitions and registry
+  utils.mjs        # Shared utilities (Ollama client, readline interface, etc.)
 tests/
   unit.test.mjs    # Unit tests for utility functions and tool logic
   e2e.test.mjs     # End-to-end CLI tests
