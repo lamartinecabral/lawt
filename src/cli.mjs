@@ -46,23 +46,24 @@ program
   .action(async function () {
     await presentation(this);
     const opts = this.opts();
+    let prompt = opts.prompt;
 
     /** @type {import("ollama").Message[]} */
     const messages = [{ role: "system", content: opts.system }];
 
     while (true) {
       console.log(pc.green("\n--- user ---"));
-      if (!opts.prompt) {
-        opts.prompt = await rl.question("");
+      if (!prompt) {
+        prompt = await rl.question("");
       } else {
-        console.log(opts.prompt);
+        console.log(prompt);
       }
       // prompt = "increment the value in counter.txt";
 
-      if (opts.prompt === "exit") break;
+      if (prompt === "exit") break;
 
-      messages.push({ role: "user", content: opts.prompt });
-      opts.prompt = "";
+      messages.push({ role: "user", content: prompt });
+      prompt = "";
 
       while (true) {
         const spinner = ora().start();
