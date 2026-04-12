@@ -7,6 +7,7 @@ import { Command, InvalidArgumentError } from "commander";
 import { Ollama } from "ollama";
 import ora from "ora";
 import pc from "picocolors";
+import pkg from "../package.json";
 
 const rl = readline.createInterface({
   input: process.stdin,
@@ -26,7 +27,7 @@ const program = new Command();
 program
   .name("minicode")
   .description("CLI AI agent powered by Ollama")
-  .version("1.0.0", "-v, --version")
+  .version(pkg.version, "-v, --version")
   .option("-m, --model <model>", "Ollama model to use", "gemma4:e2b")
   .option("-p, --prompt <prompt>", "Initial prompt")
   .option(
