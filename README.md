@@ -11,12 +11,13 @@ A lightweight CLI AI agent powered by [Ollama](https://ollama.com). It provides 
 
 ```bash
 npm install
+npm link
 ```
 
 ## Usage
 
 ```bash
-node src/cli.mjs [options]
+minicode [options]
 ```
 
 ### Options
@@ -41,7 +42,7 @@ node src/cli.mjs
 Use a specific model with an initial prompt:
 
 ```bash
-node src/cli.mjs -m llama3 -p "list files in the current directory"
+node src/cli.mjs -m llama3.1 -p "list files in the current directory"
 ```
 
 Enable thinking mode:
@@ -84,6 +85,7 @@ npm run test:watch
 ```
 src/
   cli.mjs          # Main CLI entry point — REPL loop, tool dispatch, streaming output
+  tools.mjs        # Tool definitions and helper logic
 tests/
   unit.test.mjs    # Unit tests for utility functions and tool logic
   e2e.test.mjs     # End-to-end CLI tests

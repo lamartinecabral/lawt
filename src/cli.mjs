@@ -1,13 +1,13 @@
 #!/usr/bin/env node
 
 // @ts-check
-import { exec } from "node:child_process";
 import readline from "node:readline/promises";
 import { Command, InvalidArgumentError } from "commander";
 import { Ollama } from "ollama";
 import ora from "ora";
 import pc from "picocolors";
 import pkg from "../package.json" with { type: "json" };
+import { toolRegistry } from "./tools.mjs";
 
 const rl = readline.createInterface({
   input: process.stdin,
@@ -139,56 +139,6 @@ program
     console.log(pc.dim("Good bye!"));
     rl.close();
   });
-
-// TOOLS
-
-/** @type {Record<string, {definition: import("ollama").Tool, execute: (...args: any[]) => Promise<string>}>} */
-const toolRegistry = {
-  run_bash_command: {
-    definition: {
-      type: "function",
-      function: {
-        name: "run_bash_command",
-        description:
-          "Executes a bash shell command on the host system. Use this to read files, navigate the directory, install packages, or run scripts. Returns the terminal output.",
-        parameters: {
-          type: "object",
-          properties: {
-            command: {
-              type: "string",
-              description:
-                "The exact bash command to run (e.g., 'ls -la', 'cat file.txt', 'mkdir new_folder').",
-            },
-          },
-          required: ["command"],
-        },
-      },
-    },
-    execute: async ({ command }) => {
-      try {
-        // Execute the command with a timeout to prevent infinite hangs
-        const { stdout, stderr } = await new Promise((res, rej) =>
-          exec(command, { timeout: 15000 }, (error, stdout, stderr) => {
-            if (error) rej(error);
-            res({ stderr, stdout });
-          }),
-        );
-
-        // If the command succeeds but writes to stderr (common for warnings)
-        if (stderr && !stdout) {
-          return `Command executed with warnings/stderr:\n${stderr.trim()}`;
-        }
-
-        // Return standard output
-        return stdout.trim() || "Command executed successfully with no output.";
-      } catch (error) {
-        // Return the error message to the AI so it knows what went wrong and can adapt
-        // @ts-ignore
-        return `Execution Failed.\nExit Code: ${error.code}\nError: ${error.message}`;
-      }
-    },
-  },
-};
 
 // UTILS
 
