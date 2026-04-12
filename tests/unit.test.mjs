@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { describe, expect, it } from "vitest";
 import { exec } from "node:child_process";
 
 // Since cli.mjs doesn't export its utilities, we test them

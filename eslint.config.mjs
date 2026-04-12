@@ -1,5 +1,5 @@
-import js from "@eslint/js";
 import globals from "globals";
+import js from "@eslint/js";
 
 export default [
   js.configs.recommended,
@@ -14,6 +14,16 @@ export default [
     rules: {
       "no-unused-vars": ["warn", { argsIgnorePattern: "^_" }],
       "no-console": "off",
+      "sort-imports": [
+        "warn",
+        {
+          ignoreCase: true,
+          ignoreDeclarationSort: false,
+          ignoreMemberSort: false,
+          memberSyntaxSortOrder: ["none", "all", "multiple", "single"],
+          allowSeparatedGroups: true,
+        },
+      ],
     },
   },
   {

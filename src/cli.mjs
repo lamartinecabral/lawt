@@ -1,13 +1,15 @@
 #!/usr/bin/env node
 
 // @ts-check
-import readline from "node:readline/promises";
-import { Command, InvalidArgumentError } from "commander";
 import { Ollama } from "ollama";
 import ora from "ora";
 import pc from "picocolors";
-import pkg from "../package.json" with { type: "json" };
+import readline from "node:readline/promises";
 import { toolRegistry } from "./tools.mjs";
+
+import { Command, InvalidArgumentError } from "commander";
+
+import pkg from "../package.json" with { type: "json" };
 
 const rl = readline.createInterface({
   input: process.stdin,
@@ -42,14 +44,14 @@ program
   )
   .option("-c, --context <number>", "Context length", "16000")
   .action(async function () {
+    await presentation(this);
     const opts = this.opts();
-    await presentation(opts);
 
     /** @type {import("ollama").Message[]} */
     const messages = [{ role: "system", content: opts.system }];
 
     while (true) {
-      console.log(pc.green("--- user ---"));
+      console.log(pc.green("\n--- user ---"));
       if (!opts.prompt) {
         opts.prompt = await rl.question("");
       } else {
@@ -80,7 +82,8 @@ program
         let tool_calls = [];
 
         let mode = "";
-        for await (const { message, done } of response) {
+        for await (const res of response) {
+          const { message, done } = res;
           if (spinner.isSpinning) spinner.stop();
           if (message?.content) content += message.content;
           if (message?.tool_calls?.length)
@@ -95,7 +98,7 @@ program
             if ("thinking" in chunk) {
               if (mode !== "thinking") {
                 if (mode) console.log("");
-                console.log(pc.magenta("--- thinking ---"));
+                console.log(pc.magenta("\n--- thinking ---"));
                 mode = "thinking";
               }
               process.stdout.write(pc.dim(chunk.thinking));
@@ -103,7 +106,7 @@ program
             if ("content" in chunk) {
               if (mode !== "content") {
                 if (mode) console.log("");
-                console.log(pc.blue("--- bot ---"));
+                console.log(pc.blue("\n--- bot ---"));
                 mode = "content";
               }
               process.stdout.write(chunk.content);
@@ -128,7 +131,7 @@ program
           const content = await toolRegistry[tool_name].execute(args);
           messages.push({ role: "tool", tool_name, content });
 
-          console.log(pc.yellow("--- tool ---"));
+          console.log(pc.yellow("\n--- tool ---"));
           console.log(
             pc.dim(ellipsis(`> ${tool_name}(${JSON.stringify(args)})`, 300)),
           );
@@ -167,8 +170,9 @@ function parseThinkOption(value) {
   );
 }
 
-async function presentation(opts) {
-  const { model, system, context, think } = opts;
+/** @param {Command} cmd */
+async function presentation(cmd) {
+  const { model, system, context, think } = cmd.opts();
   const response = await ollama.list();
   let modelNotFound;
   try {
@@ -180,19 +184,21 @@ async function presentation(opts) {
     );
   }
   if (modelNotFound) throw new Error(`model ${model} not found`);
+  console.log(pc.bgGreen(`${cmd.name()} - ${cmd.description()}`));
+  console.log(``);
   let maxLen = 0;
   [
     ["model", model],
     ["system prompt", system],
     ["context length", context],
-    ["thinking", think],
+    ["thinking", think ?? "default"],
   ]
     .map((a) => {
       maxLen = Math.max(maxLen, a[0].length);
       return a;
     })
     .forEach(([a, b]) =>
-      console.log(`${a}: `.padEnd(maxLen + 2, " "), pc.dim(b)),
+      console.log(`${a}:`.padEnd(maxLen + 1, " "), pc.dim(b)),
     );
 }
 
