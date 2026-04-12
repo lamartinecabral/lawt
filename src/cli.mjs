@@ -49,7 +49,7 @@ program
       if (!opts.prompt) {
         opts.prompt = await rl.question("");
       } else {
-        console.log(prompt);
+        console.log(opts.prompt);
       }
       // prompt = "increment the value in counter.txt";
 

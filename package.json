@@ -1,4 +1,24 @@
 {
+  "name": "minicode",
+  "version": "1.0.0",
+  "description": "A lightweight CLI AI agent powered by Ollama",
+  "type": "module",
+  "scripts": {
+    "start": "node src/cli.mjs",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "keywords": [
+    "cli",
+    "ai",
+    "agent",
+    "ollama"
+  ],
+  "license": "ISC",
   "dependencies": {
     "commander": "^14.0.3",
     "ollama": "^0.6.3",
@@ -6,6 +26,12 @@
     "picocolors": "^1.1.1"
   },
   "devDependencies": {
-    "@types/node": "^25.6.0"
+    "@eslint/js": "^10.0.1",
+    "@types/node": "^25.6.0",
+    "eslint": "^10.2.0",
+    "execa": "^9.6.1",
+    "globals": "^17.4.0",
+    "prettier": "^3.8.2",
+    "vitest": "^4.1.4"
   }
 }
