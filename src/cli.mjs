@@ -43,6 +43,7 @@ program
   .option("-c, --context <number>", "Context length", "16000")
   .action(async function () {
     const opts = this.opts();
+    await presentation(opts);
 
     /** @type {import("ollama").Message[]} */
     const messages = [{ role: "system", content: opts.system }];
@@ -139,6 +140,7 @@ program
         }
       }
     }
+    console.log(pc.dim("Good bye!"));
     rl.close();
   });
 
@@ -217,6 +219,35 @@ function parseThinkOption(value) {
   throw new InvalidArgumentError(
     `Invalid value for --think: ${value}. Expected true, false, high, medium, or low.`,
   );
+}
+
+async function presentation(opts) {
+  const { model, system, context, think } = opts;
+  const response = await ollama.list();
+  let modelNotFound;
+  try {
+    modelNotFound = !response.models.find((m) => m.model === model);
+  } catch (err) {
+    throw new Error(
+      "Failed to connect to Ollama. Please make sure Ollama is installed and running.",
+      { cause: err },
+    );
+  }
+  if (modelNotFound) throw new Error(`model ${model} not found`);
+  let maxLen = 0;
+  [
+    ["model", model],
+    ["system prompt", system],
+    ["context length", context],
+    ["thinking", think],
+  ]
+    .map((a) => {
+      maxLen = Math.max(maxLen, a[0].length);
+      return a;
+    })
+    .forEach(([a, b]) =>
+      console.log(`${a}: `.padEnd(maxLen + 2, " "), pc.dim(b)),
+    );
 }
 
 // START
