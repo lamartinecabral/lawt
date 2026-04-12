@@ -1,30 +1,32 @@
 #!/usr/bin/env node
 
 // @ts-check
-import { Ollama } from "ollama";
-import ora from "ora";
+import { finish, ollama } from "./utils.mjs";
 import pc from "picocolors";
-import readline from "node:readline/promises";
-import { toolRegistry } from "./tools.mjs";
+import pkg from "../package.json" with { type: "json" };
+import { run } from "./run.mjs";
+import { z } from "zod";
 
 import { Command, InvalidArgumentError } from "commander";
 
-import pkg from "../package.json" with { type: "json" };
-
-const rl = readline.createInterface({
-  input: process.stdin,
-  output: process.stdout,
-});
-
-let activeResponse;
-rl.on("close", () => {
-  if (activeResponse) activeResponse.abort();
-  process.exit(0);
-});
-
-const ollama = new Ollama();
-
 const program = new Command();
+
+const optsSchema = z.object({
+  model: z.string().nonempty(),
+  prompt: z.string().nonempty().optional(),
+  think: z
+    .union([
+      z.boolean(),
+      z.literal("low"),
+      z.literal("medium"),
+      z.literal("high"),
+    ])
+    .optional(),
+  system: z.string().nonempty(),
+  context: z.coerce.number().int(),
+});
+
+/** @typedef {z.infer<typeof optsSchema>} Opts */
 
 program
   .name("minicode")
@@ -44,112 +46,40 @@ program
   )
   .option("-c, --context <number>", "Context length", "16000")
   .action(async function () {
+    const opts = optsSchema.parse(this.opts());
+
     await presentation(this);
-    const opts = this.opts();
-    let prompt = opts.prompt;
 
     /** @type {import("ollama").Message[]} */
     const messages = [{ role: "system", content: opts.system }];
 
-    while (true) {
-      console.log(pc.green("\n--- user ---"));
-      if (!prompt) {
-        prompt = await rl.question("");
-      } else {
-        console.log(prompt);
-      }
-      // prompt = "increment the value in counter.txt";
+    if (opts.prompt) {
+      const res = await run({
+        modelId: opts.model,
+        messages,
+        reasoningEffort: opts.think,
+        contextLength: opts.context,
+        userPrompt: opts.prompt,
+      });
 
-      if (prompt === "exit") break;
-
-      messages.push({ role: "user", content: prompt });
-      prompt = "";
-
-      while (true) {
-        const spinner = ora().start();
-
-        const response = await ollama.chat({
-          stream: true,
-          options: { num_ctx: +opts.context },
-          model: opts.model,
-          messages,
-          tools: Object.values(toolRegistry).map((a) => a.definition),
-          think: opts.think,
-        });
-
-        activeResponse = response;
-
-        let content = "";
-        let tool_calls = [];
-
-        let mode = "";
-        for await (const res of response) {
-          const { message, done } = res;
-          if (spinner.isSpinning) spinner.stop();
-          if (message?.content) content += message.content;
-          if (message?.tool_calls?.length)
-            tool_calls.push(...message.tool_calls);
-          if (!done) {
-            const chunk = Object.fromEntries(
-              [
-                ["content", message.content],
-                ["thinking", message.thinking],
-              ].filter((a) => a[1]),
-            );
-            if ("thinking" in chunk) {
-              if (mode !== "thinking") {
-                if (mode) console.log("");
-                console.log(pc.magenta("\n--- thinking ---"));
-                mode = "thinking";
-              }
-              process.stdout.write(pc.dim(chunk.thinking));
-            }
-            if ("content" in chunk) {
-              if (mode !== "content") {
-                if (mode) console.log("");
-                console.log(pc.blue("\n--- bot ---"));
-                mode = "content";
-              }
-              process.stdout.write(chunk.content);
-            }
-          }
-        }
-        if (mode) console.log("");
-
-        activeResponse = null;
-
-        messages.push({
-          role: "assistant",
-          content,
-          tool_calls: tool_calls.length ? tool_calls : undefined,
-        });
-
-        if (!tool_calls.length) break;
-
-        for (const tool_call of tool_calls) {
-          const tool_name = tool_call.function.name;
-          const args = tool_call.function.arguments;
-          const content = await toolRegistry[tool_name].execute(args);
-          messages.push({ role: "tool", tool_name, content });
-
-          console.log(pc.yellow("\n--- tool ---"));
-          console.log(
-            pc.dim(ellipsis(`> ${tool_name}(${JSON.stringify(args)})`, 300)),
-          );
-          console.log(pc.dim(ellipsis(`= ${content}`, 300)));
-        }
-      }
+      if (res === "break") finish();
     }
-    console.log(pc.dim("Good bye!"));
-    rl.close();
+
+    while (true) {
+      const res = await run({
+        modelId: opts.model,
+        messages,
+        reasoningEffort: opts.think,
+        contextLength: opts.context,
+      });
+
+      if (res === "break") break;
+    }
+
+    finish();
   });
 
 // UTILS
-
-const ellipsis = (str = "", len = 50) => {
-  if (str.length > len) return str.substring(0, len - 1) + "…";
-  return str;
-};
 
 function parseThinkOption(value) {
   if (typeof value === "boolean") {
