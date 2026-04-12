@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "description": "A lightweight CLI AI agent powered by Ollama",
   "type": "module",
+  "bin": {
+    "minicode": "./src/cli.js"
+  },
   "scripts": {
     "start": "node src/cli.mjs",
     "lint": "eslint .",

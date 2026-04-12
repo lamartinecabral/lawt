@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 // @ts-check
 import { exec } from "node:child_process";
 import readline from "node:readline/promises";
