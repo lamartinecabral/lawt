@@ -90,10 +90,6 @@ program
               [
                 ["content", message.content],
                 ["thinking", message.thinking],
-                [
-                  "tool_calls",
-                  message.tool_calls && JSON.stringify(message.tool_calls),
-                ],
               ].filter((a) => a[1]),
             );
             if ("thinking" in chunk) {
@@ -134,9 +130,9 @@ program
 
           console.log(pc.yellow("--- tool ---"));
           console.log(
-            pc.dim(ellipsis(`> ${tool_name}(${JSON.stringify(args)})`, 200)),
+            pc.dim(ellipsis(`> ${tool_name}(${JSON.stringify(args)})`, 300)),
           );
-          console.log(pc.dim(ellipsis(`= ${content}`, 200)));
+          console.log(pc.dim(ellipsis(`= ${content}`, 300)));
         }
       }
     }
