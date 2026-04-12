@@ -7,7 +7,7 @@ import { Command, InvalidArgumentError } from "commander";
 import { Ollama } from "ollama";
 import ora from "ora";
 import pc from "picocolors";
-import pkg from "../package.json";
+import pkg from "../package.json" with { type: "json" };
 
 const rl = readline.createInterface({
   input: process.stdin,
