@@ -1,21 +1,22 @@
 // @ts-check
+import { abortables, ellipsis, ollama, question } from "./utils.mjs";
 import ora from "ora";
 import pc from "picocolors";
 import { toolRegistry } from "./tools.mjs";
 
-import { abortables, ellipsis, ollama, rl } from "./utils.mjs";
-
 /**
  * @param {object} param0
  * @param {string} [param0.userPrompt]
+ * @param {(prompt: string) => boolean} [param0.interceptPrompt]
  * @param {string} param0.modelId
  * @param {import("ollama").Message[]} param0.messages
  * @param {number} param0.contextLength
  * @param {import("ollama").ChatRequest['think']} [param0.reasoningEffort]
- * @returns {Promise<'break' | undefined>}
+ * @returns {Promise<string | undefined>}
  */
 export const run = async ({
   userPrompt,
+  interceptPrompt,
   modelId,
   messages,
   contextLength,
@@ -27,8 +28,8 @@ export const run = async ({
     console.log(userPrompt);
     messages.push({ role: "user", content: userPrompt });
   } else {
-    const prompt = await rl.question("");
-    if (prompt === "exit") return "break";
+    const prompt = await question();
+    if (interceptPrompt?.(prompt)) return prompt;
     messages.push({ role: "user", content: prompt });
   }
   // userPrompt = "increment the value in counter.txt";

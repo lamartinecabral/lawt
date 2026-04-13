@@ -1,32 +1,13 @@
 #!/usr/bin/env node
 
 // @ts-check
-import { finish, ollama } from "./utils.mjs";
+import { finish, ollama, optsSchema, parseThinkOption } from "./utils.mjs";
+import { Command } from "commander";
 import pc from "picocolors";
 import pkg from "../package.json" with { type: "json" };
 import { run } from "./run.mjs";
-import { z } from "zod";
-
-import { Command, InvalidArgumentError } from "commander";
 
 const program = new Command();
-
-const optsSchema = z.object({
-  model: z.string().nonempty(),
-  prompt: z.string().nonempty().optional(),
-  think: z
-    .union([
-      z.boolean(),
-      z.literal("low"),
-      z.literal("medium"),
-      z.literal("high"),
-    ])
-    .optional(),
-  system: z.string().nonempty(),
-  context: z.coerce.number().int(),
-});
-
-/** @typedef {z.infer<typeof optsSchema>} Opts */
 
 program
   .name(pkg.name)
@@ -48,21 +29,19 @@ program
   .action(async function () {
     const opts = optsSchema.parse(this.opts());
 
-    await presentation(this);
+    await presentation(this, opts);
 
     /** @type {import("ollama").Message[]} */
     const messages = [{ role: "system", content: opts.system }];
 
     if (opts.prompt) {
-      const res = await run({
+      await run({
         modelId: opts.model,
         messages,
         reasoningEffort: opts.think,
         contextLength: opts.context,
         userPrompt: opts.prompt,
       });
-
-      if (res === "break") finish();
     }
 
     while (true) {
@@ -71,39 +50,56 @@ program
         messages,
         reasoningEffort: opts.think,
         contextLength: opts.context,
+        interceptPrompt: (prompt) => {
+          if (prompt === "/exit") return true;
+          if (prompt === "/clear") return true;
+          if (prompt === "/save") return true;
+          if (prompt === "/load") return true;
+          if (prompt.startsWith("/system ")) return true;
+          if (prompt.startsWith("/think ")) return true;
+          if (prompt.startsWith("/context ")) return true;
+          return false;
+        },
       });
 
-      if (res === "break") break;
+      if (res === "/exit") break;
+      if (res === "/clear") {
+        messages.splice(1);
+        console.log(pc.dim("\nContext cleared"));
+      }
+      if (res === "/save") {
+        console.log(pc.dim("\nnot implemented yet"));
+      }
+      if (res === "/load") {
+        console.log(pc.dim("\nnot implemented yet"));
+      }
+      if (res?.startsWith("/system ")) {
+        messages[0].content = res.substring(8).trim();
+        console.log(pc.dim("\nSystem prompt changed"));
+      }
+      if (res?.startsWith("/think ")) {
+        try {
+          opts.think = parseThinkOption(res.substring(7).trim());
+          console.log(pc.dim(`\nThinking changed to '${opts.think}'`));
+        } catch (e) {
+          console.log(pc.dim(`\n${e instanceof Error ? e.message : e}`));
+        }
+      }
+      if (res?.startsWith("/context ")) {
+        opts.context = +res.substring(9);
+        console.log(pc.dim(`\nContext length changed to '${opts.context}'`));
+      }
     }
 
     finish();
   });
 
-// UTILS
-
-function parseThinkOption(value) {
-  if (typeof value === "boolean") {
-    return value;
-  }
-
-  const normalized = value.toLowerCase();
-  if (normalized === "true") return true;
-  if (normalized === "false") return false;
-  if (
-    normalized === "high" ||
-    normalized === "medium" ||
-    normalized === "low"
-  ) {
-    return normalized;
-  }
-  throw new InvalidArgumentError(
-    `Invalid value for --think: ${value}. Expected true, false, high, medium, or low.`,
-  );
-}
-
-/** @param {Command} cmd */
-async function presentation(cmd) {
-  const { model, system, context, think } = cmd.opts();
+/**
+ * @param {Command} cmd
+ * @param {import('zod').z.infer<typeof optsSchema>} opts
+ */
+async function presentation(cmd, opts) {
+  const { model, system, context, think } = opts;
   const response = await ollama.list();
   let modelNotFound;
   try {
@@ -125,11 +121,11 @@ async function presentation(cmd) {
     ["thinking", think ?? "default"],
   ]
     .map((a) => {
-      maxLen = Math.max(maxLen, a[0].length);
+      maxLen = Math.max(maxLen, String(a[0]).length);
       return a;
     })
     .forEach(([a, b]) =>
-      console.log(`${a}:`.padEnd(maxLen + 1, " "), pc.dim(b)),
+      console.log(`${a}:`.padEnd(maxLen + 1, " "), pc.dim(String(b))),
     );
 }
 
