@@ -5,7 +5,8 @@ A lightweight AI agent CLI powered by [Ollama](https://ollama.com). It provides 
 ## Prerequisites
 
 - [Node.js](https://nodejs.org) >= 18
-- [Ollama](https://ollama.com) running locally with a model pulled (default: `gemma4:e2b`)
+- [Ollama](https://ollama.com) running locally
+- A tool-calling capable model already pulled (`ollama pull gemma4:e2b`) or created (`ollama create my-model -f Modelfile`)
 
 ## Installation
 
@@ -36,19 +37,19 @@ minicode [options]
 Start an interactive session:
 
 ```bash
-node src/cli.mjs
+minicode
 ```
 
 Use a specific model with an initial prompt:
 
 ```bash
-node src/cli.mjs -m llama3.1 -p "list files in the current directory"
+minicode -m gpt-oss:20b -p "list files in the current directory"
 ```
 
 Enable thinking mode:
 
 ```bash
-node src/cli.mjs -t high
+minicode -t high
 ```
 
 Type `exit` to quit the session.
