@@ -7,7 +7,7 @@ const CLI_PATH = resolve(import.meta.dirname, "../src/cli.mjs");
 describe("CLI e2e", () => {
   it("prints help text", async () => {
     const { stdout } = await execaNode(CLI_PATH, ["--help"]);
-    expect(stdout).toContain("CLI AI agent powered by Ollama");
+    expect(stdout).toContain("AI agent CLI powered by Ollama");
     expect(stdout).toContain("-m, --model");
     expect(stdout).toContain("-p, --prompt");
     expect(stdout).toContain("-t, --think");
@@ -35,12 +35,12 @@ describe("CLI e2e", () => {
     // Passing --think true with --help so the process exits without
     // needing an Ollama connection.
     const { stdout } = await execaNode(CLI_PATH, ["--think", "true", "--help"]);
-    expect(stdout).toContain("CLI AI agent");
+    expect(stdout).toContain("AI agent CLI");
   });
 
   it("accepts --think high", async () => {
     const { stdout } = await execaNode(CLI_PATH, ["--think", "high", "--help"]);
-    expect(stdout).toContain("CLI AI agent");
+    expect(stdout).toContain("AI agent CLI");
   });
 
   it("shows program name as minicode", async () => {

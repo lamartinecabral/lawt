@@ -29,8 +29,8 @@ const optsSchema = z.object({
 /** @typedef {z.infer<typeof optsSchema>} Opts */
 
 program
-  .name("minicode")
-  .description("CLI AI agent powered by Ollama")
+  .name(pkg.name)
+  .description(pkg.description)
   .version(pkg.version, "-v, --version")
   .option("-m, --model <model>", "Ollama model to use", "gemma4:e2b")
   .option("-p, --prompt <prompt>", "Initial prompt")

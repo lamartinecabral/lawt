@@ -1,6 +1,6 @@
 # minicode
 
-A lightweight CLI AI agent powered by [Ollama](https://ollama.com). It provides an interactive chat with tool-calling capabilities, letting the AI execute bash commands on your system.
+A lightweight AI agent CLI powered by [Ollama](https://ollama.com). It provides an interactive chat with tool-calling capabilities, letting the AI execute bash commands on your system.
 
 ## Prerequisites
 

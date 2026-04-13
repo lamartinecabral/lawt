@@ -1,7 +1,7 @@
 {
   "name": "minicode",
   "version": "1.0.0",
-  "description": "A lightweight CLI AI agent powered by Ollama",
+  "description": "A lightweight AI agent CLI powered by Ollama",
   "type": "module",
   "bin": {
     "minicode": "./src/cli.mjs"
