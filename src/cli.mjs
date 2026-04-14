@@ -56,6 +56,7 @@ program
           if (prompt === "/save") return true;
           if (prompt === "/load") return true;
           if (prompt.startsWith("/system ")) return true;
+          if (prompt.startsWith("/model ")) return true;
           if (prompt.startsWith("/think ")) return true;
           if (prompt.startsWith("/context ")) return true;
           return false;
@@ -76,6 +77,16 @@ program
       if (res?.startsWith("/system ")) {
         messages[0].content = res.substring(8).trim();
         console.log(pc.dim("\nSystem prompt changed"));
+      }
+      if (res?.startsWith("/model ")) {
+        try {
+          const model = res.substring(7).trim();
+          await assertModel(model);
+          opts.model = model;
+          console.log(pc.dim(`\nModel changed to '${model}'`));
+        } catch (e) {
+          console.log(pc.dim(`\n${e instanceof Error ? e.message : e}`));
+        }
       }
       if (res?.startsWith("/think ")) {
         try {
@@ -100,17 +111,7 @@ program
  */
 async function presentation(cmd, opts) {
   const { model, system, context, think } = opts;
-  const response = await ollama.list();
-  let modelNotFound;
-  try {
-    modelNotFound = !response.models.find((m) => m.model === model);
-  } catch (err) {
-    throw new Error(
-      "Failed to connect to Ollama. Please make sure Ollama is installed and running.",
-      { cause: err },
-    );
-  }
-  if (modelNotFound) throw new Error(`model ${model} not found`);
+  await assertModel(model);
   console.log(pc.bgGreen(`${cmd.name()} - ${cmd.description()}`));
   console.log(``);
   let maxLen = 0;
@@ -127,6 +128,20 @@ async function presentation(cmd, opts) {
     .forEach(([a, b]) =>
       console.log(`${a}:`.padEnd(maxLen + 1, " "), pc.dim(String(b))),
     );
+}
+
+async function assertModel(model) {
+  const response = await ollama.list();
+  let modelNotFound;
+  try {
+    modelNotFound = !response.models.find((m) => m.model === model);
+  } catch (err) {
+    throw new Error(
+      "Failed to connect to Ollama. Please make sure Ollama is installed and running.",
+      { cause: err },
+    );
+  }
+  if (modelNotFound) throw new Error(`model ${model} not found`);
 }
 
 // START

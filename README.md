@@ -5,8 +5,8 @@ A lightweight AI agent CLI powered by [Ollama](https://ollama.com). It provides 
 ## Prerequisites
 
 - [Node.js](https://nodejs.org) >= 18
-- [Ollama](https://ollama.com) running locally
-- A tool-calling capable model already pulled (`ollama pull gemma4:e2b`) or created (`ollama create my-model -f Modelfile`)
+- [Ollama](https://ollama.com/download) running locally
+- A tool-calling capable [model](https://ollama.com/search?c=tools)
 
 ## Installation
 
