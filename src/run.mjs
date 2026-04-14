@@ -30,9 +30,8 @@ export const run = async ({
   } else {
     const prompt = await question();
     if (interceptUserPrompt?.(prompt)) return prompt;
-    messages.push({ role: "user", content: prompt });
+    messages.push({ role: "user", content: prompt.trim() });
   }
-  // userPrompt = "increment the value in counter.txt";
 
   while (true) {
     const spinner = ora().start();
