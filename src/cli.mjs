@@ -66,7 +66,7 @@ program
       if (res === "/exit") break;
       if (res === "/clear") {
         messages.splice(1);
-        console.log(pc.dim("\nContext cleared"));
+        console.log(pc.green("\n✓"), pc.dim("Context cleared"));
       }
       if (res === "/save") {
         console.log(pc.dim("\nnot implemented yet"));
@@ -75,30 +75,47 @@ program
         console.log(pc.dim("\nnot implemented yet"));
       }
       if (res?.startsWith("/system ")) {
-        messages[0].content = res.substring(8).trim();
-        console.log(pc.dim("\nSystem prompt changed"));
+        opts.system = messages[0].content = res.substring(8).trim();
+        console.log(pc.green("\n✓"), pc.dim("System prompt changed"));
       }
       if (res?.startsWith("/model ")) {
         try {
           const model = res.substring(7).trim();
           await assertModel(model);
           opts.model = model;
-          console.log(pc.dim(`\nModel changed to '${model}'`));
+          console.log(pc.green("\n✓"), pc.dim(`Model changed to '${model}'`));
         } catch (e) {
-          console.log(pc.dim(`\n${e instanceof Error ? e.message : e}`));
+          console.log(
+            pc.red("\n✕"),
+            pc.dim(`${e instanceof Error ? e.message : e}`),
+          );
         }
       }
       if (res?.startsWith("/think ")) {
         try {
           opts.think = parseThinkOption(res.substring(7).trim());
-          console.log(pc.dim(`\nThinking changed to '${opts.think}'`));
+          console.log(
+            pc.green("\n✓"),
+            pc.dim(`Thinking changed to '${opts.think}'`),
+          );
         } catch (e) {
-          console.log(pc.dim(`\n${e instanceof Error ? e.message : e}`));
+          console.log(
+            pc.red("\n✕"),
+            pc.dim(`${e instanceof Error ? e.message : e}`),
+          );
         }
       }
       if (res?.startsWith("/context ")) {
-        opts.context = +res.substring(9);
-        console.log(pc.dim(`\nContext length changed to '${opts.context}'`));
+        const context = +res.substring(9);
+        if (Number.isInteger(context) && context > 0) {
+          opts.context = context;
+          console.log(
+            pc.green("\n✓"),
+            pc.dim(`Context length changed to '${opts.context}'`),
+          );
+        } else {
+          console.log(pc.red("\n✕"), pc.dim(`Invalid value`));
+        }
       }
     }
 
