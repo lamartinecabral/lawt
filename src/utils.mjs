@@ -15,7 +15,7 @@ export const abortables = new Set();
 
 rl.on("close", () => {
   for (const abortable of abortables) abortable.abort();
-  console.log(pc.dim("\nGood bye!"));
+  console.log(pc.dim("\nGoodbye!"));
   process.exit(0);
 });
 
