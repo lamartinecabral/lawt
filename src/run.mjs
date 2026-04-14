@@ -7,7 +7,7 @@ import { toolRegistry } from "./tools.mjs";
 /**
  * @param {object} param0
  * @param {string} [param0.userPrompt]
- * @param {(prompt: string) => boolean} [param0.interceptPrompt]
+ * @param {(prompt: string) => boolean} [param0.interceptUserPrompt]
  * @param {string} param0.modelId
  * @param {import("ollama").Message[]} param0.messages
  * @param {number} param0.contextLength
@@ -16,7 +16,7 @@ import { toolRegistry } from "./tools.mjs";
  */
 export const run = async ({
   userPrompt,
-  interceptPrompt,
+  interceptUserPrompt,
   modelId,
   messages,
   contextLength,
@@ -29,7 +29,7 @@ export const run = async ({
     messages.push({ role: "user", content: userPrompt });
   } else {
     const prompt = await question();
-    if (interceptPrompt?.(prompt)) return prompt;
+    if (interceptUserPrompt?.(prompt)) return prompt;
     messages.push({ role: "user", content: prompt });
   }
   // userPrompt = "increment the value in counter.txt";
@@ -52,37 +52,39 @@ export const run = async ({
     let tool_calls = [];
 
     let mode = "";
-    for await (const res of response) {
-      const { message, done } = res;
+    for await (const chunk of response) {
+      const { message, done, eval_count, prompt_eval_count } = chunk;
       if (spinner.isSpinning) spinner.stop();
       if (message?.content) content += message.content;
       if (message?.tool_calls?.length) tool_calls.push(...message.tool_calls);
       if (!done) {
-        const chunk = Object.fromEntries(
-          [
-            ["content", message.content],
-            ["thinking", message.thinking],
-          ].filter((a) => a[1]),
-        );
-        if ("thinking" in chunk) {
+        if (message.thinking) {
           if (mode !== "thinking") {
             if (mode) console.log("");
             console.log(pc.magenta("\n--- thinking ---"));
             mode = "thinking";
           }
-          process.stdout.write(pc.dim(chunk.thinking));
+          process.stdout.write(pc.dim(message.thinking));
         }
-        if ("content" in chunk) {
+        if (message.content) {
           if (mode !== "content") {
             if (mode) console.log("");
             console.log(pc.blue("\n--- bot ---"));
             mode = "content";
           }
-          process.stdout.write(chunk.content);
+          process.stdout.write(message.content);
+        }
+      } else {
+        if (mode) console.log("");
+        if (mode === "content") {
+          console.log(
+            pc.dim(
+              `(input tokens: ${prompt_eval_count}, output tokens: ${eval_count})`,
+            ),
+          );
         }
       }
     }
-    if (mode) console.log("");
 
     abortables.delete(response);
 

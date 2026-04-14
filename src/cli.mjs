@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 // @ts-check
-import { finish, ollama, optsSchema, parseThinkOption } from "./utils.mjs";
+import { assertModel, finish, optsSchema, parseThinkOption } from "./utils.mjs";
 import { Command } from "commander";
 import pc from "picocolors";
 import pkg from "../package.json" with { type: "json" };
@@ -29,7 +29,9 @@ program
   .action(async function () {
     const opts = optsSchema.parse(this.opts());
 
-    await presentation(this, opts);
+    await assertModel(opts.model);
+    console.log(pc.bgGreen(`${this.name()} - ${this.description()}`));
+    showOpts(opts);
 
     /** @type {import("ollama").Message[]} */
     const messages = [{ role: "system", content: opts.system }];
@@ -50,11 +52,12 @@ program
         messages,
         reasoningEffort: opts.think,
         contextLength: opts.context,
-        interceptPrompt: (prompt) => {
+        interceptUserPrompt: (prompt) => {
           if (prompt === "/exit") return true;
           if (prompt === "/clear") return true;
           if (prompt === "/save") return true;
           if (prompt === "/load") return true;
+          if (prompt === "/show_opts") return true;
           if (prompt.startsWith("/system ")) return true;
           if (prompt.startsWith("/model ")) return true;
           if (prompt.startsWith("/think ")) return true;
@@ -73,6 +76,9 @@ program
       }
       if (res === "/load") {
         console.log(pc.dim("\nnot implemented yet"));
+      }
+      if (res === "/show_opts") {
+        showOpts(opts);
       }
       if (res?.startsWith("/system ")) {
         opts.system = messages[0].content = res.substring(8).trim();
@@ -122,14 +128,9 @@ program
     finish();
   });
 
-/**
- * @param {Command} cmd
- * @param {import('zod').z.infer<typeof optsSchema>} opts
- */
-async function presentation(cmd, opts) {
+/** @param {import('zod').z.infer<typeof optsSchema>} opts */
+function showOpts(opts) {
   const { model, system, context, think } = opts;
-  await assertModel(model);
-  console.log(pc.bgGreen(`${cmd.name()} - ${cmd.description()}`));
   console.log(``);
   let maxLen = 0;
   [
@@ -145,20 +146,6 @@ async function presentation(cmd, opts) {
     .forEach(([a, b]) =>
       console.log(`${a}:`.padEnd(maxLen + 1, " "), pc.dim(String(b))),
     );
-}
-
-async function assertModel(model) {
-  const response = await ollama.list();
-  let modelNotFound;
-  try {
-    modelNotFound = !response.models.find((m) => m.model === model);
-  } catch (err) {
-    throw new Error(
-      "Failed to connect to Ollama. Please make sure Ollama is installed and running.",
-      { cause: err },
-    );
-  }
-  if (modelNotFound) throw new Error(`model ${model} not found`);
 }
 
 // START

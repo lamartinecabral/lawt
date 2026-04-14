@@ -55,6 +55,7 @@ export function parseThinkOption(value) {
   const normalized = value.toLowerCase();
   if (normalized === "true") return true;
   if (normalized === "false") return false;
+  if (normalized === "default") return undefined;
   if (
     normalized === "high" ||
     normalized === "medium" ||
@@ -63,8 +64,22 @@ export function parseThinkOption(value) {
     return normalized;
   }
   throw new InvalidArgumentError(
-    `Invalid value for --think: ${value}. Expected true, false, high, medium, or low.`,
+    `Invalid value for --think: ${value}. Expected default, true, false, high, medium, or low.`,
   );
 }
 
 export const ollama = new Ollama();
+
+export async function assertModel(model) {
+  const response = await ollama.list();
+  let modelNotFound;
+  try {
+    modelNotFound = !response.models.find((m) => m.model === model);
+  } catch (err) {
+    throw new Error(
+      "Failed to connect to Ollama. Please make sure Ollama is installed and running.",
+      { cause: err },
+    );
+  }
+  if (modelNotFound) throw new Error(`model ${model} not found`);
+}
