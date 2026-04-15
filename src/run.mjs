@@ -48,6 +48,7 @@ export const run = async ({
     abortables.add(response);
 
     let content = "";
+    let thinking = "";
     let tool_calls = [];
 
     let mode = "";
@@ -55,6 +56,7 @@ export const run = async ({
       const { message, done, eval_count, prompt_eval_count } = chunk;
       if (spinner.isSpinning) spinner.stop();
       if (message?.content) content += message.content;
+      if (message?.thinking) thinking += message.thinking;
       if (message?.tool_calls?.length) tool_calls.push(...message.tool_calls);
       if (!done) {
         if (message.thinking) {
@@ -91,6 +93,7 @@ export const run = async ({
       role: "assistant",
       content,
       tool_calls: tool_calls.length ? tool_calls : undefined,
+      ...(thinking ? { thinking } : {}),
     });
 
     if (!tool_calls.length) break;
@@ -108,4 +111,7 @@ export const run = async ({
       console.log(pc.dim(ellipsis(`= ${content}`, 300)));
     }
   }
+  messages.forEach((msg) => {
+    if (msg.thinking) delete msg.thinking;
+  });
 };

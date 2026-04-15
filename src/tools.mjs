@@ -1,4 +1,5 @@
 // @ts-check
+import { ellipsis } from "./utils.mjs";
 import { exec } from "node:child_process";
 
 /** @typedef {{definition: import("ollama").Tool, execute: (...args: any[]) => Promise<string>}} Tool */
@@ -40,7 +41,10 @@ const run_bash_command = {
       }
 
       // Return standard output
-      return stdout.trim() || "Command executed successfully with no output.";
+      return (
+        ellipsis(stdout.trim(), 5000) ||
+        "Command executed successfully with no output."
+      );
     } catch (error) {
       // Return the error message to the AI so it knows what went wrong and can adapt
       // @ts-ignore
