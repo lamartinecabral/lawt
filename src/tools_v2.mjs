@@ -79,8 +79,10 @@ const readFile = {
       if (isBinaryPath(filePath)) return fail("Cannot read binary file");
       const stat = await fs.stat(filePath);
       const limit = args.maxBytes ?? MAX_READ_BYTES;
-      if (stat.size > limit)
-        return fail(`File exceeds size limit (${stat.size} > ${limit})`);
+      if (stat.size > MAX_FILE_SIZE)
+        return fail(
+          `File exceeds size limit (${stat.size} > ${MAX_FILE_SIZE})`,
+        );
 
       const content = await fs.readFile(filePath, "utf-8");
 
@@ -88,7 +90,7 @@ const readFile = {
         const lines = content.split("\n");
         const start = (args.startLine ?? 1) - 1;
         const end = args.endLine ?? lines.length;
-        return ok(lines.slice(start, end).join("\n"));
+        return ok(ellipsis(lines.slice(start, end).join("\n"), limit));
       }
 
       return ok(content);
@@ -333,7 +335,7 @@ const grepSearch = {
         if (isBinaryPath(fullPath)) continue;
         try {
           const stat = await fs.stat(fullPath);
-          if (stat.size > MAX_READ_BYTES) continue;
+          if (stat.size > MAX_FILE_SIZE) continue;
           const content = await fs.readFile(fullPath, "utf-8");
           const lines = content.split("\n");
           for (let i = 0; i < lines.length; i++) {
@@ -497,6 +499,9 @@ const BINARY_EXTENSIONS = new Set([
 function isBinaryPath(filePath) {
   return BINARY_EXTENSIONS.has(path.extname(filePath).toLowerCase());
 }
+
+/** Max file size for read operations (5 MB) */
+const MAX_FILE_SIZE = 5 * 1024 * 1024;
 
 /** Max bytes for read operations (0.5 MB) */
 const MAX_READ_BYTES = 0.5 * 1024 * 1024;
