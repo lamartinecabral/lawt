@@ -43,6 +43,7 @@ export const run = async ({
       messages,
       tools: toolsToOllamaFormat(),
       think: reasoningEffort,
+      keep_alive: "20m",
     });
 
     abortables.add(response);
@@ -116,6 +117,7 @@ export const run = async ({
       console.log(pc.dim(ellipsis(`= ${content}`, 300)));
     }
   }
+
   messages.forEach((msg) => {
     if (msg.thinking) delete msg.thinking;
   });

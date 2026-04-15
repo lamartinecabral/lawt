@@ -3,6 +3,7 @@
 // @ts-check
 import { assertModel, finish, optsSchema, parseThinkOption } from "./utils.mjs";
 import { Command } from "commander";
+import { promises as fs } from "node:fs";
 import pc from "picocolors";
 import pkg from "../package.json" with { type: "json" };
 import { run } from "./run.mjs";
@@ -25,7 +26,7 @@ program
     "System prompt",
     "You are an assistant with access to tools.",
   )
-  .option("-c, --context <number>", "Context length", "16000")
+  .option("-c, --context <number>", "Context length", "32000")
   .action(async function () {
     const opts = optsSchema.parse(this.opts());
 
@@ -72,10 +73,25 @@ program
         console.log(pc.green("\n✓"), pc.dim("Context cleared"));
       }
       if (res === "/save") {
-        console.log(pc.dim("\nnot implemented yet"));
+        const file = `${process.cwd()}/.cache/minicode_state.json`;
+        try {
+          await fs.writeFile(file, JSON.stringify({ opts, messages }));
+          console.log(pc.green("\n✓"), pc.dim(`State saved to ${file}`));
+        } catch (e) {
+          console.log(pc.red("\n✕"), pc.dim(`Error saving state: ${e}`));
+        }
       }
       if (res === "/load") {
-        console.log(pc.dim("\nnot implemented yet"));
+        const file = `${process.cwd()}/.cache/minicode_state.json`;
+        try {
+          const data = JSON.parse(await fs.readFile(file, "utf-8"));
+          if (data.opts) Object.assign(opts, data.opts);
+          if (data.messages)
+            messages.splice(0, messages.length, ...data.messages);
+          console.log(pc.green("\n✓"), pc.dim(`State loaded from ${file}`));
+        } catch (e) {
+          console.log(pc.red("\n✕"), pc.dim(`Error loading state: ${e}`));
+        }
       }
       if (res === "/show_opts") {
         showOpts(opts);

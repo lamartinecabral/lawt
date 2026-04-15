@@ -1,5 +1,7 @@
 // @ts-check
 
+import { ellipsis } from "./utils.mjs";
+import { exec } from "node:child_process";
 import fg from "fast-glob";
 import fs from "fs-extra";
 import path from "node:path";
@@ -352,6 +354,50 @@ const grepSearch = {
   },
 };
 
+// ---------- execute_bash_command ----------
+const executeBashCommandSchema = z.object({
+  command: z
+    .string()
+    .describe(
+      `The exact bash command to execute (e.g., 'git diff --cached', 'npm run test', 'python -c "import foo; foo.bar()"').`,
+    ),
+});
+const executeBashCommand = {
+  name: "execute_bash_command",
+  description:
+    "Executes a bash shell command on the host system. Use this to run scripts, utilities and other programs. Returns the terminal output.",
+  schema: executeBashCommandSchema,
+  execute: async (...args) => {
+    const { command } = args[0];
+    try {
+      // Execute the command with a timeout to prevent infinite hangs
+      const { stdout, stderr } = await new Promise((res, rej) =>
+        exec(command, { timeout: 15000 }, (error, stdout, stderr) => {
+          if (error) rej(error);
+          res({ stderr, stdout });
+        }),
+      );
+
+      // If the command succeeds but writes to stderr (common for warnings)
+      if (stderr && !stdout) {
+        return ok(`Command executed with warnings/stderr:\n${stderr.trim()}`);
+      }
+
+      // Return standard output
+      return ok(
+        ellipsis(stdout.trim(), 5000) ||
+          "Command executed successfully with no output.",
+      );
+    } catch (error) {
+      // Return the error message to the AI so it knows what went wrong and can adapt
+      return fail(
+        // @ts-ignore
+        `Execution Failed.\nExit Code: ${error.code}\nError: ${error.message}`,
+      );
+    }
+  },
+};
+
 // ---------- Registry ----------
 export const ALL_TOOLS = [
   listDir,
@@ -364,6 +410,7 @@ export const ALL_TOOLS = [
   mkdirTool,
   globSearch,
   grepSearch,
+  executeBashCommand,
 ];
 
 function getToolByName(name) {
