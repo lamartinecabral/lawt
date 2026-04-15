@@ -26,7 +26,7 @@ minicode [options]
 | Flag                     | Description                                                      | Default                                      |
 | ------------------------ | ---------------------------------------------------------------- | -------------------------------------------- |
 | `-v, --version`          | Print version                                                    |                                              |
-| `-m, --model <model>`    | Ollama model to use                                              | `gemma4:e2b`                                 |
+| `-m, --model <model>`    | Ollama model to use                                              | `gpt-oss:20b`                                |
 | `-p, --prompt <prompt>`  | Initial prompt (skips first interactive input)                   |                                              |
 | `-t, --think <value>`    | Enable model thinking (`true`, `false`, `high`, `medium`, `low`) |                                              |
 | `-s, --system <value>`   | System prompt                                                    | `You are an assistant with access to tools.` |

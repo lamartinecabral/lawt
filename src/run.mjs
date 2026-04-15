@@ -118,7 +118,16 @@ export const run = async ({
     }
   }
 
-  messages.forEach((msg) => {
-    if (msg.thinking) delete msg.thinking;
-  });
+  // uncomment this to remove thinking and tools from history
+  // messages.splice(
+  //   0,
+  //   messages.length,
+  //   ...messages.filter((msg) => {
+  //     if (msg.thinking) delete msg.thinking;
+  //     if (msg.tool_calls) delete msg.tool_calls;
+  //     if (!msg.content) return false;
+  //     if (msg.role === "tool") return false;
+  //     return true;
+  //   }),
+  // );
 };
