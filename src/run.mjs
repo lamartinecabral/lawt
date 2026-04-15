@@ -1,8 +1,8 @@
 // @ts-check
 import { abortables, ellipsis, ollama, question } from "./utils.mjs";
+import { executeToolCall, toolsToOllamaFormat } from "./tools_v2.mjs";
 import ora from "ora";
 import pc from "picocolors";
-import { toolRegistry } from "./tools.mjs";
 
 /**
  * @param {object} param0
@@ -41,7 +41,7 @@ export const run = async ({
       options: { num_ctx: +contextLength },
       model: modelId,
       messages,
-      tools: Object.values(toolRegistry).map((a) => a.definition),
+      tools: toolsToOllamaFormat(),
       think: reasoningEffort,
     });
 
@@ -101,7 +101,12 @@ export const run = async ({
     for (const tool_call of tool_calls) {
       const tool_name = tool_call.function.name;
       const args = tool_call.function.arguments;
-      const content = await toolRegistry[tool_name].execute(args);
+      const { result } = await executeToolCall(tool_name, args, process.cwd());
+      const content = result.success
+        ? typeof result.data === "string"
+          ? result.data
+          : JSON.stringify(result.data)
+        : JSON.stringify(result);
       messages.push({ role: "tool", tool_name, content });
 
       console.log(pc.yellow("\n--- tool ---"));
