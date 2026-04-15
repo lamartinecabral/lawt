@@ -52,7 +52,7 @@ Enable thinking mode:
 minicode -t high
 ```
 
-Type `exit` to quit the session.
+Type `/exit` to quit the session.
 
 ## Tools
 
