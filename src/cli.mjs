@@ -75,7 +75,8 @@ program
       if (res === "/save") {
         const file = `${process.cwd()}/.cache/minicode_state.json`;
         try {
-          await fs.writeFile(file, JSON.stringify({ opts, messages }));
+          await fs.mkdir(`${process.cwd()}/.cache`, { recursive: true });
+          await fs.writeFile(file, JSON.stringify({ opts, messages }, null, 2));
           console.log(pc.green("\n✓"), pc.dim(`State saved to ${file}`));
         } catch (e) {
           console.log(pc.red("\n✕"), pc.dim(`Error saving state: ${e}`));
