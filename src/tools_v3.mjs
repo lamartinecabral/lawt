@@ -2,22 +2,8 @@
 
 import fs from "node:fs/promises";
 import path from "node:path";
+import { spawn } from "node:child_process";
 import { z } from "zod";
-
-// const apply_patch = {
-//   name: "apply_patch",
-//   description:
-//     'Edit text files. `apply_patch` allows you to execute a diff/patch against a text file, but the format of the diff specification is unique to this task, so pay careful attention to these instructions. To use the `apply_patch` command, you should pass a message of the following structure as "input":\n\n*** Begin Patch\n[YOUR_PATCH]\n*** End Patch\n\nWhere [YOUR_PATCH] is the actual content of your patch, specified in the following V4A diff format.\n\n*** [ACTION] File: [/absolute/path/to/file] -> ACTION can be one of Add, Update, or Delete.\nAn example of a message that you might pass as "input" to this function, in order to apply a patch, is shown below.\n\n*** Begin Patch\n*** Update File: /Users/someone/pygorithm/searching/binary_search.py\n@@class BaseClass\n@@    def search():\n-        pass\n+        raise NotImplementedError()\n\n@@class Subclass\n@@    def search():\n-        pass\n+        raise NotImplementedError()\n\n*** End Patch\nDo not use line numbers in this diff format.',
-//   schema: z.object({
-//     properties: z.string().describe("The edit patch to apply."),
-//     description: z
-//       .string()
-//       .describe(
-//         "A short description of what the tool call is aiming to achieve.",
-//       ),
-//   }),
-//   execute: () => {},
-// };
 
 // const fetch_webpage = {
 //   name: "fetch_webpage",
@@ -87,27 +73,6 @@ import { z } from "zod";
 //   execute: () => {},
 // };
 
-// const get_changed_files = {
-//   name: "get_changed_files",
-//   description:
-//     "Get git diffs of current file changes in a git repository. Don't forget that you can use run_in_terminal to run git commands in a terminal as well.",
-//   schema: z.object({
-//     repositoryPath: z
-//       .string()
-//       .optional()
-//       .describe(
-//         "The absolute path to the git repository to look for changes in. If not provided, the active git repository will be used.",
-//       ),
-//     sourceControlState: z
-//       .array(z.enum(["staged", "unstaged", "merge-conflicts"]))
-//       .optional()
-//       .describe(
-//         "The kinds of git state to filter by. Allowed values are: 'staged', 'unstaged', and 'merge-conflicts'. If not provided, all states will be included.",
-//       ),
-//   }),
-//   execute: () => {},
-// };
-
 // const run_in_terminal = {
 //   name: "run_in_terminal",
 //   description:
@@ -147,13 +112,9 @@ import { z } from "zod";
 // };
 
 // export const ALL_TOOLS = [
-//   apply_patch,
-//   create_file,
 //   fetch_webpage,
 //   file_search,
 //   grep_search,
-//   get_changed_files,
-//   read_file,
 //   run_in_terminal,
 // ];
 
@@ -196,32 +157,28 @@ const read_file = {
   description:
     "Read the contents of a file.\n\nYou must specify the line range you're interested in. Line numbers are 1-indexed. If the file contents returned are insufficient for your task, you may call this tool again to retrieve more content. Prefer reading larger ranges over doing many small reads. Binary files use startLine/endLine as byte offsets.",
   schema: z.object({
-    filePath: z.string().describe("The absolute path of the file to read."),
-    startLine: z
+    file_path: z.string().describe("The relative path of the file to read."),
+    position: z
       .number()
       .describe("The line number to start reading from, 1-based."),
-    endLine: z
-      .number()
-      .describe("The inclusive line number to end reading at, 1-based."),
+    line_count: z.number().describe("The number of lines to be returned."),
   }),
   async execute() {
     /** @type {z.infer<typeof this.schema>} */
     const args = arguments[0];
 
     try {
-      const resolvedPath = getResolvedPath(args.filePath);
+      const resolvedPath = getResolvedPath(args.file_path);
       const stats = await fs.stat(resolvedPath);
 
       if (!stats.isFile()) {
-        return fail(`Not a file: ${args.filePath}`);
+        return fail(`Not a file: ${args.file_path}`);
       }
-
-      const { endLine, startLine } = parseLineRange(args);
 
       const content = await fs.readFile(resolvedPath, "utf-8");
       const lines = content.split(/\r\n|\r|\n/);
-      const startIndex = startLine - 1;
-      const endIndex = Math.min(lines.length, endLine);
+      const startIndex = args.position - 1;
+      const endIndex = Math.min(lines.length, startIndex + args.line_count);
 
       return ok(lines.slice(startIndex, endIndex).join("\n"));
     } catch (err) {
@@ -235,7 +192,7 @@ const create_file = {
   description:
     "This is a tool for creating a new file in the workspace. The file will be created with the specified content. The directory will be created if it does not already exist. Never use this tool to edit a file that already exists.",
   schema: z.object({
-    filePath: z.string().describe("The absolute path to the file to create."),
+    file_path: z.string().describe("The relative path to the file to create."),
     content: z.string().describe("The content to write to the file."),
   }),
   async execute() {
@@ -243,11 +200,11 @@ const create_file = {
     const args = arguments[0];
 
     try {
-      const resolvedPath = getResolvedPath(args.filePath);
+      const resolvedPath = getResolvedPath(args.file_path);
 
       try {
         await fs.stat(resolvedPath);
-        return fail(`File already exists: ${args.filePath}`);
+        return fail(`File already exists: ${args.file_path}`);
       } catch (err) {
         if (!(err instanceof Error && err["code"] === "ENOENT")) {
           return fail(String(err));
@@ -258,7 +215,7 @@ const create_file = {
       await fs.mkdir(directory, { recursive: true });
       await fs.writeFile(resolvedPath, args.content, "utf-8");
 
-      return ok({ filePath: resolvedPath });
+      return ok({ file_path: resolvedPath });
     } catch (err) {
       return fail(err instanceof Error ? err.message : String(err));
     }
@@ -268,61 +225,157 @@ const create_file = {
 const update_file = {
   name: "update_file",
   description:
-    "Update an existing file by replacing the specified line range with new content.",
+    "Update an existing file by removing zero or more lines and inserting a new content in place.",
   schema: z.object({
-    filePath: z.string().describe("The absolute path of the file to update."),
-    startLine: z
+    file_path: z.string().describe("The relative path of the file to update."),
+    position: z
       .number()
-      .describe("The line number to start replacing from, 1-based."),
-    endLine: z
+      .optional()
+      .describe(
+        "The line number to insert the new content, 1-based. If omitted, the new content will be appended.",
+      ),
+    delete_count: z
       .number()
-      .describe("The inclusive line number to end replacing at, 1-based."),
-    content: z.string().describe("The content to write to the file."),
+      .optional()
+      .describe(
+        "The number of lines to remove. If omitted, no lines will be removed.",
+      ),
+    content: z
+      .string()
+      .optional()
+      .describe(
+        "The content to write to the file. If omitted, only line removal will be applied.",
+      ),
   }),
   async execute() {
     /** @type {z.infer<typeof this.schema>} */
     const args = arguments[0];
 
     try {
-      const resolvedPath = getResolvedPath(args.filePath);
+      const resolvedPath = getResolvedPath(args.file_path);
       const stats = await fs.stat(resolvedPath);
-
       if (!stats.isFile()) {
-        return fail(`Not a file: ${args.filePath}`);
+        return fail(`Not a file: ${args.file_path}`);
       }
 
-      const { startLine, endLine } = parseLineRange(args);
+      const original = await fs.readFile(resolvedPath, "utf-8");
+      const newline = original.includes("\r\n") ? "\r\n" : "\n";
+      const lines = original.split(/\r\n|\n/);
+      const deleteCount = args.delete_count ?? 0;
 
-      const content = await fs.readFile(resolvedPath, "utf-8");
-      const lines = content.split(/\r\n|\r|\n/);
+      if (!Number.isInteger(deleteCount) || deleteCount < 0) {
+        return fail("Invalid delete_count: must be a non-negative integer.");
+      }
 
-      const before = lines.slice(0, startLine - 1);
-      const after = lines.slice(endLine);
-      const replacementLines = args.content.length
-        ? args.content.split(/\r\n|\r|\n/)
-        : [];
+      let position = args.position;
 
-      const updatedLines = [before, replacementLines, after].flat();
-      await fs.writeFile(resolvedPath, updatedLines.join("\n"), "utf-8");
+      if (
+        position !== undefined &&
+        (!Number.isInteger(position) || position < 1)
+      ) {
+        return fail("Invalid position: must be a positive integer.");
+      }
 
-      return ok({ filePath: resolvedPath });
+      const insertLines =
+        args.content === undefined ? [] : args.content.split(/\r\n|\n/);
+
+      let updatedLines = [];
+      if (!position) {
+        updatedLines = [
+          lines.slice(0, lines.length - deleteCount),
+          insertLines,
+        ].flat();
+      } else {
+        updatedLines = [
+          lines.slice(0, position - 1),
+          insertLines,
+          lines.slice(position - 1 + deleteCount),
+        ].flat();
+      }
+
+      const updated = updatedLines.join(newline);
+      if (updated === original) {
+        return ok({ file_path: resolvedPath, modified: false });
+      }
+
+      await fs.writeFile(resolvedPath, updated, "utf-8");
+      return ok({ file_path: resolvedPath, modified: true });
     } catch (err) {
       return fail(err instanceof Error ? err.message : String(err));
     }
   },
 };
 
-const get_changed_files = {
-  name: "get_changed_files",
-  description:
-    "Get git diffs of current file changes in the current repository. Don't forget that you can use run_in_terminal to run git commands in a terminal as well.",
+const delete_file = {
+  name: "delete_file",
+  description: "Delete an existing file.",
   schema: z.object({
-    type: z.enum(["staged", "unstaged"]).optional(),
+    file_path: z.string().describe("The relative path of the file to delete."),
   }),
   async execute() {
     /** @type {z.infer<typeof this.schema>} */
     const args = arguments[0];
-    // todo: tool logic. It has 3 scenarios: run `git diff --cached` or `git diff` or `git diff HEAD`.
+
+    try {
+      const resolvedPath = getResolvedPath(args.file_path);
+      const stats = await fs.stat(resolvedPath);
+      if (!stats.isFile()) {
+        return fail(`Not a file: ${args.file_path}`);
+      }
+
+      await fs.unlink(resolvedPath);
+      return ok({ file_path: resolvedPath });
+    } catch (err) {
+      if (err instanceof Error && err["code"] === "ENOENT") {
+        return fail(`File does not exist: ${args.file_path}`);
+      }
+      return fail(err instanceof Error ? err.message : String(err));
+    }
+  },
+};
+
+const file_search = {
+  name: "file_search",
+  description:
+    "Search for files in the workspace by glob pattern. This only returns the paths of matching files. Use this tool when you know the exact filename pattern of the files you're searching for. Glob patterns match from the root of the workspace folder. Examples:\n- **/*.{js,ts} to match all js/ts files in the workspace.\n- src/** to match all files under the top-level src folder.\n- **/foo/**/*.js to match all js files under any foo folder in the workspace.\n\nIn a multi-root workspace, you can scope the search to a specific workspace folder by using the absolute path to the folder as the query, e.g. /path/to/folder/**/*.ts.",
+  schema: z.object({
+    query: z
+      .string()
+      .describe(
+        "Search for files with names or paths matching this glob pattern. Can also be an absolute path to a workspace folder to scope the search in a multi-root workspace.",
+      ),
+  }),
+  async execute() {
+    /** @type {z.infer<typeof this.schema>} */
+    const args = arguments[0];
+    // todo: tool logic
+  },
+};
+
+const run_in_terminal = {
+  name: "run_in_terminal",
+  description: "This tool allows you to execute shell commands.",
+  schema: z.object({
+    command: z.string().describe("The command to run in the terminal."),
+  }),
+  async execute() {
+    /** @type {z.infer<typeof this.schema>} */
+    const args = arguments[0];
+
+    try {
+      const command = String(args.command ?? "").trim();
+      if (!command) {
+        return fail("Command must be a non-empty string.");
+      }
+
+      const result = await runCommand(command);
+      return ok({
+        stdout: result.stdout,
+        stderr: result.stderr,
+      });
+    } catch (err) {
+      return fail(err instanceof Error ? err.message : String(err));
+    }
   },
 };
 
@@ -332,7 +385,9 @@ const ALL_TOOLS = [
   read_file,
   create_file,
   update_file,
-  get_changed_files,
+  delete_file,
+  file_search,
+  run_in_terminal,
 ];
 
 /** @returns {import('ollama').Tool[]} */
@@ -400,23 +455,6 @@ function getResolvedPath(unresolvedPath = "") {
   return resolvedPath;
 }
 
-function parseLineRange({ startLine: start, endLine: end }) {
-  const startLine = Number(start);
-  const endLine = Number(end);
-
-  if (
-    !Number.isInteger(startLine) ||
-    !Number.isInteger(endLine) ||
-    startLine < 1 ||
-    endLine < startLine
-  ) {
-    throw new Error(
-      "Invalid line range: startLine must be >= 1, endLine must be >= startLine.",
-    );
-  }
-  return { startLine, endLine };
-}
-
 function parseToolArgs(rawArgs) {
   if (typeof rawArgs === "string") {
     let parsed;
@@ -448,4 +486,34 @@ function ok(data) {
 
 function fail(error) {
   return { success: false, error };
+}
+
+function runCommand(command, args = []) {
+  return new Promise((resolve, reject) => {
+    const child = spawn(command, args, {
+      cwd: process.cwd(),
+      shell: true,
+      timeout: 15000,
+      stdio: ["ignore", "pipe", "pipe"],
+    });
+
+    let stdout = "";
+    let stderr = "";
+
+    child.stdout.on("data", (chunk) => {
+      stdout += chunk.toString();
+    });
+
+    child.stderr.on("data", (chunk) => {
+      stderr += chunk.toString();
+    });
+
+    child.on("error", (error) => {
+      reject(error);
+    });
+
+    child.on("close", (code, signal) => {
+      resolve({ stdout, stderr, code, signal });
+    });
+  });
 }
