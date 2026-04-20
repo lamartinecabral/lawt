@@ -1,6 +1,6 @@
 // @ts-check
 import { abortables, ellipsis, ollama, question } from "./utils.mjs";
-import { executeToolCall, toolsToOllamaFormat } from "./tools_v2.mjs";
+import { executeToolCall, toolsToOllamaFormat } from "./tools_v3.mjs";
 import ora from "ora";
 import pc from "picocolors";
 

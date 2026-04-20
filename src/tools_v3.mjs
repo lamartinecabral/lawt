@@ -1,5 +1,6 @@
 // @ts-check
 
+import fg from "fast-glob";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { spawn } from "node:child_process";
@@ -348,15 +349,33 @@ const file_search = {
   async execute() {
     /** @type {z.infer<typeof this.schema>} */
     const args = arguments[0];
-    // todo: tool logic
+
+    try {
+      const query = String(args.query ?? "").trim();
+      if (!query) {
+        return fail("Query must be a non-empty string.");
+      }
+
+      const normalizedPattern = normalizeSearchPattern(query);
+      const matches = await fg(normalizedPattern, {
+        cwd: process.cwd(),
+        onlyFiles: true,
+        dot: true,
+        unique: true,
+      });
+
+      return ok(matches.sort((a, b) => a.localeCompare(b)));
+    } catch (err) {
+      return fail(err instanceof Error ? err.message : String(err));
+    }
   },
 };
 
-const run_in_terminal = {
-  name: "run_in_terminal",
+const run_shell_command = {
+  name: "run_shell_command",
   description: "This tool allows you to execute shell commands.",
   schema: z.object({
-    command: z.string().describe("The command to run in the terminal."),
+    command: z.string().describe("The shell command to run."),
   }),
   async execute() {
     /** @type {z.infer<typeof this.schema>} */
@@ -387,7 +406,7 @@ const ALL_TOOLS = [
   update_file,
   delete_file,
   file_search,
-  run_in_terminal,
+  run_shell_command,
 ];
 
 /** @returns {import('ollama').Tool[]} */
@@ -453,6 +472,45 @@ function getResolvedPath(unresolvedPath = "") {
     throw new Error(`Path is outside the workspace: ${unresolvedPath}`);
   }
   return resolvedPath;
+}
+
+function normalizeSearchPattern(query) {
+  if (path.isAbsolute(query)) {
+    const globIndex = findGlobIndex(query);
+
+    if (globIndex === -1) {
+      const resolved = getResolvedPath(query);
+      return path.relative(process.cwd(), resolved);
+    }
+
+    const prefix = query.slice(0, globIndex);
+    const remainder = query.slice(globIndex);
+    const absolutePrefix = path.resolve(prefix);
+    const relativePrefix = path.relative(process.cwd(), absolutePrefix);
+
+    if (relativePrefix.startsWith("..")) {
+      throw new Error("Search pattern must remain inside the workspace.");
+    }
+
+    const normalizedPrefix = relativePrefix.split(path.sep).join("/");
+    return normalizedPrefix ? `${normalizedPrefix}/${remainder}` : remainder;
+  }
+
+  const globIndex = findGlobIndex(query);
+  const prefix = globIndex === -1 ? query : query.slice(0, globIndex);
+  const normalizedPrefix = path.normalize(prefix);
+
+  if (normalizedPrefix.startsWith("..") || path.isAbsolute(normalizedPrefix)) {
+    throw new Error("Search pattern must remain inside the workspace.");
+  }
+
+  return query;
+}
+
+function findGlobIndex(pattern) {
+  const special = new RegExp("[*?\\[\\]{}()]");
+  const match = pattern.match(special);
+  return match ? match.index : -1;
 }
 
 function parseToolArgs(rawArgs) {
