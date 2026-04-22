@@ -11,9 +11,7 @@
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
-    "format:check": "prettier --check .",
-    "test": "vitest run",
-    "test:watch": "vitest"
+    "format:check": "prettier --check ."
   },
   "keywords": [
     "cli",

@@ -18,9 +18,9 @@ const listDir = {
   name: "list_dir",
   description: "List contents of a directory",
   schema: listDirSchema,
-  async execute(args, sandbox) {
+  async execute(args) {
     try {
-      const dirPath = resolveSandboxed(args.path, sandbox);
+      const dirPath = resolveSandboxed(args.path);
       const stat = await fs.stat(dirPath);
       if (!stat.isDirectory()) return fail(`Not a directory: ${args.path}`);
 
@@ -73,9 +73,9 @@ const readFile = {
   name: "read_file",
   description: "Read contents of a file with optional line range",
   schema: readFileSchema,
-  async execute(args, sandbox) {
+  async execute(args) {
     try {
-      const filePath = resolveSandboxed(args.path, sandbox);
+      const filePath = resolveSandboxed(args.path);
       if (isBinaryPath(filePath)) return fail("Cannot read binary file");
       const stat = await fs.stat(filePath);
       const limit = args.maxBytes ?? MAX_READ_BYTES;
@@ -114,9 +114,9 @@ const writeFile = {
   name: "write_file",
   description: "Write content to a file, creating directories as needed",
   schema: writeFileSchema,
-  async execute(args, sandbox) {
+  async execute(args) {
     try {
-      const filePath = resolveSandboxed(args.path, sandbox);
+      const filePath = resolveSandboxed(args.path);
       if (isBinaryPath(filePath)) return fail("Cannot write binary file");
       if (Buffer.byteLength(args.content, "utf-8") > MAX_WRITE_BYTES) {
         return fail("Content exceeds write size limit");
@@ -145,9 +145,9 @@ const appendFile = {
   name: "append_file",
   description: "Append content to a file",
   schema: appendFileSchema,
-  async execute(args, sandbox) {
+  async execute(args) {
     try {
-      const filePath = resolveSandboxed(args.path, sandbox);
+      const filePath = resolveSandboxed(args.path);
       if (isBinaryPath(filePath)) return fail("Cannot append to binary file");
 
       await fs.ensureDir(path.dirname(filePath));
@@ -175,9 +175,9 @@ const replaceInFile = {
   name: "replace_in_file",
   description: "Search and replace text in a file",
   schema: replaceInFileSchema,
-  async execute(args, sandbox) {
+  async execute(args) {
     try {
-      const filePath = resolveSandboxed(args.path, sandbox);
+      const filePath = resolveSandboxed(args.path);
       if (isBinaryPath(filePath)) return fail("Cannot edit binary file");
 
       const content = await fs.readFile(filePath, "utf-8");
@@ -230,9 +230,9 @@ const deleteFileTool = {
   name: "delete_file",
   description: "Delete a file",
   schema: deleteFileSchema,
-  async execute(args, sandbox) {
+  async execute(args) {
     try {
-      const filePath = resolveSandboxed(args.path, sandbox);
+      const filePath = resolveSandboxed(args.path);
       await fs.remove(filePath);
       return ok({ deleted: filePath });
     } catch (err) {
@@ -251,10 +251,10 @@ const moveFile = {
   name: "move_file",
   description: "Move or rename a file",
   schema: moveFileSchema,
-  async execute(args, sandbox) {
+  async execute(args) {
     try {
-      const fromPath = resolveSandboxed(args.from, sandbox);
-      const toPath = resolveSandboxed(args.to, sandbox);
+      const fromPath = resolveSandboxed(args.from);
+      const toPath = resolveSandboxed(args.to);
       await fs.ensureDir(path.dirname(toPath));
       await fs.move(fromPath, toPath);
       return ok({ from: fromPath, to: toPath });
@@ -274,9 +274,9 @@ const mkdirTool = {
   name: "mkdir",
   description: "Create a directory",
   schema: mkdirSchema,
-  async execute(args, sandbox) {
+  async execute(args) {
     try {
-      const dirPath = resolveSandboxed(args.path, sandbox);
+      const dirPath = resolveSandboxed(args.path);
       await fs.mkdir(dirPath, { recursive: args.recursive !== false });
       return ok({ created: dirPath });
     } catch (err) {
@@ -298,9 +298,9 @@ const globSearch = {
   name: "glob_search",
   description: "Find files matching a glob pattern",
   schema: globSearchSchema,
-  async execute(args, sandbox) {
+  async execute(args) {
     try {
-      const base = args.cwd ? resolveSandboxed(args.cwd, sandbox) : sandbox;
+      const base = args.cwd ? resolveSandboxed(args.cwd) : process.cwd();
       const entries = await fg(args.pattern, { cwd: base, dot: false });
       return ok(entries);
     } catch (err) {
@@ -319,11 +319,11 @@ const grepSearch = {
   name: "grep_search",
   description: "Search file contents for a pattern",
   schema: grepSearchSchema,
-  async execute(args, sandbox) {
+  async execute(args) {
     try {
       const pattern = args.includePattern ?? "**/*";
       const files = await fg(pattern, {
-        cwd: sandbox,
+        cwd: process.cwd(),
         dot: false,
         onlyFiles: true,
       });
@@ -331,7 +331,7 @@ const grepSearch = {
       const results = [];
 
       for (const file of files) {
-        const fullPath = path.join(sandbox, file);
+        const fullPath = path.join(process.cwd(), file);
         if (isBinaryPath(fullPath)) continue;
         try {
           const stat = await fs.stat(fullPath);
@@ -437,7 +437,8 @@ export function toolsToOllamaFormat() {
  * Resolve a user-supplied path and ensure it stays within the sandbox root.
  * Follows symlinks to block symlink escapes.
  */
-function resolveSandboxed(userPath, sandbox) {
+function resolveSandboxed(userPath) {
+  const sandbox = process.cwd();
   const resolved = path.resolve(sandbox, userPath);
   const normalSandbox = path.resolve(sandbox) + path.sep;
   const normalResolved = path.resolve(resolved);
@@ -542,7 +543,7 @@ function parseToolArgs(rawArgs) {
   return rawArgs;
 }
 
-export async function executeToolCall(name, rawArgs, sandbox) {
+export async function executeToolCall(name, rawArgs) {
   let args = {};
 
   try {
@@ -582,7 +583,7 @@ export async function executeToolCall(name, rawArgs, sandbox) {
     };
   }
 
-  const result = await tool.execute(parsed.data, sandbox);
+  const result = await tool.execute(parsed.data);
   return {
     name,
     args,

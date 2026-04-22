@@ -102,7 +102,7 @@ export const run = async ({
     for (const tool_call of tool_calls) {
       const tool_name = tool_call.function.name;
       const args = tool_call.function.arguments;
-      const { result } = await executeToolCall(tool_name, args, process.cwd());
+      const { result } = await executeToolCall(tool_name, args);
       const content = result.success
         ? typeof result.data === "string"
           ? result.data

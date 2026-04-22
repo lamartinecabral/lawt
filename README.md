@@ -73,12 +73,6 @@ npm run format:check
 
 # Apply formatting
 npm run format
-
-# Run tests
-npm test
-
-# Run tests in watch mode
-npm run test:watch
 ```
 
 ## Architecture
@@ -89,9 +83,6 @@ src/
   run.mjs          # Core execution logic — manages the LLM interaction loop and tool dispatch
   tools.mjs        # Tool definitions and registry
   utils.mjs        # Shared utilities (Ollama client, readline interface, etc.)
-tests/
-  unit.test.mjs    # Unit tests for utility functions and tool logic
-  e2e.test.mjs     # End-to-end CLI tests
 ```
 
 ## License
