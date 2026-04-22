@@ -54,6 +54,16 @@ const run_bash_command = {
 };
 
 /** @type {Record<string, Tool>} */
-export const toolRegistry = {
+const toolRegistry = {
   run_bash_command,
+};
+
+export async function executeToolCall(name, rawArgs) {
+  return await (name in toolRegistry
+    ? toolRegistry[name]?.execute(rawArgs)
+    : "tool not found");
+}
+
+export const toolsToOllamaFormat = () => {
+  return Object.values(toolRegistry).map((a) => a.definition);
 };

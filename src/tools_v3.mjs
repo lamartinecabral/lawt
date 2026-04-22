@@ -422,7 +422,7 @@ export function toolsToOllamaFormat() {
   }));
 }
 
-export async function executeToolCall(name, rawArgs, sandbox) {
+export async function executeToolCall(name, rawArgs) {
   let args = {};
 
   try {
@@ -453,7 +453,7 @@ export async function executeToolCall(name, rawArgs, sandbox) {
     };
   }
 
-  const result = await tool.execute(parsed.data, sandbox);
+  const result = await tool.execute(parsed.data);
   return {
     name,
     args,
