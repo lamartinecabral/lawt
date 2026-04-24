@@ -46,7 +46,6 @@ const run_bash_command = {
       );
     } catch (error) {
       // Return the error message to the AI so it knows what went wrong and can adapt
-      // @ts-ignore
       return `Execution Failed.\nExit Code: ${error.code}\nError: ${error.message}`;
     }
   },

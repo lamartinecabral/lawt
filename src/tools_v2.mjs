@@ -391,7 +391,6 @@ const executeBashCommand = {
     } catch (error) {
       // Return the error message to the AI so it knows what went wrong and can adapt
       return fail(
-        // @ts-ignore
         `Execution Failed.\nExit Code: ${error.code}\nError: ${error.message}`,
       );
     }
@@ -420,7 +419,6 @@ function getToolByName(name) {
 /** Convert tool definitions to Ollama tool format */
 /** @returns {import('ollama').Tool[]} */
 export function toolsToOllamaFormat() {
-  // @ts-ignore
   return ALL_TOOLS.map((tool) => ({
     type: "function",
     function: {

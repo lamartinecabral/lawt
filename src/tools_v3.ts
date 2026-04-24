@@ -4,14 +4,14 @@ import fg from "fast-glob";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { spawn } from "node:child_process";
-import { z } from "zod";
 import type { Tool } from "ollama";
+import { z } from "zod";
 
 const makeTool = <T extends z.ZodObject>(params: {
   name: string;
   description: string;
   schema: T;
-  execute: (args: z.infer<T>) => any;
+  execute: (_args: z.infer<T>) => any;
 }) => params;
 
 const list_directory = makeTool({
@@ -151,7 +151,7 @@ const update_file = makeTool({
         return fail("Invalid delete_count: must be a non-negative integer.");
       }
 
-      let position = args.position;
+      const position = args.position;
 
       if (
         position !== undefined &&
@@ -341,14 +341,13 @@ const ALL_TOOLS = [
   run_shell_command,
 ];
 
-export function toolsToOllamaFormat(): Tool[] {
-  // @ts-ignore
-  return ALL_TOOLS.map((tool) => ({
+export function toolsToOllamaFormat() {
+  return ALL_TOOLS.map<Tool>((tool) => ({
     type: "function",
     function: {
       name: tool.name,
       description: tool.description,
-      parameters: tool.schema.toJSONSchema(),
+      parameters: tool.schema.toJSONSchema() as any,
     },
   }));
 }
@@ -384,8 +383,7 @@ export async function executeToolCall(name, rawArgs) {
     };
   }
 
-  // @ts-ignore
-  const result = await tool.execute(parsed.data);
+  const result = await tool.execute(parsed.data as any);
   return {
     name,
     args,

@@ -1,13 +1,13 @@
-// @ts-check
+import type { ChatRequest, Message, ToolCall } from "ollama";
+
 import { abortables, ellipsis, ollama, question } from "./utils.ts";
 import { executeToolCall, toolsToOllamaFormat } from "./tools_v3.ts";
 import ora from "ora";
 import pc from "picocolors";
-import type { ChatRequest, Message, ToolCall } from "ollama";
 
-type RunType = (args: {
+type RunType = (_args: {
   userPrompt?: string;
-  interceptUserPrompt?: (prompt: string) => boolean;
+  interceptUserPrompt?: (_prompt: string) => boolean;
   modelId: string;
   messages: Message[];
   contextLength: number;
@@ -50,7 +50,7 @@ export const run: RunType = async ({
 
     let content = "";
     let thinking = "";
-    let tool_calls: ToolCall[] = [];
+    const tool_calls: ToolCall[] = [];
 
     let mode = "";
     for await (const chunk of response) {

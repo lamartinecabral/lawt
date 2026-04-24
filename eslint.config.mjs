@@ -1,8 +1,11 @@
+import { defineConfig } from "eslint/config";
 import globals from "globals";
 import js from "@eslint/js";
+import tseslint from "typescript-eslint";
 
-export default [
+export default defineConfig(
   js.configs.recommended,
+  tseslint.configs.recommended,
   {
     languageOptions: {
       ecmaVersion: "latest",
@@ -12,6 +15,7 @@ export default [
       },
     },
     rules: {
+      "@typescript-eslint/no-explicit-any": "off",
       "no-unused-vars": ["warn", { argsIgnorePattern: "^_" }],
       "no-console": "off",
       "sort-imports": [
@@ -29,4 +33,4 @@ export default [
   {
     ignores: ["node_modules/", "dist/", "build/", "coverage/"],
   },
-];
+);
