@@ -1,8 +1,9 @@
 {
   "compilerOptions": {
     "allowImportingTsExtensions": true,
-    "rewriteRelativeImportExtensions": true,
+    "allowJs": false,
     "module": "esnext",
-    "noImplicitAny": false
+    "noImplicitAny": false,
+    "rewriteRelativeImportExtensions": true
   }
 }

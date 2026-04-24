@@ -5,9 +5,14 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { spawn } from "node:child_process";
 import { z } from "zod";
-import type {Tool} from 'ollama'
+import type { Tool } from "ollama";
 
-const makeTool = <T extends z.ZodObject>(params: {name: string, description: string, schema: T, execute: (args: z.infer<T>) => any}) => params;
+const makeTool = <T extends z.ZodObject>(params: {
+  name: string;
+  description: string;
+  schema: T;
+  execute: (args: z.infer<T>) => any;
+}) => params;
 
 const list_directory = makeTool({
   name: "list_directory",
@@ -265,7 +270,7 @@ const grep_search = makeTool({
       }
 
       const files = await getSearchFiles(args.includePattern);
-      const results: {file: string, line: number, text: string}[] = [];
+      const results: { file: string; line: number; text: string }[] = [];
 
       for (const file of files) {
         try {
@@ -519,7 +524,12 @@ function fail(error) {
 }
 
 function runCommand(command, args = []) {
-  return new Promise<{stdout: string, stderr: string, code: number | null, signal: NodeJS.Signals | null}>((resolve, reject) => {
+  return new Promise<{
+    stdout: string;
+    stderr: string;
+    code: number | null;
+    signal: NodeJS.Signals | null;
+  }>((resolve, reject) => {
     const child = spawn(command, args, {
       cwd: process.cwd(),
       shell: true,

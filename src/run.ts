@@ -6,13 +6,13 @@ import pc from "picocolors";
 import type { ChatRequest, Message, ToolCall } from "ollama";
 
 type RunType = (args: {
-  userPrompt?: string,
-  interceptUserPrompt?: (prompt: string) => boolean,
-  modelId: string,
-  messages: Message[],
-  contextLength: number,
-  reasoningEffort: ChatRequest['think'],
-}) => Promise<string | undefined>
+  userPrompt?: string;
+  interceptUserPrompt?: (prompt: string) => boolean;
+  modelId: string;
+  messages: Message[];
+  contextLength: number;
+  reasoningEffort: ChatRequest["think"];
+}) => Promise<string | undefined>;
 
 export const run: RunType = async ({
   userPrompt,

@@ -1,5 +1,3 @@
-// @ts-check
-
 import { ellipsis } from "./utils.ts";
 import { exec } from "node:child_process";
 import fg from "fast-glob";
