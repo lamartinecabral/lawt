@@ -1,12 +1,12 @@
 #!/usr/bin/env node
 
 // @ts-check
-import { assertModel, finish, optsSchema, parseThinkOption } from "./utils.mjs";
+import { assertModel, finish, optsSchema, parseThinkOption } from "./utils.ts";
 import { Command } from "commander";
 import { promises as fs } from "node:fs";
 import pc from "picocolors";
 import pkg from "../package.json" with { type: "json" };
-import { run } from "./run.mjs";
+import { run } from "./run.ts";
 
 const program = new Command();
 
@@ -14,7 +14,7 @@ program
   .name(pkg.name)
   .description(pkg.description)
   .version(pkg.version, "-v, --version")
-  .option("-m, --model <model>", "Ollama model to use", "gpt-oss:20b")
+  .option("-m, --model <model>", "Ollama model to use", "gemma4:e2b")
   .option("-p, --prompt <prompt>", "Initial prompt")
   .option(
     "-t, --think <value>",

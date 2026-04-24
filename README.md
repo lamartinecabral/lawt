@@ -4,7 +4,7 @@ A lightweight AI agent CLI powered by [Ollama](https://ollama.com). It provides 
 
 ## Prerequisites
 
-- [Node.js](https://nodejs.org) >= 18
+- [Node.js](https://nodejs.org) >= 24
 - [Ollama](https://ollama.com/download) running locally
 - A tool-calling capable [model](https://ollama.com/search?c=tools)
 
@@ -30,7 +30,7 @@ minicode [options]
 | `-p, --prompt <prompt>`  | Initial prompt (skips first interactive input)                   |                                              |
 | `-t, --think <value>`    | Enable model thinking (`true`, `false`, `high`, `medium`, `low`) |                                              |
 | `-s, --system <value>`   | System prompt                                                    | `You are an assistant with access to tools.` |
-| `-c, --context <number>` | Context length                                                   | `16000`                                      |
+| `-c, --context <number>` | Context length                                                   | `32000`                                      |
 
 ### Examples
 

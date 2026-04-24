@@ -1,20 +1,20 @@
 // @ts-check
-import { abortables, ellipsis, ollama, question } from "./utils.mjs";
-import { executeToolCall, toolsToOllamaFormat } from "./tools_v3.mjs";
+import { abortables, ellipsis, ollama, question } from "./utils.ts";
+import { executeToolCall, toolsToOllamaFormat } from "./tools_v3.ts";
 import ora from "ora";
 import pc from "picocolors";
+import type { ChatRequest, Message, ToolCall } from "ollama";
 
-/**
- * @param {object} param0
- * @param {string} [param0.userPrompt]
- * @param {(prompt: string) => boolean} [param0.interceptUserPrompt]
- * @param {string} param0.modelId
- * @param {import("ollama").Message[]} param0.messages
- * @param {number} param0.contextLength
- * @param {import("ollama").ChatRequest['think']} [param0.reasoningEffort]
- * @returns {Promise<string | undefined>}
- */
-export const run = async ({
+type RunType = (args: {
+  userPrompt?: string,
+  interceptUserPrompt?: (prompt: string) => boolean,
+  modelId: string,
+  messages: Message[],
+  contextLength: number,
+  reasoningEffort: ChatRequest['think'],
+}) => Promise<string | undefined>
+
+export const run: RunType = async ({
   userPrompt,
   interceptUserPrompt,
   modelId,
@@ -50,7 +50,7 @@ export const run = async ({
 
     let content = "";
     let thinking = "";
-    let tool_calls = [];
+    let tool_calls: ToolCall[] = [];
 
     let mode = "";
     for await (const chunk of response) {

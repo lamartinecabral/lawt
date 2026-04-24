@@ -1,5 +1,5 @@
 // @ts-check
-import { ellipsis } from "./utils.mjs";
+import { ellipsis } from "./utils.ts";
 import { exec } from "node:child_process";
 
 /** @typedef {{definition: import("ollama").Tool, execute: (...args: any[]) => Promise<string>}} Tool */

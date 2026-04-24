@@ -10,8 +10,7 @@ const rl = readline.createInterface({
   output: process.stdout,
 });
 
-/** @type {Set<{abort: () => any}>} */
-export const abortables = new Set();
+export const abortables = new Set<{abort: () => any}>();
 
 rl.on("close", () => {
   for (const abortable of abortables) abortable.abort();

@@ -4,10 +4,13 @@
   "description": "A lightweight AI agent CLI powered by Ollama",
   "type": "module",
   "bin": {
-    "minicode": "./src/cli.mjs"
+    "minicode": "./src/cli.ts"
+  },
+  "engines": {
+    "node": ">=24.0.0"
   },
   "scripts": {
-    "start": "node src/cli.mjs",
+    "start": "node src/cli.ts",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
@@ -31,6 +34,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@types/fs-extra": "^11.0.4",
     "@types/node": "^25.6.0",
     "eslint": "^10.2.0",
     "execa": "^9.6.1",

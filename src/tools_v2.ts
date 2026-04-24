@@ -1,6 +1,6 @@
 // @ts-check
 
-import { ellipsis } from "./utils.mjs";
+import { ellipsis } from "./utils.ts";
 import { exec } from "node:child_process";
 import fg from "fast-glob";
 import fs from "fs-extra";
