@@ -1,11 +1,12 @@
-import type { ChatRequest, Message, ToolCall } from "ollama";
+import type { ChatRequest, Message, Ollama, ToolCall } from "ollama";
 
-import { abortables, ellipsis, ollama, question } from "./utils.ts";
-import { executeToolCall, toolsToOllamaFormat } from "./tools/index.ts";
+import { abortables, ellipsis, question } from "../../utils.ts";
+import { executeToolCall, toolsToOllamaFormat } from "../../tools/index.ts";
 import ora from "ora";
 import pc from "picocolors";
 
 type RunType = (_args: {
+  ollama: Ollama;
   userPrompt?: string;
   interceptUserPrompt?: (_prompt: string) => boolean;
   modelId: string;
@@ -15,6 +16,7 @@ type RunType = (_args: {
 }) => Promise<string | undefined>;
 
 export const run: RunType = async ({
+  ollama,
   userPrompt,
   interceptUserPrompt,
   modelId,

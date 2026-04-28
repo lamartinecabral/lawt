@@ -1,4 +1,5 @@
 import { fail } from "./utils.ts";
+import type { FunctionDeclaration } from "@google/genai";
 import type { Tool } from "ollama";
 
 import { create_file } from "./create-file.tool.ts";
@@ -28,6 +29,14 @@ export function toolsToOllamaFormat() {
       description: tool.description,
       parameters: tool.schema.toJSONSchema() as any,
     },
+  }));
+}
+
+export function toolsToGoogleFormat() {
+  return ALL_TOOLS.map<FunctionDeclaration>((tool) => ({
+    name: tool.name,
+    description: tool.description,
+    parameters: tool.schema.toJSONSchema() as any,
   }));
 }
 

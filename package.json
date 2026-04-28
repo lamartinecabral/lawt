@@ -1,6 +1,6 @@
 {
   "name": "minicode",
-  "version": "0.0.1-alpha",
+  "version": "0.0.1-ollama",
   "description": "A lightweight AI agent CLI powered by Ollama",
   "type": "module",
   "bin": {

@@ -3,7 +3,6 @@ import { InvalidArgumentError } from "commander";
 import { Ollama } from "ollama";
 import pc from "picocolors";
 import readline from "node:readline/promises";
-import { z } from "zod";
 
 const rl = readline.createInterface({
   input: process.stdin,
@@ -30,21 +29,6 @@ export const ellipsis = (str = "", len = 50) => {
   if (str.length > len) return str.substring(0, len - 1) + "…";
   return str;
 };
-
-export const optsSchema = z.object({
-  model: z.string().nonempty(),
-  prompt: z.string().nonempty().optional(),
-  think: z
-    .union([
-      z.boolean(),
-      z.literal("low"),
-      z.literal("medium"),
-      z.literal("high"),
-    ])
-    .optional(),
-  system: z.string().nonempty(),
-  context: z.coerce.number().int(),
-});
 
 export function parseThinkOption(value) {
   if (typeof value === "boolean") {
