@@ -1,7 +1,7 @@
 import type { ChatRequest, Message, ToolCall } from "ollama";
 
 import { abortables, ellipsis, ollama, question } from "./utils.ts";
-import { executeToolCall, toolsToOllamaFormat } from "./tools_v3.ts";
+import { executeToolCall, toolsToOllamaFormat } from "./tools/index.ts";
 import ora from "ora";
 import pc from "picocolors";
 

@@ -1,0 +1,96 @@
+import { fail } from "./utils.ts";
+import type { Tool } from "ollama";
+
+import { create_file } from "./create-file.tool.ts";
+import { file_search } from "./file-search.tool.ts";
+import { grep_search } from "./grep-search.tool.ts";
+import { list_directory } from "./list-directory.tool.ts";
+import { read_file } from "./read-file.tool.ts";
+import { run_shell_command } from "./run-shell-command.tool.ts";
+import { update_file } from "./update-file.tool.ts";
+
+/** @type {{name: string, description: string, schema: z.ZodObject, execute: (...a:any[])=>any}[]} */
+const ALL_TOOLS = [
+  list_directory,
+  read_file,
+  create_file,
+  update_file,
+  file_search,
+  grep_search,
+  run_shell_command,
+];
+
+export function toolsToOllamaFormat() {
+  return ALL_TOOLS.map<Tool>((tool) => ({
+    type: "function",
+    function: {
+      name: tool.name,
+      description: tool.description,
+      parameters: tool.schema.toJSONSchema() as any,
+    },
+  }));
+}
+
+export async function executeToolCall(name, rawArgs) {
+  let args = {};
+
+  try {
+    args = parseToolArgs(rawArgs);
+  } catch (err) {
+    return {
+      name,
+      args,
+      result: fail(err instanceof Error ? err.message : String(err)),
+    };
+  }
+
+  const tool = ALL_TOOLS.find((t) => t.name === name);
+  if (!tool) {
+    return {
+      name,
+      args,
+      result: fail(`Unknown tool: ${name}`),
+    };
+  }
+
+  const parsed = tool.schema.safeParse(args);
+  if (!parsed.success) {
+    return {
+      name,
+      args,
+      result: fail(`Validation error: ${parsed.error.message}`),
+    };
+  }
+
+  const result = await tool.execute(parsed.data as any);
+  return {
+    name,
+    args,
+    result,
+  };
+}
+
+function parseToolArgs(rawArgs) {
+  if (typeof rawArgs === "string") {
+    let parsed;
+    try {
+      parsed = JSON.parse(rawArgs);
+    } catch (err) {
+      throw new Error(
+        `Invalid tool arguments JSON: ${err instanceof Error ? err.message : String(err)}`,
+        { cause: err },
+      );
+    }
+
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+      throw new Error("Tool arguments must be a JSON object");
+    }
+    return parsed;
+  }
+
+  if (!rawArgs || typeof rawArgs !== "object" || Array.isArray(rawArgs)) {
+    throw new Error("Tool arguments must be an object");
+  }
+
+  return rawArgs;
+}
