@@ -10,7 +10,7 @@ const run_bash_command = {
     function: {
       name: "run_bash_command",
       description:
-        "Executes a bash shell command on the host system. Use this to read files, navigate the directory, install packages, or run scripts. Returns the terminal output.",
+        "Executes a bash shell command on the host system. Use this to read files, navigate the directory, or run scripts. Returns the terminal output.",
       parameters: {
         type: "object",
         properties: {
