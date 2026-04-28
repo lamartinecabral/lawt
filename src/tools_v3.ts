@@ -306,13 +306,13 @@ const grep_search = makeTool({
   },
 });
 
-const run_shell_command = {
+const run_shell_command = makeTool({
   name: "run_shell_command",
   description: "This tool allows you to execute shell commands.",
   schema: z.object({
     command: z.string().describe("The shell command to run."),
   }),
-  async execute(args: z.infer<typeof this.schema>) {
+  async execute(args) {
     try {
       const command = String(args.command ?? "").trim();
       if (!command) {
@@ -328,7 +328,7 @@ const run_shell_command = {
       return fail(err instanceof Error ? err.message : String(err));
     }
   },
-};
+});
 
 /** @type {{name: string, description: string, schema: z.ZodObject, execute: (...a:any[])=>any}[]} */
 const ALL_TOOLS = [
