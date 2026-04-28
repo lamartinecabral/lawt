@@ -1,7 +1,7 @@
 import path from "node:path";
 import z from "zod";
 
-export const makeTool = <T extends z.ZodObject>(params: {
+export const inferTool = <T extends z.ZodObject>(params: {
   name: string;
   description: string;
   schema: T;

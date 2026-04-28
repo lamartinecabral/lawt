@@ -1,8 +1,8 @@
-import { fail, makeTool, ok } from "./utils.ts";
+import { fail, inferTool, ok } from "./utils.ts";
 import { spawn } from "node:child_process";
 import z from "zod";
 
-export const run_shell_command = makeTool({
+export const run_shell_command = inferTool({
   name: "run_shell_command",
   description: "This tool allows you to execute shell commands.",
   schema: z.object({

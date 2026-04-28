@@ -1,9 +1,9 @@
-import { fail, getResolvedPath, makeTool, ok } from "./utils.ts";
+import { fail, getResolvedPath, inferTool, ok } from "./utils.ts";
 import fs from "node:fs/promises";
 import path from "node:path";
 import z from "zod";
 
-export const create_file = makeTool({
+export const create_file = inferTool({
   name: "create_file",
   description:
     "This is a tool for creating a new file in the workspace. The file will be created with the specified content. The directory will be created if it does not already exist. Never use this tool to edit a file that already exists.",

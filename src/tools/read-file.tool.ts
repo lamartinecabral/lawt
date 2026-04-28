@@ -1,8 +1,8 @@
-import { fail, getResolvedPath, makeTool, ok } from "./utils.ts";
+import { fail, getResolvedPath, inferTool, ok } from "./utils.ts";
 import fs from "node:fs/promises";
 import z from "zod";
 
-export const read_file = makeTool({
+export const read_file = inferTool({
   name: "read_file",
   description:
     "Read the contents of a file.\n\nYou must specify the line range you're interested in. Line numbers are 1-indexed. If the file contents returned are insufficient for your task, you may call this tool again to retrieve more content. Prefer reading larger ranges over doing many small reads. Binary files use startLine/endLine as byte offsets.",

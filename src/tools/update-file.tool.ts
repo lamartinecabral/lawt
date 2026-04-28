@@ -1,8 +1,8 @@
-import { fail, getResolvedPath, makeTool, ok } from "./utils.ts";
+import { fail, getResolvedPath, inferTool, ok } from "./utils.ts";
 import fs from "node:fs/promises";
 import z from "zod";
 
-export const update_file = makeTool({
+export const update_file = inferTool({
   name: "update_file",
   description:
     "Update an existing file by removing zero or more lines and inserting a new content in place.",

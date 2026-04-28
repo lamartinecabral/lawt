@@ -1,9 +1,9 @@
-import { fail, getResolvedPath, makeTool, ok } from "./utils.ts";
+import { fail, getResolvedPath, inferTool, ok } from "./utils.ts";
 import fg from "fast-glob";
 import path from "node:path";
 import z from "zod";
 
-export const file_search = makeTool({
+export const file_search = inferTool({
   name: "file_search",
   description:
     "Search for files in the workspace by glob pattern. This only returns the paths of matching files. Use this tool when you know the exact filename pattern of the files you're searching for. Glob patterns match from the root of the workspace folder. Examples:\n- **/*.{js,ts} to match all js/ts files in the workspace.\n- src/** to match all files under the top-level src folder.\n- **/foo/**/*.js to match all js files under any foo folder in the workspace.\n\nIn a multi-root workspace, you can scope the search to a specific workspace folder by using the absolute path to the folder as the query, e.g. /path/to/folder/**/*.ts.",
