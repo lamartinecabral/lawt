@@ -3,13 +3,10 @@
 // @ts-check
 import { assertModel, finish, optsSchema, parseThinkOption } from "./utils.ts";
 import { Command } from "commander";
-import dotenv from "dotenv";
 import { promises as fs } from "node:fs";
 import pc from "picocolors";
 import pkg from "../package.json" with { type: "json" };
 import { run } from "./run.ts";
-
-dotenv.config({ quiet: true });
 
 const program = new Command();
 
