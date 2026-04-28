@@ -4,6 +4,6 @@ import pkg from "../package.json" with { type: "json" };
 
 if (pkg.version.includes("ollama")) {
   import("./branches/ollama/cli.ts");
-} else if (pkg.description.includes("gemma")) {
+} else if (pkg.version.includes("gemma")) {
   import("./branches/gemma/cli.ts");
 }
