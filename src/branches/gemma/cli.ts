@@ -1,7 +1,9 @@
 import { Command } from "commander";
 import { configDotenv } from "dotenv";
 import { finish } from "../../utils.ts";
+import fs from "node:fs";
 import { GoogleGenAI } from "@google/genai";
+import path from "node:path";
 import pc from "picocolors";
 import pkg from "../../../package.json" with { type: "json" };
 import { run } from "./run.ts";
@@ -10,8 +12,9 @@ import z from "zod";
 
 const program = new Command();
 
-configDotenv({ quiet: true });
-const ai = new GoogleGenAI({});
+const ai = new GoogleGenAI({
+  apiKey: getApiKey(),
+});
 
 const model = "models/gemma-4-31b-it";
 
@@ -83,6 +86,22 @@ const optsSchema = z.object({
   system: z.string().nonempty(),
 });
 
+function getApiKey() {
+  configDotenv({
+    quiet: true,
+    path:
+      path
+        .dirname(fs.realpathSync(process.argv[1]))
+        .split("/")
+        .slice(0, -1)
+        .join("/") + "/.env",
+  });
+
+  if (!process.env.GEMINI_API_KEY)
+    throw new Error("GEMINI_API_KEY is required");
+
+  return process.env.GEMINI_API_KEY;
+}
 // START
 
 program.parse();

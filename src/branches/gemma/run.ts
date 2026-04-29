@@ -101,7 +101,7 @@ export const run: RunType = async ({
 };
 
 const waitForRequestSlot = (() => {
-  const requestsHistoryFile = ".request-history.json";
+  const requestsHistoryFile = ".request-history.tmp";
   const requestsPerMinute = 15;
   /** @returns {Array<number>} */
   const getRequestHistory = () => {
