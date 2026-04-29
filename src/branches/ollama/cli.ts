@@ -1,6 +1,7 @@
 import { finish, parseThinkOption } from "../../utils.ts";
 import { Command } from "commander";
 import { promises as fs } from "node:fs";
+import type { Message } from "ollama";
 import { Ollama } from "ollama";
 import pc from "picocolors";
 import pkg from "../../../package.json" with { type: "json" };
@@ -33,8 +34,7 @@ program
     console.log(pc.bgGreen(`${this.name()} - ${this.description()}`));
     showOpts(opts);
 
-    /** @type {import("ollama").Message[]} */
-    const messages = [{ role: "system", content: opts.system }];
+    const messages: Message[] = [{ role: "system", content: opts.system }];
 
     if (opts.prompt) {
       await run({
@@ -146,8 +146,7 @@ program
     finish();
   });
 
-/** @param {import('zod').z.infer<typeof optsSchema>} opts */
-function showOpts(opts) {
+function showOpts(opts: z.infer<typeof optsSchema>) {
   const { model, system, context, think } = opts;
   console.log(``);
   let maxLen = 0;

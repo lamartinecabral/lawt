@@ -61,8 +61,7 @@ program
     finish();
   });
 
-/** @param {import('zod').z.infer<typeof optsSchema>} opts */
-function showOpts(opts) {
+async function showOpts(opts: z.infer<typeof optsSchema>) {
   const { system } = opts;
   console.log(``);
   let maxLen = 0;
