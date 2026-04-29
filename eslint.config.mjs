@@ -16,7 +16,11 @@ export default defineConfig(
     },
     rules: {
       "@typescript-eslint/no-explicit-any": "off",
-      "no-unused-vars": ["warn", { argsIgnorePattern: "^_" }],
+      "no-unused-vars": [
+        "warn",
+        { argsIgnorePattern: "^_", caughtErrorsIgnorePattern: "^_" },
+      ],
+      "@typescript-eslint/no-unused-vars": "off",
       "no-console": "off",
       "sort-imports": [
         "warn",

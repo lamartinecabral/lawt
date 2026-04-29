@@ -2,6 +2,7 @@ import type { Chat, FunctionCall, FunctionResponse } from "@google/genai";
 
 import { ellipsis, question } from "../../utils.ts";
 import { executeToolCall } from "../../tools/index.ts";
+import fs from "node:fs";
 import ora from "ora";
 import pc from "picocolors";
 
@@ -30,6 +31,7 @@ export const run: RunType = async ({
   while (true) {
     const spinner = ora().start();
 
+    await waitForRequestSlot();
     const response = await chat.sendMessageStream({
       message: functionResponses.length
         ? functionResponses.map((r) => ({ functionResponse: r }))
@@ -97,3 +99,51 @@ export const run: RunType = async ({
     }
   }
 };
+
+const waitForRequestSlot = (() => {
+  const requestsHistoryFile = ".request-history.json";
+  const requestsPerMinute = 15;
+  /** @returns {Array<number>} */
+  const getRequestHistory = () => {
+    try {
+      return JSON.parse(
+        fs.readFileSync(requestsHistoryFile, { encoding: "utf-8" }),
+      );
+    } catch (_) {
+      return [];
+    }
+  };
+  const setRequestHistory = (arr) => {
+    fs.promises.writeFile(requestsHistoryFile, JSON.stringify(arr));
+  };
+  const limit = requestsPerMinute ?? 0;
+  return async () => {
+    if (!Number.isFinite(limit) || limit < 1) return;
+
+    const requestsHistory = getRequestHistory();
+    const WINDOW_MS = 60_000;
+
+    const trimHistory = (now) => {
+      while (
+        requestsHistory.length > 0 &&
+        now - requestsHistory[0] >= WINDOW_MS
+      ) {
+        requestsHistory.shift();
+      }
+    };
+
+    while (true) {
+      const now = Date.now();
+      trimHistory(now);
+
+      if (requestsHistory.length < limit) {
+        requestsHistory.push(now);
+        setRequestHistory(requestsHistory);
+        return;
+      }
+
+      const waitMs = Math.max(1, WINDOW_MS - (now - requestsHistory[0]));
+      await new Promise((r) => setTimeout(r, waitMs));
+    }
+  };
+})();

@@ -5,6 +5,7 @@
     "erasableSyntaxOnly": true,
     "module": "esnext",
     "noImplicitAny": false,
-    "rewriteRelativeImportExtensions": true
+    "rewriteRelativeImportExtensions": true,
+    "skipLibCheck": true
   }
 }
