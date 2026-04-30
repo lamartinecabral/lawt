@@ -1,6 +1,6 @@
 # minicode
 
-A lightweight AI agent CLI powered by [Ollama](https://ollama.com). It provides an interactive chat with tool-calling capabilities, letting the AI execute bash commands on your system.
+A lightweight AI agent CLI with provider-specific branches for [Ollama](https://ollama.com) and Gemini/Gemma. The current package version in this repository boots the Ollama branch by default and exposes file and shell tools inside the workspace.
 
 ## Prerequisites
 
@@ -26,7 +26,7 @@ minicode [options]
 | Flag                     | Description                                                      | Default                                      |
 | ------------------------ | ---------------------------------------------------------------- | -------------------------------------------- |
 | `-v, --version`          | Print version                                                    |                                              |
-| `-m, --model <model>`    | Ollama model to use                                              | `gpt-oss:20b`                                |
+| `-m, --model <model>`    | Ollama model to use                                              | `gemma4:e2b`                                 |
 | `-p, --prompt <prompt>`  | Initial prompt (skips first interactive input)                   |                                              |
 | `-t, --think <value>`    | Enable model thinking (`true`, `false`, `high`, `medium`, `low`) |                                              |
 | `-s, --system <value>`   | System prompt                                                    | `You are an assistant with access to tools.` |
@@ -43,7 +43,7 @@ minicode
 Use a specific model with an initial prompt:
 
 ```bash
-minicode -m gpt-oss:20b -p "list files in the current directory"
+minicode -m gemma4:e2b -p "list files in the current directory"
 ```
 
 Enable thinking mode:
@@ -56,17 +56,27 @@ Type `/exit` to quit the session.
 
 ## Tools
 
-The agent has access to the following tools:
+The shared tool registry currently exposes these workspace-scoped tools:
 
-### `run_bash_command`
-
-Executes a bash shell command on the host system. The AI can use this to read files, navigate directories, install packages, or run scripts. Commands have a 15-second timeout.
+- `list_directory`
+- `read_file`
+- `create_file`
+- `update_file`
+- `file_search`
+- `grep_search`
+- `run_shell_command`
 
 ## Development
 
 ```bash
+# Run tests
+npm test
+
 # Run linter
 npm run lint
+
+# Run typecheck
+npm run typecheck
 
 # Run formatter check
 npm run format:check
@@ -79,11 +89,23 @@ npm run format
 
 ```
 src/
-  cli.mjs          # Main CLI entry point — handles argument parsing and REPL loop
-  run.mjs          # Core execution logic — manages the LLM interaction loop and tool dispatch
-  tools.mjs        # Tool definitions and registry
-  utils.mjs        # Shared utilities (Ollama client, readline interface, etc.)
+  cli.ts                   # Dispatches to the active provider branch
+  utils.ts                 # Shared readline helpers and model utilities
+  branches/
+    ollama/
+      cli.ts               # Ollama CLI and command handling
+      run.ts               # Ollama chat loop and tool execution
+    gemma/
+      cli.ts               # Gemini/Gemma CLI setup
+      run.ts               # Gemini chat loop and tool execution
+  tools/
+    index.ts               # Shared tool registry and provider adapters
+    *.tool.ts              # Individual workspace tool implementations
+tests/
+  tools.test.ts            # Baseline Vitest coverage for the active tool registry
 ```
+
+Vitest is configured for TypeScript test files under `tests/`.
 
 ## License
 
