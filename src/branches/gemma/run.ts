@@ -1,6 +1,6 @@
 import type { Chat, FunctionCall, FunctionResponse } from "@google/genai";
 
-import { ellipsis, question } from "../../utils.ts";
+import { ellipsis, projectRoot, question } from "../../utils.ts";
 import { executeToolCall } from "../../tools/index.ts";
 import fs from "node:fs";
 import ora from "ora";
@@ -101,7 +101,7 @@ export const run: RunType = async ({
 };
 
 const waitForRequestSlot = (() => {
-  const requestsHistoryFile = ".request-history.tmp";
+  const requestsHistoryFile = projectRoot + "/.request-history.tmp";
   const limit = 3;
   const WINDOW_MS = 12_000;
   /** @returns {Array<number>} */
