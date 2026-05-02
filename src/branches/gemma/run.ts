@@ -102,7 +102,8 @@ export const run: RunType = async ({
 
 const waitForRequestSlot = (() => {
   const requestsHistoryFile = ".request-history.tmp";
-  const requestsPerMinute = 15;
+  const limit = 3;
+  const WINDOW_MS = 12_000;
   /** @returns {Array<number>} */
   const getRequestHistory = () => {
     try {
@@ -116,12 +117,10 @@ const waitForRequestSlot = (() => {
   const setRequestHistory = (arr) => {
     fs.promises.writeFile(requestsHistoryFile, JSON.stringify(arr));
   };
-  const limit = requestsPerMinute ?? 0;
   return async () => {
     if (!Number.isFinite(limit) || limit < 1) return;
 
     const requestsHistory = getRequestHistory();
-    const WINDOW_MS = 60_000;
 
     const trimHistory = (now) => {
       while (
