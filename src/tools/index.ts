@@ -1,3 +1,4 @@
+import type { ChatFunctionTool } from "@openrouter/sdk/models";
 import { fail } from "./utils.ts";
 import type { FunctionDeclaration } from "@google/genai";
 import type { Tool } from "ollama";
@@ -23,6 +24,17 @@ const ALL_TOOLS = [
 
 export function toolsToOllamaFormat() {
   return ALL_TOOLS.map<Tool>((tool) => ({
+    type: "function",
+    function: {
+      name: tool.name,
+      description: tool.description,
+      parameters: tool.schema.toJSONSchema() as any,
+    },
+  }));
+}
+
+export function toolsToOpenRouterFormat() {
+  return ALL_TOOLS.map<ChatFunctionTool>((tool) => ({
     type: "function",
     function: {
       name: tool.name,

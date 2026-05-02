@@ -1,9 +1,7 @@
+import { finish, projectRoot } from "../../utils.ts";
 import { Command } from "commander";
 import { configDotenv } from "dotenv";
-import { finish } from "../../utils.ts";
-import fs from "node:fs";
 import { GoogleGenAI } from "@google/genai";
-import path from "node:path";
 import pc from "picocolors";
 import pkg from "../../../package.json" with { type: "json" };
 import { run } from "./run.ts";
@@ -89,12 +87,7 @@ const optsSchema = z.object({
 function getApiKey() {
   configDotenv({
     quiet: true,
-    path:
-      path
-        .dirname(fs.realpathSync(process.argv[1]))
-        .split("/")
-        .slice(0, -1)
-        .join("/") + "/.env",
+    path: projectRoot + "/.env",
   });
 
   if (!process.env.GEMINI_API_KEY)

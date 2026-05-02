@@ -1,6 +1,5 @@
-// @ts-check
-import { InvalidArgumentError } from "commander";
-import { Ollama } from "ollama";
+import fs from "node:fs";
+import path from "node:path";
 import pc from "picocolors";
 import readline from "node:readline/promises";
 
@@ -30,39 +29,8 @@ export const ellipsis = (str = "", len = 50) => {
   return str;
 };
 
-export function parseThinkOption(value) {
-  if (typeof value === "boolean") {
-    return value;
-  }
-
-  const normalized = value.toLowerCase();
-  if (normalized === "true") return true;
-  if (normalized === "false") return false;
-  if (normalized === "default") return undefined;
-  if (
-    normalized === "high" ||
-    normalized === "medium" ||
-    normalized === "low"
-  ) {
-    return normalized;
-  }
-  throw new InvalidArgumentError(
-    `Invalid value for --think: ${value}. Expected default, true, false, high, medium, or low.`,
-  );
-}
-
-export const ollama = new Ollama();
-
-export async function assertModel(model) {
-  const response = await ollama.list();
-  let modelNotFound;
-  try {
-    modelNotFound = !response.models.find((m) => m.model === model);
-  } catch (err) {
-    throw new Error(
-      "Failed to connect to Ollama. Please make sure Ollama is installed and running.",
-      { cause: err },
-    );
-  }
-  if (modelNotFound) throw new Error(`model ${model} not found`);
-}
+export const projectRoot = path
+  .dirname(fs.realpathSync(process.argv[1]))
+  .split("/")
+  .slice(0, -1)
+  .join("/");

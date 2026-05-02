@@ -1,5 +1,5 @@
-import { finish, parseThinkOption } from "../../utils.ts";
-import { Command } from "commander";
+import { Command, InvalidArgumentError } from "commander";
+import { finish } from "../../utils.ts";
 import { promises as fs } from "node:fs";
 import type { Message } from "ollama";
 import { Ollama } from "ollama";
@@ -195,6 +195,27 @@ const optsSchema = z.object({
   system: z.string().nonempty(),
   context: z.coerce.number().int(),
 });
+
+export function parseThinkOption(value) {
+  if (typeof value === "boolean") {
+    return value;
+  }
+
+  const normalized = value.toLowerCase();
+  if (normalized === "true") return true;
+  if (normalized === "false") return false;
+  if (normalized === "default") return undefined;
+  if (
+    normalized === "high" ||
+    normalized === "medium" ||
+    normalized === "low"
+  ) {
+    return normalized;
+  }
+  throw new InvalidArgumentError(
+    `Invalid value for --think: ${value}. Expected default, true, false, high, medium, or low.`,
+  );
+}
 
 // START
 
