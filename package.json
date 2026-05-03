@@ -10,6 +10,7 @@
     "node": ">=24.0.0"
   },
   "scripts": {
+    "activate": "node src/branches/activate.ts",
     "start": "node src/cli.ts",
     "test": "vitest run",
     "lint": "eslint .",
