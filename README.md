@@ -1,6 +1,6 @@
 # minicode
 
-A lightweight AI agent CLI with provider-specific branches for [Ollama](https://ollama.com) and Gemini/Gemma. The current package version in this repository boots the Ollama branch by default and exposes file and shell tools inside the workspace.
+A lightweight AI agent CLI powererd by [Ollama](https://ollama.com).
 
 ## Prerequisites
 
