@@ -29,8 +29,7 @@ export const ellipsis = (str = "", len = 50) => {
   return str;
 };
 
-export const projectRoot = path
-  .dirname(fs.realpathSync(process.argv[1]))
-  .split("/")
-  .slice(0, -1)
-  .join("/");
+export const projectRoot = path.resolve(
+  path.dirname(fs.realpathSync(process.argv[1])),
+  "..",
+);
