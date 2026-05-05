@@ -23,7 +23,7 @@ program
   .option(
     "-m, --model <model>",
     "OpenRouter model to use",
-    "openai/gpt-oss-20b:free",
+    "google/gemma-4-31b-it:free",
   )
   .option("-p, --prompt <prompt>", "Initial prompt")
   .option(
