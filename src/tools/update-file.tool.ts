@@ -5,26 +5,20 @@ import z from "zod";
 export const update_file = inferTool({
   name: "update_file",
   description:
-    "Update an existing file by removing zero or more lines and inserting a new content in place.",
+    "Update an existing file by replacing exact text with new text. If the text to replace is omitted, the new text is appended to the file.",
   schema: z.object({
     file_path: z.string().describe("The relative path of the file to update."),
-    position: z
-      .number()
+    old_text: z
+      .string()
       .optional()
       .describe(
-        "The line number to insert the new content, 1-based. If omitted, the new content will be appended.",
-      ),
-    delete_count: z
-      .number()
-      .optional()
-      .describe(
-        "The number of lines to remove. If omitted, no lines will be removed.",
+        "The exact text to replace. If omitted, the new text will be appended.",
       ),
     content: z
       .string()
       .optional()
       .describe(
-        "The content to write to the file. If omitted, only line removal will be applied.",
+        "The new text to write. If omitted, the matched text will be removed.",
       ),
   }),
   async execute(args) {
@@ -36,41 +30,30 @@ export const update_file = inferTool({
       }
 
       const original = await fs.readFile(resolvedPath, "utf-8");
-      const newline = original.includes("\r\n") ? "\r\n" : "\n";
-      const lines = original.split(/\r\n|\n/);
-      const deleteCount = args.delete_count ?? 0;
+      const replacement = args.content ?? "";
+      let updated = original;
 
-      if (!Number.isInteger(deleteCount) || deleteCount < 0) {
-        return fail("Invalid delete_count: must be a non-negative integer.");
-      }
-
-      const position = args.position;
-
-      if (
-        position !== undefined &&
-        (!Number.isInteger(position) || position < 1)
-      ) {
-        return fail("Invalid position: must be a positive integer.");
-      }
-
-      const insertLines =
-        args.content === undefined ? [] : args.content.split(/\r\n|\n/);
-
-      let updatedLines: string[] = [];
-      if (!position) {
-        updatedLines = [
-          lines.slice(0, lines.length - deleteCount),
-          insertLines,
-        ].flat();
+      if (args.old_text === undefined) {
+        updated = `${original}${replacement}`;
       } else {
-        updatedLines = [
-          lines.slice(0, position - 1),
-          insertLines,
-          lines.slice(position - 1 + deleteCount),
-        ].flat();
+        if (args.old_text.length === 0) {
+          return fail("Invalid old_text: must not be empty.");
+        }
+
+        const occurrences = original.split(args.old_text).length - 1;
+        if (occurrences === 0) {
+          return fail(`Text not found in file: ${args.old_text}`);
+        }
+
+        if (occurrences > 1) {
+          return fail(
+            "Text to replace must be unique within the file. Provide a more specific old_text.",
+          );
+        }
+
+        updated = original.replace(args.old_text, replacement);
       }
 
-      const updated = updatedLines.join(newline);
       if (updated === original) {
         return ok({ file_path: resolvedPath, modified: false });
       }
