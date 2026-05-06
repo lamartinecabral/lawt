@@ -98,6 +98,9 @@ src/
     gemma/
       cli.ts               # Gemini/Gemma CLI setup
       run.ts               # Gemini chat loop and tool execution
+    openrouter/
+      cli.ts               # OpenRouter CLI setup
+      run.ts               # OpenRouter chat loop and tool execution
   tools/
     index.ts               # Shared tool registry and provider adapters
     *.tool.ts              # Individual workspace tool implementations

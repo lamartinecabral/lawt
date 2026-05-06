@@ -23,13 +23,14 @@
 
 ## Project Structure
 
-| Path                   | Purpose                                     |
-| ---------------------- | ------------------------------------------- |
-| `src/cli.ts`           | Entry point that dispatches to a branch CLI |
-| `src/branches/ollama/` | Ollama-specific CLI and chat runtime        |
-| `src/branches/gemma/`  | Gemini/Gemma-specific CLI and chat runtime  |
-| `src/tools/`           | Shared workspace tool implementations       |
-| `tests/`               | Vitest unit tests                           |
-| `eslint.config.mjs`    | ESLint flat config                          |
-| `.prettierrc`          | Prettier config                             |
-| `vitest.config.mjs`    | Vitest config                               |
+| Path                       | Purpose                                     |
+| -------------------------- | ------------------------------------------- |
+| `src/cli.ts`               | Entry point that dispatches to a branch CLI |
+| `src/branches/ollama/`     | Ollama-specific CLI and chat runtime        |
+| `src/branches/gemma/`      | Gemini/Gemma-specific CLI and chat runtime  |
+| `src/branches/openrouter/` | OpenRouter-specific CLI and chat runtime    |
+| `src/tools/`               | Shared workspace tool implementations       |
+| `tests/`                   | Vitest unit tests                           |
+| `eslint.config.mjs`        | ESLint flat config                          |
+| `.prettierrc`              | Prettier config                             |
+| `vitest.config.mjs`        | Vitest config                               |
