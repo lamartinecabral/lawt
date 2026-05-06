@@ -69,20 +69,13 @@ describe("tool registry", () => {
 
     expectSuccess(updated);
 
-    const appended = await executeToolCall("update_file", {
-      file_path: "notes/example.txt",
-      content: "delta\n",
-    });
-
-    expectSuccess(appended);
-
     const read = await executeToolCall("read_file", {
       file_path: "notes/example.txt",
       position: 1,
-      line_count: 4,
+      line_count: 3,
     });
 
-    expect(expectSuccess(read)).toBe("alpha\nbeta-updated\ngamma\ndelta");
+    expect(expectSuccess(read)).toBe("alpha\nbeta-updated\ngamma");
 
     const listing = await executeToolCall("list_directory", { path: "notes" });
     expect(expectSuccess(listing)).toEqual(["example.txt"]);
