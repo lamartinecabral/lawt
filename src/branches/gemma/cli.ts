@@ -1,6 +1,7 @@
 import { finish, projectRoot } from "../../utils.ts";
 import { Command } from "commander";
 import { configDotenv } from "dotenv";
+import { promises as fs } from "node:fs";
 import { GoogleGenAI } from "@google/genai";
 import pc from "picocolors";
 import pkg from "../../../package.json" with { type: "json" };
@@ -52,11 +53,25 @@ program
         chat,
         interceptUserPrompt: (prompt) => {
           if (prompt === "/exit") return true;
+          if (prompt === "/save") return true;
           return false;
         },
       });
 
       if (res === "/exit") break;
+      if (res === "/save") {
+        const file = `${process.cwd()}/.cache/minicode_state.json`;
+        try {
+          await fs.mkdir(`${process.cwd()}/.cache`, { recursive: true });
+          await fs.writeFile(
+            file,
+            JSON.stringify({ opts, messages: chat.getHistory() }, null, 2),
+          );
+          console.log(pc.green("\n✓"), pc.dim(`State saved to ${file}`));
+        } catch (e) {
+          console.log(pc.red("\n✕"), pc.dim(`Error saving state: ${e}`));
+        }
+      }
     }
 
     finish();
