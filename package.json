@@ -36,6 +36,7 @@
     "ollama": "^0.6.3",
     "ora": "^9.3.0",
     "picocolors": "^1.1.1",
+    "puppeteer": "^24.43.0",
     "zod": "^4.3.6"
   },
   "devDependencies": {
