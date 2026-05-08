@@ -1,8 +1,8 @@
-import { fail, getResolvedPath, inferTool, ok } from "./utils.ts";
+import { fail, getResolvedPath, ok, tool } from "./utils.ts";
 import fs from "node:fs/promises";
 import z from "zod";
 
-export const update_file = inferTool({
+export const update_file = tool({
   name: "update_file",
   description: "Update an existing file by replacing exact text with new text.",
   schema: z.object({

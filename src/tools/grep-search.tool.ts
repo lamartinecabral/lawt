@@ -1,10 +1,10 @@
-import { fail, getResolvedPath, inferTool, ok } from "./utils.ts";
+import { fail, getResolvedPath, ok, tool } from "./utils.ts";
 import fg from "fast-glob";
 import fs from "node:fs/promises";
 import path from "node:path";
 import z from "zod";
 
-export const grep_search = inferTool({
+export const grep_search = tool({
   name: "grep_search",
   description:
     "Do a fast text search in the workspace. Use this tool when you want to search with an exact string or regex. If you are not sure what words will appear in the workspace, prefer using regex patterns with alternation (|) or character classes to search for multiple potential words at once instead of making separate searches. For example, use 'function|method|procedure' to look for all of those words at once. Use includePattern to search within files matching a specific pattern, or in a specific file, using a relative path.",

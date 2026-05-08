@@ -1,8 +1,8 @@
-import { fail, getResolvedPath, inferTool, ok } from "./utils.ts";
+import { fail, getResolvedPath, ok, tool } from "./utils.ts";
 import fs from "node:fs/promises";
 import z from "zod";
 
-export const list_directory = inferTool({
+export const list_directory = tool({
   name: "list_directory",
   description:
     "List the contents of a directory. Result will have the name of the child. If the name ends in /, it's a folder, otherwise a file",
