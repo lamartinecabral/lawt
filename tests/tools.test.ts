@@ -43,7 +43,7 @@ describe("tool registry", () => {
       "list_directory",
       "read_file",
       "create_file",
-      "update_file",
+      "replace_string_in_file",
       "file_search",
       "grep_search",
       "run_shell_command",
@@ -61,10 +61,10 @@ describe("tool registry", () => {
       fs.readFile(path.join(workspaceDir, "notes/example.txt"), "utf-8"),
     ).resolves.toBe("alpha\nbeta\ngamma\n");
 
-    const updated = await executeToolCall("update_file", {
+    const updated = await executeToolCall("replace_string_in_file", {
       file_path: "notes/example.txt",
       old_text: "beta",
-      content: "beta-updated",
+      new_text: "beta-updated",
     });
 
     expectSuccess(updated);
@@ -78,12 +78,12 @@ describe("tool registry", () => {
     expect(expectSuccess(read)).toBe("alpha\nbeta-updated\ngamma");
 
     const listing = await executeToolCall("list_directory", { path: "notes" });
-    expect(expectSuccess(listing)).toEqual(["example.txt"]);
+    expect(expectSuccess(listing)).toEqual("example.txt");
 
     const files = await executeToolCall("file_search", {
       query: "notes/**/*.txt",
     });
-    expect(expectSuccess(files)).toEqual(["notes/example.txt"]);
+    expect(expectSuccess(files)).toEqual("notes/example.txt");
 
     const grep = await executeToolCall("grep_search", {
       query: "beta-updated",
@@ -91,13 +91,9 @@ describe("tool registry", () => {
       includePattern: "notes/**",
     });
 
-    expect(expectSuccess(grep)).toEqual([
-      {
-        file: "notes/example.txt",
-        line: 2,
-        text: "beta-updated",
-      },
-    ]);
+    expect(expectSuccess(grep)).toEqual(
+      "notes/example.txt@line2: beta-updated",
+    );
   });
 
   it("executes shell commands in the current workspace", async () => {
@@ -106,10 +102,12 @@ describe("tool registry", () => {
       JSON.stringify({ command: "printf 'hello from shell'" }),
     );
 
-    expect(expectSuccess(result)).toEqual({
+    expect(expectSuccess(result)).toEqual(
+      JSON.stringify({
       stdout: "hello from shell",
       stderr: "",
-    });
+      }),
+    );
   });
 
   it("rejects paths that lexically escape the workspace", async () => {
