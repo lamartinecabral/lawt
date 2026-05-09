@@ -28,7 +28,7 @@ export const create_file = tool({
       await fs.mkdir(directory, { recursive: true });
       await fs.writeFile(resolvedPath, args.content, "utf-8");
 
-      return ok({ file_path: resolvedPath });
+      return ok(`file created: ${resolvedPath}`);
     } catch (err) {
       return fail(err instanceof Error ? err.message : String(err));
     }

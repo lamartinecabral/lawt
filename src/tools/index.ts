@@ -1,22 +1,22 @@
 import type { ChatFunctionTool } from "@openrouter/sdk/models";
-import { fail } from "./utils.ts";
 import type { FunctionDeclaration } from "@google/genai";
 import type { Tool } from "ollama";
 
 import { create_file } from "./create-file.tool.ts";
+import { fail } from "./utils.ts";
 import { file_search } from "./file-search.tool.ts";
 import { grep_search } from "./grep-search.tool.ts";
 import { list_directory } from "./list-directory.tool.ts";
 import { read_file } from "./read-file.tool.ts";
+import { replace_string_in_file } from "./update-file.tool.ts";
 import { run_shell_command } from "./run-shell-command.tool.ts";
-import { update_file } from "./update-file.tool.ts";
 
 /** @type {{name: string, description: string, schema: z.ZodObject, execute: (...a:any[])=>any}[]} */
 const ALL_TOOLS = [
   list_directory,
   read_file,
   create_file,
-  update_file,
+  replace_string_in_file,
   file_search,
   grep_search,
   run_shell_command,

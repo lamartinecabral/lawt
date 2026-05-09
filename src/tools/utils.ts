@@ -5,7 +5,9 @@ export const tool = <T extends z.ZodObject>(params: {
   name: string;
   description: string;
   schema: T;
-  execute: (_args: z.infer<T>) => any;
+  execute: (
+    _args: z.infer<T>,
+  ) => Promise<ReturnType<typeof fail> | ReturnType<typeof ok>>;
 }) => params;
 
 export function getResolvedPath(unresolvedPath = "") {
@@ -20,11 +22,10 @@ export function getResolvedPath(unresolvedPath = "") {
   }
   return resolvedPath;
 }
-
-export function ok(data) {
-  return { success: true, data };
+export function ok(data: string) {
+  return { success: true as const, data };
 }
 
-export function fail(error) {
-  return { success: false, error };
+export function fail(error: string) {
+  return { success: false as const, error };
 }

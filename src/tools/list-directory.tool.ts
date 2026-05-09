@@ -26,7 +26,7 @@ export const list_directory = tool({
         entry.isDirectory() ? `${entry.name}/` : entry.name,
       );
 
-      return ok(list);
+      return ok(list.join("\n"));
     } catch (err) {
       return fail(err instanceof Error ? err.message : String(err));
     }

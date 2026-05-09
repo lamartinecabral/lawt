@@ -72,7 +72,7 @@ export const grep_search = tool({
             });
 
             if (maxResults !== undefined && results.length >= maxResults) {
-              return ok(results);
+              return ok(parseResults(results));
             }
           }
         } catch {
@@ -80,12 +80,18 @@ export const grep_search = tool({
         }
       }
 
-      return ok(results);
+      return ok(parseResults(results));
     } catch (err) {
       return fail(err instanceof Error ? err.message : String(err));
     }
   },
 });
+
+function parseResults(results: { file: string; line: number; text: string }[]) {
+  return results
+    .map((result) => `${result.file}@line${result.line}: ${result.text}`)
+    .join("\n");
+}
 
 function normalizeSearchPattern(query) {
   if (path.isAbsolute(query)) {

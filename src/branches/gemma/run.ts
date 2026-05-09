@@ -78,11 +78,7 @@ export const run: RunType = async ({
       const tool_name = tool_call.name;
       const args = tool_call.args;
       const { result } = await executeToolCall(tool_name, args);
-      const content = result.success
-        ? typeof result.data === "string"
-          ? result.data
-          : JSON.stringify(result.data)
-        : JSON.stringify(result);
+      const content = result.success ? result.data : `Error: ${result.error}`;
       functionResponses.push({
         id: tool_call.id,
         name: tool_name,

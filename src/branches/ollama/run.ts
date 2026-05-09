@@ -105,11 +105,7 @@ export const run: RunType = async ({
       const tool_name = tool_call.function.name;
       const args = tool_call.function.arguments;
       const { result } = await executeToolCall(tool_name, args);
-      const content = result.success
-        ? typeof result.data === "string"
-          ? result.data
-          : JSON.stringify(result.data)
-        : JSON.stringify(result);
+      const content = result.success ? result.data : `Error: ${result.error}`;
       messages.push({ role: "tool", tool_name, content });
 
       console.log(pc.yellow("\n--- tool ---"));

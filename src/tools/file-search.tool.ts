@@ -29,7 +29,7 @@ export const file_search = tool({
         unique: true,
       });
 
-      return ok(matches.sort((a, b) => a.localeCompare(b)));
+      return ok(matches.sort((a, b) => a.localeCompare(b)).join("\n"));
     } catch (err) {
       return fail(err instanceof Error ? err.message : String(err));
     }
