@@ -110,10 +110,9 @@ describe("tool registry", () => {
   });
 
   it("executes shell commands in the current workspace", async () => {
-    const result = await executeToolCall(
-      "run_shell_command",
-      JSON.stringify({ command: "printf 'hello from shell'" }),
-    );
+    const result = await executeToolCall("run_shell_command", {
+      command: "printf 'hello from shell'",
+    });
 
     expect(expectSuccess(result)).toEqual(
       JSON.stringify({

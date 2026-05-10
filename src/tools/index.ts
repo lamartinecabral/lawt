@@ -12,7 +12,7 @@ import { replace_string_in_file } from "./update-file.tool.ts";
 import { run_shell_command } from "./run-shell-command.tool.ts";
 
 /** @type {{name: string, description: string, schema: z.ZodObject, execute: (...a:any[])=>any}[]} */
-const ALL_TOOLS = [
+const ALL_TOOLS = {
   list_directory,
   read_file,
   create_file,
@@ -20,10 +20,10 @@ const ALL_TOOLS = [
   file_search,
   grep_search,
   run_shell_command,
-];
+} as const;
 
 export function toolsToOllamaFormat() {
-  return ALL_TOOLS.map<Tool>((tool) => ({
+  return Object.values(ALL_TOOLS).map<Tool>((tool) => ({
     type: "function",
     function: {
       name: tool.name,
@@ -34,7 +34,7 @@ export function toolsToOllamaFormat() {
 }
 
 export function toolsToOpenRouterFormat() {
-  return ALL_TOOLS.map<ChatFunctionTool>((tool) => ({
+  return Object.values(ALL_TOOLS).map<ChatFunctionTool>((tool) => ({
     type: "function",
     function: {
       name: tool.name,
@@ -45,14 +45,19 @@ export function toolsToOpenRouterFormat() {
 }
 
 export function toolsToGoogleFormat() {
-  return ALL_TOOLS.map<FunctionDeclaration>((tool) => ({
+  return Object.values(ALL_TOOLS).map<FunctionDeclaration>((tool) => ({
     name: tool.name,
     description: tool.description,
     parameters: tool.schema.toJSONSchema() as any,
   }));
 }
 
-export async function executeToolCall(name, rawArgs) {
+export async function executeToolCall<T extends keyof typeof ALL_TOOLS>(
+  name: T,
+  rawArgs: (typeof ALL_TOOLS)[T]["execute"] extends (_args: infer A) => any
+    ? A
+    : unknown,
+) {
   let args = {};
 
   try {
@@ -65,7 +70,7 @@ export async function executeToolCall(name, rawArgs) {
     };
   }
 
-  const tool = ALL_TOOLS.find((t) => t.name === name);
+  const tool = ALL_TOOLS[name];
   if (!tool) {
     return {
       name,
