@@ -50,6 +50,21 @@ describe("tool registry", () => {
     ]);
   });
 
+  it("searches file contents with grep_search", async () => {
+    await executeToolCall("create_file", {
+      file_path: "notes/example.txt",
+      content: "alpha\nbeta\ngamma\n",
+    });
+
+    const result = await executeToolCall("grep_search", {
+      query: "beta",
+      isRegexp: false,
+      includePattern: "notes/**",
+    });
+
+    expect(expectSuccess(result)).toContain("notes/example.txt:2:beta");
+  });
+
   it("can create, update, read, and search files inside the workspace", async () => {
     const created = await executeToolCall("create_file", {
       file_path: "notes/example.txt",
@@ -91,9 +106,7 @@ describe("tool registry", () => {
       includePattern: "notes/**",
     });
 
-    expect(expectSuccess(grep)).toEqual(
-      "notes/example.txt@line2: beta-updated",
-    );
+    expect(expectSuccess(grep)).toEqual("notes/example.txt:2:beta-updated");
   });
 
   it("executes shell commands in the current workspace", async () => {
@@ -104,8 +117,8 @@ describe("tool registry", () => {
 
     expect(expectSuccess(result)).toEqual(
       JSON.stringify({
-      stdout: "hello from shell",
-      stderr: "",
+        stdout: "hello from shell",
+        stderr: "",
       }),
     );
   });

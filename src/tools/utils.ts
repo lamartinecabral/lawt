@@ -1,4 +1,5 @@
 import path from "node:path";
+import { spawn } from "node:child_process";
 import z from "zod";
 
 export const tool = <T extends z.ZodObject>(params: {
@@ -22,10 +23,46 @@ export function getResolvedPath(unresolvedPath = "") {
   }
   return resolvedPath;
 }
+
 export function ok(data: string) {
   return { success: true as const, data };
 }
 
 export function fail(error: string) {
   return { success: false as const, error };
+}
+
+export function runCommand(command: string, args: string[] = []) {
+  return new Promise<{
+    stdout: string;
+    stderr: string;
+    code: number | null;
+    signal: NodeJS.Signals | null;
+  }>((resolve, reject) => {
+    const child = spawn(command, args, {
+      cwd: process.cwd(),
+      shell: true,
+      timeout: 15000,
+      stdio: ["ignore", "pipe", "pipe"],
+    });
+
+    let stdout = "";
+    let stderr = "";
+
+    child.stdout.on("data", (chunk) => {
+      stdout += chunk.toString();
+    });
+
+    child.stderr.on("data", (chunk) => {
+      stderr += chunk.toString();
+    });
+
+    child.on("error", (error) => {
+      reject(error);
+    });
+
+    child.on("close", (code, signal) => {
+      resolve({ stdout, stderr, code, signal });
+    });
+  });
 }

@@ -89,7 +89,7 @@ export const grep_search = tool({
 
 function parseResults(results: { file: string; line: number; text: string }[]) {
   return results
-    .map((result) => `${result.file}@line${result.line}: ${result.text}`)
+    .map((result) => `${result.file}:${result.line}:${result.text}`)
     .join("\n");
 }
 
