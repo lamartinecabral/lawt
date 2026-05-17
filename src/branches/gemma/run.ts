@@ -77,7 +77,7 @@ export const run: RunType = async ({
     for (const tool_call of tool_calls) {
       const tool_name = tool_call.name;
       const args = tool_call.args;
-      const { result } = await executeToolCall(tool_name, args);
+      const { result } = await executeToolCall(tool_name as any, args);
       const content = result.success ? result.data : `Error: ${result.error}`;
       functionResponses.push({
         id: tool_call.id,

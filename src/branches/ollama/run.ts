@@ -104,7 +104,7 @@ export const run: RunType = async ({
     for (const tool_call of tool_calls) {
       const tool_name = tool_call.function.name;
       const args = tool_call.function.arguments;
-      const { result } = await executeToolCall(tool_name, args);
+      const { result } = await executeToolCall(tool_name as any, args);
       const content = result.success ? result.data : `Error: ${result.error}`;
       messages.push({ role: "tool", tool_name, content });
 
