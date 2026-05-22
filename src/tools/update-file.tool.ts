@@ -5,7 +5,7 @@ import z from "zod";
 export const replace_string_in_file = tool({
   name: "replace_string_in_file",
   description:
-    "This tool allows you to replace a specific string in a file with a new string. You must provide the exact text to be replaced and the new text. Use this tool for making precise edits to files when you know the exact content that needs to be changed. If you want to make more complex edits that are not just simple string replacements, consider using the create_file tool to create a new version of the file with the desired changes instead.",
+    "This tool allows you to replace a specific string in a file with a new string. You must provide the exact text to be replaced and the new text. Use this tool for making precise edits to files when you know the exact content that needs to be changed.",
   schema: z.object({
     file_path: z.string().describe("The relative path of the file to update."),
     old_text: z
