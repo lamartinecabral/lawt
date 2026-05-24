@@ -8,7 +8,7 @@ import { file_search } from "./file-search.tool.ts";
 import { grep_search } from "./grep-search.tool.ts";
 import { list_directory } from "./list-directory.tool.ts";
 import { read_file } from "./read-file.tool.ts";
-import { replace_string_in_file } from "./update-file.tool.ts";
+import { replace_string_in_file } from "./replace_string_in_file.tool.ts";
 import { run_shell_command } from "./run-shell-command.tool.ts";
 
 /** @type {{name: string, description: string, schema: z.ZodObject, execute: (...a:any[])=>any}[]} */
