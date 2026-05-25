@@ -47,6 +47,7 @@ describe("tool registry", () => {
       "file_search",
       "grep_search",
       "run_shell_command",
+      "web_search",
     ]);
   });
 
