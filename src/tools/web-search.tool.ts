@@ -4,12 +4,17 @@ import z from "zod";
 
 const BRAVE_SEARCH_URL = "https://search.brave.com";
 const MAX_RESULTS = 5;
-const SEARCH_TIMEOUT_MS = 5000;
+const SEARCH_TIMEOUT_MS = 25000;
+const CHROME_PATH: string = {
+  darwin: "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+  win32: "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
+  linux: "/usr/bin/google-chrome",
+}[process.platform];
 
 type SearchResult = {
   title: string;
   url: string;
-  description: string;
+  snippet: string;
 };
 
 export const web_search = tool({
@@ -28,14 +33,15 @@ export const web_search = tool({
 
       const results = await searchWeb(query);
       return ok(
-        JSON.stringify(
-          {
-            query,
-            results,
-          },
-          null,
-          2,
-        ),
+        results
+          .map((result) =>
+            [
+              `**title**: ${result.title}`,
+              `**url**: ${result.url}`,
+              `**snippet**: ${result.snippet}`,
+            ].join("\n"),
+          )
+          .join("\n\n"),
       );
     } catch (err) {
       return fail(err instanceof Error ? err.message : String(err));
@@ -45,9 +51,7 @@ export const web_search = tool({
 
 async function searchWeb(query: string) {
   const browser = await puppeteer.launch({
-    // google chrome executable path for macOS
-    executablePath:
-      "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+    executablePath: CHROME_PATH,
     headless: false,
   });
 
@@ -86,78 +90,33 @@ async function searchWeb(query: string) {
         (value ?? "").replace(/\s+/g, " ").trim();
       const browserDocument = (globalThis as any).document;
 
-      const selectors = [
-        "main article",
-        "main [data-type='web']",
-        "main .snippet",
-        "main .result",
-      ];
-
-      const seenUrls = new Set<string>();
       const parsedResults: SearchResult[] = [];
-      const containers = selectors.flatMap((selector) =>
-        Array.from(browserDocument?.querySelectorAll?.(selector) ?? []),
-      ) as any[];
 
-      for (const container of containers) {
-        const link = container.querySelector?.("a[href^='http']");
-        const url = cleanText(link?.href);
-        if (!url || seenUrls.has(url)) {
-          continue;
+      const snippets = browserDocument.querySelectorAll(
+        "main .snippet[data-type='web']",
+      );
+
+      for (const snippet of snippets) {
+        const url = snippet.querySelector?.("a[href^='http']").href;
+        const title = snippet.querySelector?.(
+          "a[href^='http'] .title",
+        ).innerText;
+
+        let text = "";
+        const content = snippet.querySelector?.(".content");
+        if (content) {
+          text = content.innerText;
+          const when = content.querySelector?.(".t-secondary")?.innerText;
+          if (when) text = text.replace(when, "");
         }
 
-        const title =
-          cleanText(
-            container.querySelector?.("h1, h2, h3, .title, [data-type='title']")
-              ?.textContent,
-          ) || cleanText(link?.textContent);
-
-        const description = cleanText(
-          container.querySelector?.(".content")?.textContent,
-        );
-
-        if (!title) {
-          continue;
-        }
-
-        seenUrls.add(url);
         parsedResults.push({
-          title,
-          url,
-          description,
+          title: title,
+          url: url,
+          snippet: cleanText(text),
         });
 
-        if (parsedResults.length === maxResults) {
-          return parsedResults;
-        }
-      }
-
-      const fallbackLinks = Array.from(
-        browserDocument?.querySelectorAll?.("main a[href^='http']") ?? [],
-      ) as any[];
-
-      for (const link of fallbackLinks) {
-        const url = cleanText(link.href);
-        const title = cleanText(link.textContent);
-        if (!url || !title || seenUrls.has(url)) {
-          continue;
-        }
-
-        const container = link.closest?.("article, li, div");
-        const description = cleanText(container?.textContent)
-          .replace(title, "")
-          .trim();
-
-        seenUrls.add(url);
-        parsedResults.push({
-          title,
-          url,
-          description,
-        });
-
-        if (parsedResults.length === maxResults) {
-          break;
-        }
+        if (parsedResults.length >= maxResults) break;
       }
 
       return parsedResults;
