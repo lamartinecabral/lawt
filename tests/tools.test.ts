@@ -27,7 +27,7 @@ function expectFailure(result: Awaited<ReturnType<typeof executeToolCall>>) {
 
 describe("tool registry", () => {
   beforeEach(async () => {
-    workspaceDir = await fs.mkdtemp(path.join(os.tmpdir(), "minicode-tools-"));
+    workspaceDir = await fs.mkdtemp(path.join(os.tmpdir(), "lawt-tools-"));
     process.chdir(workspaceDir);
   });
 

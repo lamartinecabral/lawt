@@ -1,4 +1,4 @@
-# Contributing to minicode
+# Contributing to lawt
 
 ## Getting Started
 

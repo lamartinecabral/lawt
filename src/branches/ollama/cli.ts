@@ -14,7 +14,7 @@ program
   .name(pkg.name)
   .description(pkg.description)
   .version(pkg.version, "-v, --version")
-  .option("-m, --model <model>", "Ollama model to use", "gemma4:e2b-nvfp4")
+  .option("-m, --model <model>", "Ollama model to use", "gemma4:e2b-mlx")
   .option("-p, --prompt <prompt>", "Initial prompt")
   .option(
     "-t, --think <value>",
@@ -74,7 +74,7 @@ program
         console.log(pc.green("\n✓"), pc.dim("Context cleared"));
       }
       if (res === "/save") {
-        const file = `${process.cwd()}/.cache/minicode_state.json`;
+        const file = `${process.cwd()}/.cache/${pkg.name}_state.json`;
         try {
           await fs.mkdir(`${process.cwd()}/.cache`, { recursive: true });
           await fs.writeFile(file, JSON.stringify({ opts, messages }, null, 2));
@@ -84,7 +84,7 @@ program
         }
       }
       if (res === "/load") {
-        const file = `${process.cwd()}/.cache/minicode_state.json`;
+        const file = `${process.cwd()}/.cache/${pkg.name}_state.json`;
         try {
           const data = JSON.parse(await fs.readFile(file, "utf-8"));
           if (data.opts) Object.assign(opts, data.opts);

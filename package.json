@@ -1,10 +1,10 @@
 {
-  "name": "minicode",
+  "name": "lawt",
   "version": "0.0.1-ollama",
-  "description": "A lightweight AI agent CLI powered by Ollama",
+  "description": "Local AI With Tools",
   "type": "module",
   "bin": {
-    "minicode": "./src/cli.ts"
+    "lawt": "./src/cli.ts"
   },
   "engines": {
     "node": ">=24.0.0"

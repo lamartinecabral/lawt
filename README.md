@@ -1,24 +1,25 @@
-# minicode
+# lawt
 
-A lightweight AI agent CLI powererd by [Ollama](https://ollama.com).
+Local AI With Tools. A lightweight AI agent CLI powererd by [Ollama](https://ollama.com).
 
 ## Prerequisites
 
 - [Node.js](https://nodejs.org) >= 24
 - [Ollama](https://ollama.com/download) running locally
-- A tool-calling capable [model](https://ollama.com/search?c=tools)
+- A tool-calling capable [model](https://ollama.com/search?c=tools); the lightest recommended options are `gemma4:e2b` and `gpt-oss:20b`
 
 ## Installation
 
 ```bash
 npm install
+chmod +x src/cli.ts
 npm link
 ```
 
 ## Usage
 
 ```bash
-minicode [options]
+lawt [options]
 ```
 
 ### Options
@@ -37,19 +38,19 @@ minicode [options]
 Start an interactive session:
 
 ```bash
-minicode
+lawt
 ```
 
 Use a specific model with an initial prompt:
 
 ```bash
-minicode -m gemma4:e2b -p "list files in the current directory"
+lawt -m gemma4:e2b -p "list files in the current directory"
 ```
 
 Enable thinking mode:
 
 ```bash
-minicode -t high
+lawt -t high
 ```
 
 Type `/exit` to quit the session.

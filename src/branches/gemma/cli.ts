@@ -60,7 +60,7 @@ program
 
       if (res === "/exit") break;
       if (res === "/save") {
-        const file = `${process.cwd()}/.cache/minicode_state.json`;
+        const file = `${process.cwd()}/.cache/${pkg.name}_state.json`;
         try {
           await fs.mkdir(`${process.cwd()}/.cache`, { recursive: true });
           await fs.writeFile(
