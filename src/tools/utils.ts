@@ -1,3 +1,4 @@
+import { ellipsis } from "../utils.ts";
 import path from "node:path";
 import { spawn } from "node:child_process";
 import z from "zod";
@@ -25,7 +26,7 @@ export function getResolvedPath(unresolvedPath = "") {
 }
 
 export function ok(data: string) {
-  return { success: true as const, data };
+  return { success: true as const, data: truncate(data, 5000) };
 }
 
 export function fail(error: string) {
@@ -66,3 +67,10 @@ export function runCommand(command: string, args: string[] = []) {
     });
   });
 }
+
+const truncate = (str = "", len = 300) => {
+  if (str.length > len) {
+    return `${ellipsis(str, len)} ${str.length - len} chars truncated`;
+  }
+  return str;
+};
