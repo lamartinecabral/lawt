@@ -4,6 +4,7 @@ import type { Tool } from "ollama";
 
 import { create_file } from "./create-file.tool.ts";
 import { fail } from "./utils.ts";
+import { fetch_url } from "./fetch-url.tool.ts";
 import { file_search } from "./file-search.tool.ts";
 import { grep_search } from "./grep-search.tool.ts";
 import { list_directory } from "./list-directory.tool.ts";
@@ -22,6 +23,7 @@ const ALL_TOOLS = {
   grep_search,
   run_shell_command,
   web_search,
+  fetch_url,
 } as const;
 
 export function toolsToOllamaFormat() {

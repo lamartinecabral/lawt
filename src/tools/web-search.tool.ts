@@ -1,15 +1,10 @@
-import { fail, ok, tool } from "./utils.ts";
+import { chromePath, fail, ok, tool } from "./utils.ts";
 import puppeteer from "puppeteer-core";
 import z from "zod";
 
 const BRAVE_SEARCH_URL = "https://search.brave.com";
 const MAX_RESULTS = 5;
 const SEARCH_TIMEOUT_MS = 25000;
-const CHROME_PATH: string = {
-  darwin: "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
-  win32: "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
-  linux: "/usr/bin/google-chrome",
-}[process.platform];
 
 type SearchResult = {
   title: string;
@@ -19,10 +14,11 @@ type SearchResult = {
 
 export const web_search = tool({
   name: "web_search",
-  description:
-    "Use this tool to perform a web search for up-to-date information.",
+  description: "Searches the web for information based on a query.",
   schema: z.object({
-    query: z.string().describe("The search query."),
+    query: z
+      .string()
+      .describe("The search terms or question to find information about."),
   }),
   async execute(args) {
     try {
@@ -51,7 +47,7 @@ export const web_search = tool({
 
 async function searchWeb(query: string) {
   const browser = await puppeteer.launch({
-    executablePath: CHROME_PATH,
+    executablePath: chromePath,
     headless: false,
   });
 
