@@ -40,24 +40,9 @@ async function getUrlContent(url: string) {
     });
 
     const content = await page.evaluate(() => {
-      const browserDocument = (globalThis as any).document;
+      const body = (globalThis as any).document.body;
 
-      let contentElement;
-      const selectors = [
-        "body main",
-        "body article",
-        "body #content",
-        "body .content",
-        "body .main",
-        "body",
-      ];
-
-      for (const selector of selectors) {
-        contentElement = browserDocument.querySelector(selector);
-        if (contentElement?.innerText.trim()) break;
-      }
-
-      return contentElement?.innerText.trim() || undefined;
+      return body?.innerText.trim() || undefined;
     });
 
     if (!content) {
