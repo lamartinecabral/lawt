@@ -26,7 +26,7 @@ export const list_directory = tool({
         entry.isDirectory() ? `${entry.name}/` : entry.name,
       );
 
-      return ok(list.join("\n"));
+      return ok(list.join("\n") || "Directory is empty");
     } catch (err) {
       return fail(err instanceof Error ? err.message : String(err));
     }
