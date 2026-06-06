@@ -19,9 +19,12 @@ export const list_directory = tool({
       }
 
       const entries = await fs.readdir(resolvedPath, { withFileTypes: true });
-      const sorted = entries
-        .slice()
-        .sort((a, b) => a.name.localeCompare(b.name));
+      const sorted = entries.slice().sort((a, b) => {
+        if (a.isDirectory() !== b.isDirectory()) {
+          return a.isDirectory() ? -1 : 1;
+        }
+        return a.name.localeCompare(b.name);
+      });
       const list = sorted.map((entry) =>
         entry.isDirectory() ? `${entry.name}/` : entry.name,
       );
