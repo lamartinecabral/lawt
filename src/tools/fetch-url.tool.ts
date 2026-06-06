@@ -40,9 +40,30 @@ async function getUrlContent(url: string) {
     });
 
     const content = await page.evaluate(() => {
-      const body = (globalThis as any).document.body;
+      const browserDocument = (globalThis as any).document;
 
-      return body?.innerText.trim() || undefined;
+      let text = browserDocument.body?.innerText.trim();
+
+      if (text?.length > 5000) {
+        let contentElement;
+        const selectors = [
+          "body main",
+          "body article",
+          "body #content",
+          "body .content",
+          "body .main",
+        ];
+
+        for (const selector of selectors) {
+          contentElement = browserDocument.querySelector(selector);
+          const hasTitle = !!contentElement?.querySelector("h1, h2, h3");
+          if (hasTitle && contentElement?.innerText.trim()) break;
+        }
+
+        text = contentElement?.innerText.trim() || text;
+      }
+
+      return text || undefined;
     });
 
     if (!content) {
