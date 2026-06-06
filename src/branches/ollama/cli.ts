@@ -14,7 +14,7 @@ program
   .name(pkg.name)
   .description(pkg.description)
   .version(pkg.version, "-v, --version")
-  .option("-m, --model <model>", "Ollama model to use", "gemma4:e2b-mlx")
+  .option("-m, --model <model>", "Ollama model to use", "gemma4:26b-mlx")
   .option("-p, --prompt <prompt>", "Initial prompt")
   .option(
     "-t, --think <value>",
@@ -26,7 +26,6 @@ program
     "System prompt",
     "You are an assistant with access to tools.",
   )
-  .option("-c, --context <number>", "Context length", "32000")
   .action(async function () {
     const opts = optsSchema.parse(this.opts());
 
@@ -42,7 +41,6 @@ program
         modelId: opts.model,
         messages,
         reasoningEffort: opts.think,
-        contextLength: opts.context,
         userPrompt: opts.prompt,
       });
     }
@@ -53,7 +51,6 @@ program
         modelId: opts.model,
         messages,
         reasoningEffort: opts.think,
-        contextLength: opts.context,
         interceptUserPrompt: (prompt) => {
           if (prompt === "/exit") return true;
           if (prompt === "/clear") return true;
@@ -63,7 +60,6 @@ program
           if (prompt.startsWith("/system ")) return true;
           if (prompt.startsWith("/model ")) return true;
           if (prompt.startsWith("/think ")) return true;
-          if (prompt.startsWith("/context ")) return true;
           return false;
         },
       });
@@ -129,31 +125,18 @@ program
           );
         }
       }
-      if (res?.startsWith("/context ")) {
-        const context = +res.substring(9);
-        if (Number.isInteger(context) && context > 0) {
-          opts.context = context;
-          console.log(
-            pc.green("\n✓"),
-            pc.dim(`Context length changed to '${opts.context}'`),
-          );
-        } else {
-          console.log(pc.red("\n✕"), pc.dim(`Invalid value`));
-        }
-      }
     }
 
     finish();
   });
 
 function showOpts(opts: z.infer<typeof optsSchema>) {
-  const { model, system, context, think } = opts;
+  const { model, system, think } = opts;
   console.log(``);
   let maxLen = 0;
   [
     ["model", model],
     ["system prompt", system],
-    ["context length", context],
     ["thinking", think ?? "default"],
   ]
     .map((a) => {
@@ -193,7 +176,6 @@ const optsSchema = z.object({
     ])
     .optional(),
   system: z.string().nonempty(),
-  context: z.coerce.number().int(),
 });
 
 export function parseThinkOption(value) {

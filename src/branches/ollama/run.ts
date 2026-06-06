@@ -11,7 +11,7 @@ type RunType = (_args: {
   interceptUserPrompt?: (_prompt: string) => boolean;
   modelId: string;
   messages: Message[];
-  contextLength: number;
+  contextLength?: number;
   reasoningEffort: ChatRequest["think"];
 }) => Promise<string | undefined>;
 
@@ -40,7 +40,7 @@ export const run: RunType = async ({
 
     const response = await ollama.chat({
       stream: true,
-      options: { num_ctx: +contextLength },
+      options: { num_ctx: contextLength ?? undefined },
       model: modelId,
       messages,
       tools: toolsToOllamaFormat(),
