@@ -14,7 +14,7 @@ program
   .name(pkg.name)
   .description(pkg.description)
   .version(pkg.version, "-v, --version")
-  .option("-m, --model <model>", "Ollama model to use", "gemma4:26b-nvfp4")
+  .option("-m, --model <model>", "Ollama model to use", "gemma4:e2b")
   .option("-p, --prompt <prompt>", "Initial prompt")
   .option(
     "-t, --think <value>",
@@ -29,7 +29,7 @@ program
   .action(async function () {
     const opts = optsSchema.parse(this.opts());
 
-    await assertModel(opts.model);
+    const model = await assertModel(opts.model);
     console.log(pc.bgGreen(`${this.name()} - ${this.description()}`));
     showOpts(opts);
 
@@ -38,7 +38,7 @@ program
     if (opts.prompt) {
       await run({
         ollama,
-        modelId: opts.model,
+        modelId: model,
         messages,
         reasoningEffort: opts.think,
         userPrompt: opts.prompt,
@@ -101,9 +101,11 @@ program
       if (res?.startsWith("/model ")) {
         try {
           const model = res.substring(7).trim();
-          await assertModel(model);
-          opts.model = model;
-          console.log(pc.green("\n✓"), pc.dim(`Model changed to '${model}'`));
+          opts.model = await assertModel(model);
+          console.log(
+            pc.green("\n✓"),
+            pc.dim(`Model changed to '${opts.model}'`),
+          );
         } catch (e) {
           console.log(
             pc.red("\n✕"),
@@ -150,11 +152,15 @@ function showOpts(opts: z.infer<typeof optsSchema>) {
 
 const ollama = new Ollama();
 
-async function assertModel(model) {
+async function assertModel(model: string): Promise<string> {
   const response = await ollama.list();
   let modelNotFound;
   try {
-    modelNotFound = !response.models.find((m) => m.model === model);
+    const exactMatch = response.models.find((m) => m.model === model);
+    if (exactMatch) return model;
+    const candidates = response.models.filter((m) => m.model.startsWith(model));
+    if (candidates.length === 1) return candidates[0].model;
+    modelNotFound = true;
   } catch (err) {
     throw new Error(
       "Failed to connect to Ollama. Please make sure Ollama is installed and running.",
@@ -162,6 +168,7 @@ async function assertModel(model) {
     );
   }
   if (modelNotFound) throw new Error(`model ${model} not found`);
+  return model;
 }
 
 const optsSchema = z.object({
