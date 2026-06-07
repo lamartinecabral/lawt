@@ -1,4 +1,5 @@
 import { chromePath, fail, ok, tool } from "./utils.ts";
+import { getUrlContent } from "./fetch-url.tool.ts";
 import puppeteer from "puppeteer-core";
 import z from "zod";
 
@@ -28,13 +29,28 @@ export const web_search = tool({
       }
 
       const results = await searchWeb(query);
+
+      if (results.length) {
+        const content = await getUrlContent(results[0].url);
+        if (contentContainsSnippet(content, results[0].snippet)) {
+          return ok(
+            [
+              `**Title**: ${results[0].title}`,
+              `**URL**: ${results[0].url}`,
+              `**Snippet**: ${results[0].snippet}`,
+              `**Content**:\n${content}`,
+            ].join("\n"),
+          );
+        }
+      }
+
       return ok(
         results
           .map((result) =>
             [
-              `**title**: ${result.title}`,
-              `**url**: ${result.url}`,
-              `**snippet**: ${result.snippet}`,
+              `**Title**: ${result.title}`,
+              `**URL**: ${result.url}`,
+              `**Snippet**: ${result.snippet}`,
             ].join("\n"),
           )
           .join("\n\n"),
@@ -127,3 +143,8 @@ async function searchWeb(query: string) {
     await browser.close();
   }
 }
+
+const contentContainsSnippet = (content: string, snippet: string) => {
+  // todo: implement a subsequence matching using the KMP algorithm
+  return true;
+};

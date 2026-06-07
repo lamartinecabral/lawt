@@ -25,7 +25,7 @@ export const fetch_url = tool({
   },
 });
 
-async function getUrlContent(url: string): Promise<string> {
+export async function getUrlContent(url: string): Promise<string> {
   const browser = await puppeteer.launch({
     executablePath: chromePath,
     headless: false,
