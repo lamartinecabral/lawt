@@ -48,7 +48,7 @@ program
     while (true) {
       const res = await run({
         ollama,
-        modelId: opts.model,
+        modelId: model,
         messages,
         reasoningEffort: opts.think,
         interceptUserPrompt: (prompt) => {
