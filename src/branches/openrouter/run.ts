@@ -129,7 +129,7 @@ export const run: RunType = async ({
       console.log(
         pc.dim(ellipsis(`> ${tool_name}(${JSON.stringify(args)})`, 300)),
       );
-      console.log(pc.dim(ellipsis(`= ${content}`, 300)));
+      console.log(pc.dim(ellipsis(`= ${JSON.stringify(content)}`, 300)));
     }
   }
 
