@@ -30,16 +30,11 @@ export const web_search = tool({
 
       const results = await searchWeb(query);
 
-      if (results.length) {
-        const content = await getUrlContent(results[0].url);
-        if (contentContainsSnippet(content, results[0].snippet)) {
+      for (const result of results) {
+        const content = await getUrlContent(result.url);
+        if (contentContainsSnippet(content, result.snippet)) {
           return ok(
-            [
-              `**Title**: ${results[0].title}`,
-              `**URL**: ${results[0].url}`,
-              `**Snippet**: ${results[0].snippet}`,
-              `**Content**:\n${content}`,
-            ].join("\n"),
+            [`**URL**: ${result.url}`, `**Content**:\n${content}`].join("\n"),
           );
         }
       }
@@ -145,6 +140,26 @@ async function searchWeb(query: string) {
 }
 
 const contentContainsSnippet = (content: string, snippet: string) => {
-  // todo: implement a subsequence matching using the KMP algorithm
-  return true;
+  if (!snippet) return true;
+  const a = snippet.toLowerCase();
+  const m = a.length;
+  for (let i = 0; i < content.length; i += m) {
+    const chunk = content.slice(i, i + m * 2);
+    if (chunk.length < m) break;
+    const b = chunk.toLowerCase();
+    const n = b.length;
+    // dp[i][j] = LCS length of a[0..i-1] and b[0..j-1]
+    const dp: number[] = new Array(n + 1).fill(0);
+    let prev;
+    for (let i = 1; i <= m; i++) {
+      prev = 0;
+      for (let j = 1; j <= n; j++) {
+        const temp = dp[j];
+        dp[j] = a[i - 1] === b[j - 1] ? prev + 1 : Math.max(dp[j], dp[j - 1]);
+        prev = temp;
+      }
+    }
+    if (dp[n] / m >= 0.6) return true;
+  }
+  return false;
 };
