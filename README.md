@@ -15,8 +15,7 @@ Use `npm run activate <branch>` to switch branches via `package.json` version, t
 ## Prerequisites
 
 - Node.js >= 24
-- `npm install`
-- `chmod +x src/cli.ts`
+- Chrome installed for the web related tools
 - One of the provider runtimes / credentials below:
   - `Ollama` installed and running locally for the `ollama` branch
   - `GEMINI_API_KEY` set for the `gemma` branch
@@ -104,6 +103,7 @@ The shared tool registry exposes these workspace-scoped tools:
 - `grep_search`
 - `run_shell_command`
 - `web_search`
+- `fetch_url`
 
 These tools are available to the model through the provider-specific tool integration.
 
@@ -153,6 +153,7 @@ src/
       run.ts               # OpenRouter chat + tool execution loop
   tools/
     index.ts               # shared registry and format adapters
+    utils.ts               # shared tool utilities
     *.tool.ts              # workspace tool implementations
 tests/
   tools.test.ts            # Vitest coverage for the tool registry
