@@ -14,7 +14,7 @@ program
   .name(pkg.name)
   .description(pkg.description)
   .version(pkg.version, "-v, --version")
-  .option("-m, --model <model>", "Ollama model to use", "gemma4:26b-mlx")
+  .option("-m, --model <model>", "Ollama model to use", "gemma4:26b-nvfp4")
   .option("-p, --prompt <prompt>", "Initial prompt")
   .option(
     "-t, --think <value>",
