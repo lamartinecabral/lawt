@@ -25,7 +25,7 @@ export const fetch_url = tool({
   },
 });
 
-async function getUrlContent(url: string) {
+async function getUrlContent(url: string): Promise<string> {
   const browser = await puppeteer.launch({
     executablePath: chromePath,
     headless: false,
@@ -44,26 +44,25 @@ async function getUrlContent(url: string) {
 
       let text = browserDocument.body?.innerText.trim();
 
-      if (text?.length > 5000) {
-        let contentElement;
-        const selectors = [
-          "body main",
-          "body article",
-          "body #content",
-          "body .content",
-          "body .main",
-        ];
+      const selectors = [
+        "body main",
+        "body article",
+        "body #content",
+        "body .content",
+        "body .main",
+      ];
 
-        for (const selector of selectors) {
-          contentElement = browserDocument.querySelector(selector);
-          const hasTitle = !!contentElement?.querySelector("h1, h2, h3");
-          if (hasTitle && contentElement?.innerText.trim()) break;
+      for (const selector of selectors) {
+        const elem = browserDocument.querySelector(selector);
+        if (!elem) continue;
+        const elemText = elem.innerText.trim() ?? "";
+        if (elemText.length / text.length > 0.5) {
+          text = elemText;
+          break;
         }
-
-        text = contentElement?.innerText.trim() || text;
       }
 
-      return text || undefined;
+      return text;
     });
 
     if (!content) {
