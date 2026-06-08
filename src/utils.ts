@@ -3,6 +3,8 @@ import path from "node:path";
 import pc from "picocolors";
 import readline from "node:readline/promises";
 
+export const TOOL_OUTPUT_LIMIT = 6000;
+
 const rl = readline.createInterface({
   input: process.stdin,
   output: process.stdout,

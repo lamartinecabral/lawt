@@ -1,4 +1,4 @@
-import { ellipsis } from "../utils.ts";
+import { ellipsis, TOOL_OUTPUT_LIMIT } from "../utils.ts";
 import path from "node:path";
 import { spawn } from "node:child_process";
 import z from "zod";
@@ -26,7 +26,7 @@ export function getResolvedPath(unresolvedPath = "") {
 }
 
 export function ok(data: string) {
-  return { success: true as const, data: truncate(data, 5000) };
+  return { success: true as const, data: truncate(data, TOOL_OUTPUT_LIMIT) };
 }
 
 export function fail(error: string) {

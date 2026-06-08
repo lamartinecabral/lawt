@@ -8,10 +8,14 @@ export const read_file = tool({
     "Read the contents of a file.\n\nYou must specify the line range you're interested in. Line numbers are 1-indexed. If the file contents returned are insufficient for your task, you may call this tool again to retrieve more content. Prefer reading larger ranges over doing many small reads. Binary files use startLine/endLine as byte offsets.",
   schema: z.object({
     file_path: z.string().describe("The relative path of the file to read."),
-    position: z
+    start_line: z
       .number()
-      .describe("The line number to start reading from, 1-based."),
-    line_count: z.number().describe("The number of lines to be returned."),
+      .describe("The 1-indexed line number where the reading should begin."),
+    end_line: z
+      .number()
+      .describe(
+        "The 1-indexed line number where the reading should end (inclusive).",
+      ),
   }),
   async execute(args) {
     try {
@@ -24,8 +28,8 @@ export const read_file = tool({
 
       const content = await fs.readFile(resolvedPath, "utf-8");
       const lines = content.split(/\r\n|\r|\n/);
-      const startIndex = args.position - 1;
-      const endIndex = Math.min(lines.length, startIndex + args.line_count);
+      const startIndex = args.start_line - 1;
+      const endIndex = Math.min(lines.length, args.end_line);
 
       return ok(lines.slice(startIndex, endIndex).join("\n"));
     } catch (err) {

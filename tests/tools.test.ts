@@ -88,8 +88,8 @@ describe("tool registry", () => {
 
     const read = await executeToolCall("read_file", {
       file_path: "notes/example.txt",
-      position: 1,
-      line_count: 3,
+      start_line: 1,
+      end_line: 3,
     });
 
     expect(expectSuccess(read)).toBe("alpha\nbeta-updated\ngamma");
@@ -127,8 +127,8 @@ describe("tool registry", () => {
   it("rejects paths that lexically escape the workspace", async () => {
     const result = await executeToolCall("read_file", {
       file_path: "../outside.txt",
-      position: 1,
-      line_count: 1,
+      start_line: 1,
+      end_line: 1,
     });
 
     expect(expectFailure(result)).toContain("outside the workspace");
