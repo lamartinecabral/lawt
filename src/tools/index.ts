@@ -1,5 +1,7 @@
 import type { ChatFunctionTool } from "@openrouter/sdk/models";
+import fs from "node:fs";
 import type { FunctionDeclaration } from "@google/genai";
+import { projectRoot } from "../utils.ts";
 import type { Tool } from "ollama";
 
 import { create_file } from "./create-file.tool.ts";
@@ -10,7 +12,6 @@ import { list_directory } from "./list-directory.tool.ts";
 import { read_file } from "./read-file.tool.ts";
 import { replace_string_in_file } from "./replace-string-in-file.tool.ts";
 import { run_shell_command } from "./run-shell-command.tool.ts";
-
 import { web_search } from "./web-search.tool.ts";
 
 /** @type {{name: string, description: string, schema: z.ZodObject, execute: (...a:any[])=>any}[]} */
@@ -55,7 +56,7 @@ export function toolsToGoogleFormat() {
   }));
 }
 
-export async function executeToolCall<T extends keyof typeof ALL_TOOLS>(
+async function executeToolCall<T extends keyof typeof ALL_TOOLS>(
   name: T,
   rawArgs: (typeof ALL_TOOLS)[T]["execute"] extends (_args: infer A) => any
     ? A
@@ -98,6 +99,31 @@ export async function executeToolCall<T extends keyof typeof ALL_TOOLS>(
     result,
   };
 }
+
+const executeToolCallWithLogging: typeof executeToolCall = async (...args) => {
+  const result = await executeToolCall(...args);
+
+  const logFile = projectRoot + "/src/tools/.logs.jsonl";
+  const time = new Date().toISOString();
+  try {
+    await fs.promises.appendFile(
+      logFile,
+      JSON.stringify({ time, ...result }) + "\n",
+    );
+  } catch (e) {
+    await fs.promises.appendFile(
+      logFile,
+      JSON.stringify({
+        time,
+        error: e instanceof Error ? e.message : String(e),
+      }) + "\n",
+    );
+  }
+
+  return result;
+};
+
+export { executeToolCallWithLogging as executeToolCall };
 
 function parseToolArgs(rawArgs) {
   if (typeof rawArgs === "string") {
