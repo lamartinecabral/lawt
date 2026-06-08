@@ -1,7 +1,9 @@
-import { ellipsis, TOOL_OUTPUT_LIMIT } from "../utils.ts";
+import { ellipsis } from "../utils.ts";
 import path from "node:path";
 import { spawn } from "node:child_process";
 import z from "zod";
+
+export const TOOL_OUTPUT_LIMIT = 30000;
 
 export const tool = <T extends z.ZodObject>(params: {
   name: string;

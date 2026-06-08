@@ -1,11 +1,10 @@
 import { chromePath, fail, ok, tool } from "./utils.ts";
-import { getUrlContent } from "./fetch-url.tool.ts";
 import puppeteer from "puppeteer-core";
 import z from "zod";
 
 const BRAVE_SEARCH_URL = "https://search.brave.com";
-const MAX_RESULTS = 5;
-const SEARCH_TIMEOUT_MS = 25000;
+const MAX_RESULTS = 10;
+const WEB_TIMEOUT_MS = 25000;
 
 type SearchResult = {
   title: string;
@@ -13,13 +12,66 @@ type SearchResult = {
   snippet: string;
 };
 
+// export const web_search = tool({
+//   name: "web_search",
+//   description:
+//     "Use this tool to retrieve information snippets from the live web.",
+//   schema: z.object({
+//     query: z.string().describe("The search terms or question."),
+//   }),
+//   async execute(args) {
+//     try {
+//       const query = String(args.query ?? "").trim();
+//       if (!query) {
+//         return fail("Query must be a non-empty string.");
+//       }
+
+//       const results = await searchWeb(query);
+
+//       return ok(
+//         results
+//           .map((result) =>
+//             [
+//               `**SOURCE**: ${result.url}`,
+//               `**TITLE**: ${result.title}`,
+//               `**SNIPPET**: ${result.snippet}`,
+//             ].join("\n"),
+//           )
+//           .join("\n\n"),
+//       );
+//     } catch (err) {
+//       return fail(err instanceof Error ? err.message : String(err));
+//     }
+//   },
+// });
+
+// export const fetch_url = tool({
+//   name: "fetch_url",
+//   description: "Use this tool to retrieve information from a source URL.",
+//   schema: z.object({
+//     url: z.string().describe("The full URL of the source."),
+//   }),
+//   async execute(args) {
+//     try {
+//       const url = String(args.url ?? "").trim();
+//       if (!url) {
+//         return fail("URL must be a non-empty string.");
+//       }
+
+//       const { title, content } = await getUrlContent(url);
+
+//       return ok([`**TITLE**: ${title}`, `**CONTENT**: ${content}`].join("\n"));
+//     } catch (err) {
+//       return fail(err instanceof Error ? err.message : String(err));
+//     }
+//   },
+// });
+
 export const web_search = tool({
   name: "web_search",
-  description: "Searches the web for information based on a query.",
+  description: "Use this tool to retrieve information from the live web.",
   schema: z.object({
-    query: z
-      .string()
-      .describe("The search terms or question to find information about."),
+    query: z.string().describe("The search terms or question."),
   }),
   async execute(args) {
     try {
@@ -31,21 +83,26 @@ export const web_search = tool({
       const results = await searchWeb(query);
 
       for (const result of results) {
-        const content = await getUrlContent(result.url);
-        if (contentContainsSnippet(content, result.snippet)) {
-          return ok(
-            [`**URL**: ${result.url}`, `**Content**:\n${content}`].join("\n"),
-          );
-        }
+        const { title, content } = await getUrlContent(result.url);
+
+        if (!contentContainsSnippet(content, result.snippet)) continue;
+
+        return ok(
+          [
+            `**SOURCE**: ${result.url}`,
+            `**TITLE**: ${title}`,
+            `**CONTENT**: ${content}`,
+          ].join("\n"),
+        );
       }
 
       return ok(
         results
           .map((result) =>
             [
-              `**Title**: ${result.title}`,
-              `**URL**: ${result.url}`,
-              `**Snippet**: ${result.snippet}`,
+              `**SOURCE**: ${result.url}`,
+              `**TITLE**: ${result.title}`,
+              `**SNIPPET**: ${result.snippet}`,
             ].join("\n"),
           )
           .join("\n\n"),
@@ -69,7 +126,7 @@ async function searchWeb(query: string) {
       `${BRAVE_SEARCH_URL}/search?q=${encodeURIComponent(query)}`,
       {
         waitUntil: "domcontentloaded",
-        timeout: SEARCH_TIMEOUT_MS,
+        timeout: WEB_TIMEOUT_MS,
       },
     );
 
@@ -89,7 +146,7 @@ async function searchWeb(query: string) {
 
         return hasResults || noResults;
       },
-      { timeout: SEARCH_TIMEOUT_MS },
+      { timeout: WEB_TIMEOUT_MS },
     );
 
     const results = await page.evaluate((maxResults) => {
@@ -134,6 +191,59 @@ async function searchWeb(query: string) {
     }
 
     return results;
+  } finally {
+    await browser.close();
+  }
+}
+
+export async function getUrlContent(
+  url: string,
+): Promise<{ title: string; content: string }> {
+  const browser = await puppeteer.launch({
+    executablePath: chromePath,
+    headless: false,
+  });
+
+  try {
+    const page = await browser.newPage();
+
+    await page.goto(url, {
+      waitUntil: "domcontentloaded",
+      timeout: WEB_TIMEOUT_MS,
+    });
+
+    const [title, content] = await page.evaluate(() => {
+      const browserDocument = (globalThis as any).document;
+
+      let text = browserDocument.body?.innerText.trim();
+      const title = browserDocument.title?.trim();
+
+      const selectors = [
+        "body main",
+        "body article",
+        "body #content",
+        "body .content",
+        "body .main",
+      ];
+
+      for (const selector of selectors) {
+        const elem = browserDocument.querySelector(selector);
+        if (!elem) continue;
+        const elemText = elem.innerText.trim() ?? "";
+        if (elemText.length / text.length > 0.5) {
+          text = elemText;
+          break;
+        }
+      }
+
+      return [title, text];
+    });
+
+    if (!content) {
+      throw new Error("Could not extract content from the page.");
+    }
+
+    return { title, content };
   } finally {
     await browser.close();
   }
