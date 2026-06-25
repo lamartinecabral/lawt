@@ -31,7 +31,7 @@ program
 
     const model = await assertModel(opts.model);
     console.log(pc.bgGreen(`${this.name()} - ${this.description()}`));
-    showOpts(opts);
+    showOpts({ ...opts, model });
 
     const messages: Message[] = [{ role: "system", content: opts.system }];
 
@@ -159,7 +159,7 @@ async function assertModel(model: string): Promise<string> {
     const exactMatch = response.models.find((m) => m.model === model);
     if (exactMatch) return model;
     const candidates = response.models.filter((m) => m.model.startsWith(model));
-    if (candidates.length === 1) return candidates[0].model;
+    if (candidates.length) return candidates[0].model;
     modelNotFound = true;
   } catch (err) {
     throw new Error(

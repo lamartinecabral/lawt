@@ -28,9 +28,11 @@
   "license": "ISC",
   "dependencies": {
     "@google/genai": "^1.50.1",
+    "@lamartinecabral/extract-content": "github:lamartinecabral/extract-content#v0.0.7",
     "@openrouter/sdk": "^0.12.24",
     "commander": "^14.0.3",
     "dotenv": "^17.4.2",
+    "fast-glob": "^3.3.3",
     "ollama": "^0.6.3",
     "ora": "^9.3.0",
     "picocolors": "^1.1.1",
