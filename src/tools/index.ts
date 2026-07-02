@@ -1,5 +1,6 @@
 import fs from "node:fs";
-import { projectRoot } from "../utils.ts";
+import os from "node:os";
+import path from "node:path";
 
 import { create_file } from "./create-file.tool.ts";
 import { fail } from "./utils.ts";
@@ -13,6 +14,10 @@ import { run_shell_command } from "./run-shell-command.tool.ts";
 import { web_search } from "./web-search.tool.ts";
 
 import type OpenAI from "openai";
+
+const getToolLogDir = () =>
+  path.join(process.env.HOME || os.homedir(), ".lawt");
+const getToolLogFile = () => path.join(getToolLogDir(), ".tool_logs.jsonl");
 
 /** @type {{name: string, description: string, schema: z.ZodObject, execute: (...a:any[])=>any}[]} */
 const ALL_TOOLS = {
@@ -87,14 +92,17 @@ async function executeToolCall<T extends keyof typeof ALL_TOOLS>(
 const executeToolCallWithLogging: typeof executeToolCall = async (...args) => {
   const result = await executeToolCall(...args);
 
-  const logFile = projectRoot + "/src/tools/.logs.jsonl";
   const time = new Date().toISOString();
+  const logDir = getToolLogDir();
+  const logFile = getToolLogFile();
   try {
+    await fs.promises.mkdir(logDir, { recursive: true });
     await fs.promises.appendFile(
       logFile,
       JSON.stringify({ time, ...result }) + "\n",
     );
   } catch (e) {
+    await fs.promises.mkdir(logDir, { recursive: true });
     await fs.promises.appendFile(
       logFile,
       JSON.stringify({

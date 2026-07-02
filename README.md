@@ -12,7 +12,7 @@ At runtime it:
 - prompts for user input in the terminal
 - streams assistant output and reasoning
 - executes tool calls against the current workspace
-- appends tool execution logs to `src/tools/.logs.jsonl`
+- appends tool execution logs to `~/.lawt/.tool_logs.jsonl`
 
 ## Prerequisites
 

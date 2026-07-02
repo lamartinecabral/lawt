@@ -53,5 +53,5 @@ The CLI currently reads provider configuration directly from `process.env`; it d
 
 - Tool inputs are validated with `zod` schemas in each `*.tool.ts` file.
 - Filesystem tools must stay confined to the current workspace.
-- `executeToolCall` logs tool invocations to `src/tools/.logs.jsonl`; keep that behavior intact unless the logging contract is intentionally changing.
+- `executeToolCall` logs tool invocations to `~/.lawt/.tool_logs.jsonl`; keep that behavior intact unless the logging contract is intentionally changing.
 - `web_search` and `fetch_page_content` depend on Puppeteer and a local Chrome executable.

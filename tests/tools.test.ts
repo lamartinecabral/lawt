@@ -7,8 +7,10 @@ import path from "node:path";
 import { executeToolCall, toolsToOpenAIFormat } from "../src/tools/index.ts";
 
 const originalCwd = process.cwd();
+const originalHome = process.env.HOME;
 
 let workspaceDir = "";
+let homeDir = "";
 
 function expectSuccess(result: Awaited<ReturnType<typeof executeToolCall>>) {
   assert.partialDeepStrictEqual(result.result, { success: true });
@@ -29,13 +31,23 @@ function expectFailure(result: Awaited<ReturnType<typeof executeToolCall>>) {
 describe("tool registry", () => {
   beforeEach(async () => {
     workspaceDir = await fs.mkdtemp(path.join(os.tmpdir(), "lawt-tools-"));
+    homeDir = await fs.mkdtemp(path.join(os.tmpdir(), "lawt-home-"));
     process.chdir(workspaceDir);
+    process.env.HOME = homeDir;
   });
 
   afterEach(async () => {
     process.chdir(originalCwd);
+    if (originalHome === undefined) {
+      delete process.env.HOME;
+    } else {
+      process.env.HOME = originalHome;
+    }
     if (workspaceDir) {
       await fs.rm(workspaceDir, { recursive: true, force: true });
+    }
+    if (homeDir) {
+      await fs.rm(homeDir, { recursive: true, force: true });
     }
   });
 
@@ -129,6 +141,21 @@ describe("tool registry", () => {
         stderr: "",
       }),
     );
+  });
+
+  it("writes tool logs under ~/.lawt/.tool_logs.jsonl", async () => {
+    await executeToolCall("list_directory", { path: "." });
+
+    const logFile = path.join(homeDir, ".lawt", ".tool_logs.jsonl");
+    const logContent = await fs.readFile(logFile, "utf-8");
+    const entries = logContent
+      .trim()
+      .split("\n")
+      .map((line) => JSON.parse(line));
+
+    assert.strictEqual(entries.length, 1);
+    assert.strictEqual(entries[0].name, "list_directory");
+    assert.ok(entries[0].time);
   });
 
   it("rejects paths that lexically escape the workspace", async () => {
