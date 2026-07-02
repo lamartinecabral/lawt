@@ -1,19 +1,18 @@
-import type { ChatFunctionTool } from "@openrouter/sdk/models";
 import fs from "node:fs";
-import type { FunctionDeclaration } from "@google/genai";
 import { projectRoot } from "../utils.ts";
-import type { Tool } from "ollama";
 
 import { create_file } from "./create-file.tool.ts";
 import { fail } from "./utils.ts";
+import { fetch_page_content } from "./web-search.tool.ts";
 import { file_search } from "./file-search.tool.ts";
 import { grep_search } from "./grep-search.tool.ts";
 import { list_directory } from "./list-directory.tool.ts";
 import { read_file } from "./read-file.tool.ts";
 import { replace_string_in_file } from "./replace-string-in-file.tool.ts";
 import { run_shell_command } from "./run-shell-command.tool.ts";
+import { web_search } from "./web-search.tool.ts";
 
-import { fetch_page_content, web_search } from "./web-search.tool.ts";
+import type OpenAI from "openai";
 
 /** @type {{name: string, description: string, schema: z.ZodObject, execute: (...a:any[])=>any}[]} */
 const ALL_TOOLS = {
@@ -28,34 +27,17 @@ const ALL_TOOLS = {
   fetch_page_content,
 } as const;
 
-export function toolsToOllamaFormat() {
-  return Object.values(ALL_TOOLS).map<Tool>((tool) => ({
-    type: "function",
-    function: {
-      name: tool.name,
-      description: tool.description,
-      parameters: tool.schema.toJSONSchema() as any,
-    },
-  }));
-}
-
-export function toolsToOpenRouterFormat() {
-  return Object.values(ALL_TOOLS).map<ChatFunctionTool>((tool) => ({
-    type: "function",
-    function: {
-      name: tool.name,
-      description: tool.description,
-      parameters: tool.schema.toJSONSchema() as any,
-    },
-  }));
-}
-
-export function toolsToGoogleFormat() {
-  return Object.values(ALL_TOOLS).map<FunctionDeclaration>((tool) => ({
-    name: tool.name,
-    description: tool.description,
-    parameters: tool.schema.toJSONSchema() as any,
-  }));
+export function toolsToOpenAIFormat() {
+  return Object.values(ALL_TOOLS).map<OpenAI.ChatCompletionFunctionTool>(
+    (tool) => ({
+      type: "function",
+      function: {
+        name: tool.name,
+        description: tool.description,
+        parameters: tool.schema.toJSONSchema(),
+      },
+    }),
+  );
 }
 
 async function executeToolCall<T extends keyof typeof ALL_TOOLS>(

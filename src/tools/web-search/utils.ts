@@ -1,6 +1,7 @@
 import { extractContent } from "@lamartinecabral/extract-content";
-import type { Page } from "puppeteer-core";
 import puppeteer from "puppeteer-core";
+
+import type { Page } from "puppeteer-core";
 
 export const chromePath: string =
   process.env.CHROME_PATH ||
@@ -46,27 +47,7 @@ export async function fullSearchWeb(query: string) {
 
     for (const getResults of [getSearchWebResults, getSearchNewsResults]) {
       const results: typeof allResults = await getResults(page, query);
-
-      for (const result of results) {
-        try {
-          const { content } = await getUrlContent(page, result.url);
-          if (content) {
-            const index = contentContainsSnippet(content, result.snippet);
-            if (index === null) continue; // If snippet is not found, skip this result
-            const portionSize = 20000;
-            result.content = content.slice(
-              Math.max(0, index - portionSize / 2),
-              index + portionSize / 2,
-            ); // Only keep a portion of the content around the snippet to save space
-            break;
-          }
-        } catch (_) {
-          continue; // If fetching content fails, skip to the next result
-        }
-      }
-
-      results.sort((a, b) => (a.content ? 0 : 1) - (b.content ? 0 : 1)); // Prioritize results with content
-      allResults.push(...results.slice(0, 5));
+      allResults.push(...results.slice(0, 10));
     }
 
     return allResults;
@@ -238,35 +219,3 @@ export async function getUrlContent(
 
   return { title, content };
 }
-
-/**
- * Checks if the content contains the snippet with at least 60% similarity using a longest common subsequence approach in overlapping chunks.
- * Returns the index of the content chunk where the snippet is found, or null if not found.
- */
-const contentContainsSnippet = (
-  content: string,
-  snippet: string,
-): null | number => {
-  if (!snippet) return null;
-  const a = snippet.toLowerCase();
-  const m = a.length;
-  for (let i = 0; i < content.length; i += m) {
-    const chunk = content.slice(i, i + m * 2);
-    if (chunk.length < m) break;
-    const b = chunk.toLowerCase();
-    const n = b.length;
-    // dp[i][j] = LCS length of a[0..i-1] and b[0..j-1]
-    const dp: number[] = new Array(n + 1).fill(0);
-    let prev;
-    for (let i = 1; i <= m; i++) {
-      prev = 0;
-      for (let j = 1; j <= n; j++) {
-        const temp = dp[j];
-        dp[j] = a[i - 1] === b[j - 1] ? prev + 1 : Math.max(dp[j], dp[j - 1]);
-        prev = temp;
-      }
-    }
-    if (dp[n] / m >= 0.6) return i;
-  }
-  return null;
-};

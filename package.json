@@ -1,6 +1,6 @@
 {
   "name": "lawt",
-  "version": "0.0.1-ollama",
+  "version": "0.0.1",
   "description": "Local AI With Tools",
   "type": "module",
   "bin": {
@@ -10,9 +10,8 @@
     "node": ">=24.0.0"
   },
   "scripts": {
-    "activate": "node src/branches/activate.ts",
     "start": "node src/cli.ts",
-    "test": "vitest run",
+    "test": "node --test",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
@@ -23,17 +22,16 @@
     "cli",
     "ai",
     "agent",
+    "openai",
     "ollama"
   ],
   "license": "ISC",
   "dependencies": {
-    "@google/genai": "^1.50.1",
     "@lamartinecabral/extract-content": "github:lamartinecabral/extract-content#v0.0.7",
-    "@openrouter/sdk": "^0.12.24",
     "commander": "^14.0.3",
     "dotenv": "^17.4.2",
     "fast-glob": "^3.3.3",
-    "ollama": "^0.6.3",
+    "openai": "^6.45.0",
     "ora": "^9.3.0",
     "picocolors": "^1.1.1",
     "puppeteer-core": "25.0.4",
@@ -41,13 +39,11 @@
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
-    "@types/node": "^25.6.0",
+    "@types/node": "24",
     "eslint": "^10.2.1",
-    "execa": "^9.6.1",
     "globals": "^17.4.0",
     "prettier": "^3.8.2",
     "typescript": "6.0.3",
-    "typescript-eslint": "^8.59.0",
-    "vitest": "^4.1.4"
+    "typescript-eslint": "^8.59.0"
   }
 }

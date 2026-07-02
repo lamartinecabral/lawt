@@ -23,9 +23,7 @@ export const web_search = tool({
           [
             `**TITLE**: ${result.title}`,
             `**URL**: ${result.url}`,
-            result.content
-              ? `**CONTENT**:\n\`\`\`\`\n${result.content}\n\`\`\`\``
-              : `**SNIPPET**: ${result.snippet}`,
+            `**SNIPPET**: ${result.snippet}`,
           ].join("\n"),
         )
         .join("\n\n");

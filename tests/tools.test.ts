@@ -1,16 +1,17 @@
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, it } from "node:test";
+import assert from "node:assert";
 import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 
-import { executeToolCall, toolsToOllamaFormat } from "../src/tools/index.ts";
+import { executeToolCall, toolsToOpenAIFormat } from "../src/tools/index.ts";
 
 const originalCwd = process.cwd();
 
 let workspaceDir = "";
 
 function expectSuccess(result: Awaited<ReturnType<typeof executeToolCall>>) {
-  expect(result.result).toMatchObject({ success: true });
+  assert.partialDeepStrictEqual(result.result, { success: true });
   if (!result.result.success) {
     throw new Error(`Expected success, got failure: ${result.result.error}`);
   }
@@ -18,7 +19,7 @@ function expectSuccess(result: Awaited<ReturnType<typeof executeToolCall>>) {
 }
 
 function expectFailure(result: Awaited<ReturnType<typeof executeToolCall>>) {
-  expect(result.result).toMatchObject({ success: false });
+  assert.partialDeepStrictEqual(result.result, { success: false });
   if (result.result.success) {
     throw new Error("Expected failure, got success");
   }
@@ -39,17 +40,20 @@ describe("tool registry", () => {
   });
 
   it("exports the active tool set", () => {
-    expect(toolsToOllamaFormat().map((tool) => tool.function.name)).toEqual([
-      "list_directory",
-      "read_file",
-      "create_file",
-      "replace_string_in_file",
-      "file_search",
-      "grep_search",
-      "run_shell_command",
-      "web_search",
-      "fetch_page_content",
-    ]);
+    assert.deepStrictEqual(
+      toolsToOpenAIFormat().map((tool) => tool.function.name),
+      [
+        "list_directory",
+        "read_file",
+        "create_file",
+        "replace_string_in_file",
+        "file_search",
+        "grep_search",
+        "run_shell_command",
+        "web_search",
+        "fetch_page_content",
+      ],
+    );
   });
 
   it("searches file contents with grep_search", async () => {
@@ -64,7 +68,7 @@ describe("tool registry", () => {
       includePattern: "notes/**",
     });
 
-    expect(expectSuccess(result)).toContain("notes/example.txt:2:beta");
+    assert.ok(expectSuccess(result).includes("notes/example.txt:2:beta"));
   });
 
   it("can create, update, read, and search files inside the workspace", async () => {
@@ -74,9 +78,11 @@ describe("tool registry", () => {
     });
 
     expectSuccess(created);
-    await expect(
-      fs.readFile(path.join(workspaceDir, "notes/example.txt"), "utf-8"),
-    ).resolves.toBe("alpha\nbeta\ngamma\n");
+    await fs
+      .readFile(path.join(workspaceDir, "notes/example.txt"), "utf-8")
+      .then((content) => {
+        assert.strictEqual(content, "alpha\nbeta\ngamma\n");
+      });
 
     const updated = await executeToolCall("replace_string_in_file", {
       file_path: "notes/example.txt",
@@ -92,15 +98,15 @@ describe("tool registry", () => {
       end_line: 3,
     });
 
-    expect(expectSuccess(read)).toBe("alpha\nbeta-updated\ngamma");
+    assert.strictEqual(expectSuccess(read), "alpha\nbeta-updated\ngamma");
 
     const listing = await executeToolCall("list_directory", { path: "notes" });
-    expect(expectSuccess(listing)).toEqual("example.txt");
+    assert.strictEqual(expectSuccess(listing), "example.txt");
 
     const files = await executeToolCall("file_search", {
       query: "notes/**/*.txt",
     });
-    expect(expectSuccess(files)).toEqual("notes/example.txt");
+    assert.strictEqual(expectSuccess(files), "notes/example.txt");
 
     const grep = await executeToolCall("grep_search", {
       query: "beta-updated",
@@ -108,7 +114,7 @@ describe("tool registry", () => {
       includePattern: "notes/**",
     });
 
-    expect(expectSuccess(grep)).toEqual("notes/example.txt:2:beta-updated");
+    assert.strictEqual(expectSuccess(grep), "notes/example.txt:2:beta-updated");
   });
 
   it("executes shell commands in the current workspace", async () => {
@@ -116,7 +122,8 @@ describe("tool registry", () => {
       command: "printf 'hello from shell'",
     });
 
-    expect(expectSuccess(result)).toEqual(
+    assert.strictEqual(
+      expectSuccess(result),
       JSON.stringify({
         stdout: "hello from shell",
         stderr: "",
@@ -131,6 +138,6 @@ describe("tool registry", () => {
       end_line: 1,
     });
 
-    expect(expectFailure(result)).toContain("outside the workspace");
+    assert.ok(expectFailure(result).includes("outside the workspace"));
   });
 });
