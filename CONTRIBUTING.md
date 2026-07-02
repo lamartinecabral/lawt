@@ -4,7 +4,20 @@
 
 1. Clone the repository
 2. Install dependencies: `npm install`
-3. Ensure [Ollama](https://ollama.com) is installed and running locally
+3. Configure an OpenAI-compatible provider
+4. Install Google Chrome if you want to work on the web-search tools
+
+The default local setup uses Ollama:
+
+```bash
+export PROVIDER_BASE_URL=http://localhost:11434/v1
+export PROVIDER_API_KEY=ollama
+export PROVIDER_MODEL_ID=qwen3:latest
+```
+
+You can also point the CLI at any other OpenAI-compatible endpoint by changing those environment variables.
+
+The CLI currently reads provider configuration directly from `process.env`; it does not load `.env` files by itself.
 
 ## Development Workflow
 
@@ -12,25 +25,33 @@
 2. Run the tests: `npm test`
 3. Run the linter: `npm run lint`
 4. Run the typecheck: `npm run typecheck`
-5. Run the formatter when needed: `npm run format`
+5. Check formatting: `npm run format:check`
+6. Apply fixes when needed: `npm run lint:fix` and `npm run format`
 
 ## Code Style
 
-- Code is formatted with [Prettier](https://prettier.io) (see [.prettierrc](.prettierrc))
+- Code is formatted with [Prettier](https://prettier.io)
 - Code is linted with [ESLint](https://eslint.org) (see [eslint.config.mjs](eslint.config.mjs))
 - TypeScript source files use native ESM imports and explicit `.ts` extensions
-- Vitest looks for test files under `tests/**/*.test.{ts,mts,js,mjs}`
+- Tests use Node's built-in test runner
+- Prefer small, workspace-scoped behavior tests for tool changes
 
 ## Project Structure
 
-| Path                       | Purpose                                     |
-| -------------------------- | ------------------------------------------- |
-| `src/cli.ts`               | Entry point that dispatches to a branch CLI |
-| `src/branches/ollama/`     | Ollama-specific CLI and chat runtime        |
-| `src/branches/gemma/`      | Gemini/Gemma-specific CLI and chat runtime  |
-| `src/branches/openrouter/` | OpenRouter-specific CLI and chat runtime    |
-| `src/tools/`               | Shared workspace tool implementations       |
-| `tests/`                   | Vitest unit tests                           |
-| `eslint.config.mjs`        | ESLint flat config                          |
-| `.prettierrc`              | Prettier config                             |
-| `vitest.config.mjs`        | Vitest config                               |
+| Path | Purpose |
+| --- | --- |
+| `src/cli.ts` | CLI entry point and provider configuration |
+| `src/run.ts` | Streaming chat loop and tool orchestration |
+| `src/io.ts` | Terminal input handling and request aborts |
+| `src/tools/` | Workspace and web tool implementations |
+| `src/tools/web-search/` | Browser-backed search and page extraction helpers |
+| `tests/` | `node:test` coverage for the tool registry |
+| `eslint.config.mjs` | ESLint flat config |
+| `package.json` | Scripts, runtime metadata, and dependencies |
+
+## Notes for Tool Changes
+
+- Tool inputs are validated with `zod` schemas in each `*.tool.ts` file.
+- Filesystem tools must stay confined to the current workspace.
+- `executeToolCall` logs tool invocations to `src/tools/.logs.jsonl`; keep that behavior intact unless the logging contract is intentionally changing.
+- `web_search` and `fetch_page_content` depend on Puppeteer and a local Chrome executable.

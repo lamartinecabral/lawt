@@ -1,25 +1,26 @@
 # lawt
 
-Local AI With Tools. A lightweight CLI agent that routes between provider branches and exposes a shared tool registry.
+Local AI With Tools. A lightweight CLI agent that talks to any OpenAI-compatible chat endpoint and gives the model a small, workspace-scoped tool registry.
 
 ## Overview
 
-`lawt` is a CLI wrapper for local and remote AI providers. The active provider branch is selected by the package version suffix:
+`lawt` runs a terminal chat loop backed by the OpenAI Node SDK. By default it targets a local Ollama-compatible endpoint, but it can be pointed at any provider that implements the OpenAI chat completions API.
 
-- `ollama` → `src/branches/ollama`
-- `gemma` → `src/branches/gemma`
-- `openrouter` → `src/branches/openrouter`
+At runtime it:
 
-Use `npm run activate <branch>` to switch branches via `package.json` version, then run `lawt`.
+- loads a system prompt from `./AGENTS.md` or `~/.lawt/AGENTS.md` when present
+- prompts for user input in the terminal
+- streams assistant output and reasoning
+- executes tool calls against the current workspace
+- appends tool execution logs to `src/tools/.logs.jsonl`
 
 ## Prerequisites
 
 - Node.js >= 24
-- Chrome installed for the web related tools
-- One of the provider runtimes / credentials below:
-  - `Ollama` installed and running locally for the `ollama` branch
-  - `GEMINI_API_KEY` set for the `gemma` branch
-  - `OPENROUTER_API_KEY` set for the `openrouter` branch
+- Google Chrome installed for `web_search` and `fetch_page_content`
+- An OpenAI-compatible provider endpoint
+
+The default local configuration expects Ollama's OpenAI-compatible API at `http://localhost:11434/v1`.
 
 ## Installation
 
@@ -35,65 +36,59 @@ npm link
 lawt [options]
 ```
 
-Or directly:
+Or directly from the repository:
 
 ```bash
 npm start
 ```
 
-## Provider selection
-
-The CLI entrypoint in `src/cli.ts` imports one of the branch CLIs based on `package.json` version.
-
-Example branch names in `package.json`:
-
-- `0.0.1-ollama`
-- `0.0.1-gemma`
-- `0.0.1-openrouter`
-
-Switch branch:
-
-```bash
-npm run activate ollama
-npm run activate gemma
-npm run activate openrouter
-```
+If no model is configured, `lawt` lists the available models exposed by the provider and exits.
 
 ## CLI options
 
-Common options across branches:
+- `-v, --version` - print the CLI version
+- `-m, --model <model>` - model id to use for chat completions
+- `-t, --think <think>` - provider-specific reasoning effort value
 
-- `-v, --version` — print the CLI version
-- `-p, --prompt <prompt>` — initial prompt
-- `-s, --system <value>` — system prompt (default: `You are an assistant with access to tools.`)
+## Environment variables
 
-Branch-specific options:
+You can configure the provider without changing code:
 
-- `ollama` branch:
-  - `-m, --model <model>` — Ollama model to use
-  - `-t, --think <value>` — thinking level: `true`, `false`, `high`, `medium`, `low`
-- `openrouter` branch:
-  - `-m, --model <model>` — OpenRouter model to use
-  - `-t, --think <value>` — thinking level: `none`, `minimal`, `low`, `medium`, `high`, `xhigh`
-- `gemma` branch:
-  - only `-p` and `-s` are exposed; the branch uses a fixed Gemini model internally
+```bash
+PROVIDER_BASE_URL=http://localhost:11434/v1
+PROVIDER_API_KEY=ollama
+PROVIDER_MODEL_ID=qwen3:latest
+PROVIDER_REASONING_EFFORT=medium
+CHROME_PATH=/Applications/Google Chrome.app/Contents/MacOS/Google Chrome
+```
 
-## Interactive commands
+- `PROVIDER_BASE_URL` defaults to `http://localhost:11434/v1`
+- `PROVIDER_API_KEY` defaults to `ollama`
+- `PROVIDER_MODEL_ID` avoids the startup model listing step
+- `PROVIDER_REASONING_EFFORT` is passed through as `reasoning_effort`
+- `CHROME_PATH` overrides the Chrome executable path used by browser-backed tools
 
-During a session, the CLI supports these slash commands:
+The CLI reads these values from `process.env`. Export them in your shell, your terminal profile, or another environment loader that runs before `lawt` starts.
 
-- `/exit` — quit
-- `/clear` — clear conversation context (`ollama` / `openrouter` branches)
-- `/save` — save session state to `.cache/lawt_state.json`
-- `/load` — load session state from `.cache/lawt_state.json`
-- `/show_opts` — print current options
-- `/system <text>` — update the system prompt
-- `/model <model>` — change the active model (`ollama` / `openrouter` branches)
-- `/think <value>` — change thinking level (`ollama` / `openrouter` branches)
+## System prompt loading
+
+`lawt` uses this precedence for the system prompt:
+
+1. `./AGENTS.md`
+2. `~/.lawt/AGENTS.md`
+3. the built-in default: `You are an assistant with access to tools.`
+
+## Interactive usage
+
+- Type normally for single-line prompts.
+- Enter `"""` on its own line to start a multi-line prompt, then `"""` again to submit it.
+- Use `/exit` or `/quit` to end the session.
+- Press `Esc` to abort an in-flight request.
+- Press `Ctrl+C` to exit cleanly.
 
 ## Tools
 
-The shared tool registry exposes these workspace-scoped tools:
+The current tool registry exposes these functions to the model:
 
 - `list_directory`
 - `read_file`
@@ -103,62 +98,44 @@ The shared tool registry exposes these workspace-scoped tools:
 - `grep_search`
 - `run_shell_command`
 - `web_search`
-- `fetch_url`
+- `fetch_page_content`
 
-These tools are available to the model through the provider-specific tool integration.
-
-## Environment variables
-
-For `gemma` branch:
-
-```bash
-GEMINI_API_KEY=your_api_key
-```
-
-For `openrouter` branch:
-
-```bash
-OPENROUTER_API_KEY=your_api_key
-```
-
-Place credentials in a `.env` file at the repository root or export them in your shell.
+All filesystem tools are constrained to the current working directory. Paths that resolve outside the workspace are rejected.
 
 ## Development
 
 ```bash
 npm test
 npm run lint
-npm run lint:fix
 npm run typecheck
 npm run format:check
+```
+
+Use these when you need automatic fixes:
+
+```bash
+npm run lint:fix
 npm run format
 ```
 
 ## Architecture
 
-```
+```text
 src/
-  cli.ts                   # top-level CLI dispatcher that chooses a branch by package version
-  utils.ts                 # shared readline, prompt, and provider helper utilities
-  branches/
-    activate.ts            # switch active provider branch via package version suffix
-    ollama/
-      cli.ts               # Ollama-specific CLI options and loop
-      run.ts               # Ollama chat + tool execution loop
-    gemma/
-      cli.ts               # Gemini/Gemma CLI options and loop
-      run.ts               # Gemini chat + tool execution loop
-    openrouter/
-      cli.ts               # OpenRouter-specific CLI options and loop
-      run.ts               # OpenRouter chat + tool execution loop
+  cli.ts                   # CLI setup, provider configuration, system prompt loading
+  io.ts                    # readline loop, multiline input, abort handling
+  run.ts                   # chat loop, streaming output, tool execution
+  utils.ts                 # shared helpers and project root detection
   tools/
-    index.ts               # shared registry and format adapters
-    utils.ts               # shared tool utilities
-    *.tool.ts              # workspace tool implementations
+    index.ts               # tool registry, OpenAI schema conversion, call logging
+    utils.ts               # tool helpers, workspace path enforcement, shell execution
+    *.tool.ts              # individual tool implementations
+    web-search/
+      utils.ts             # Puppeteer + extract-content integration
 tests/
-  tools.test.ts            # Vitest coverage for the tool registry
+  tools.test.ts            # node:test coverage for the tool registry
 ```
 
 ## License
 
-ISC
+MIT
