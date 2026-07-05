@@ -21,10 +21,7 @@ program
       apiKey: process.env.PROVIDER_API_KEY || "ollama",
     });
 
-    const modelId = await assertModel(
-      client,
-      options.model || process.env.PROVIDER_MODEL_ID,
-    );
+    const modelId = await assertModel(client, options.model);
 
     const systemPrompt = await loadSystemPrompt(
       "You are an assistant with access to tools.",
@@ -34,9 +31,7 @@ program
       { role: "system", content: systemPrompt },
     ];
 
-    const reasoningEffort = parseReasoningEffort(
-      options.think || process.env.PROVIDER_REASONING_EFFORT,
-    );
+    const reasoningEffort = parseReasoningEffort(options.think);
 
     console.log(pc.bgGreen(`LAWT - Local AI With Tools`));
 

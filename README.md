@@ -57,15 +57,11 @@ You can configure the provider without changing code:
 ```bash
 PROVIDER_BASE_URL=http://localhost:11434/v1
 PROVIDER_API_KEY=ollama
-PROVIDER_MODEL_ID=qwen3:latest
-PROVIDER_REASONING_EFFORT=medium
 CHROME_PATH=/Applications/Google Chrome.app/Contents/MacOS/Google Chrome
 ```
 
 - `PROVIDER_BASE_URL` defaults to `http://localhost:11434/v1`
 - `PROVIDER_API_KEY` defaults to `ollama`
-- `PROVIDER_MODEL_ID` avoids the startup model listing step
-- `PROVIDER_REASONING_EFFORT` is passed through as `reasoning_effort`
 - `CHROME_PATH` overrides the Chrome executable path used by browser-backed tools
 
 The CLI reads these values from `process.env`. Export them in your shell, your terminal profile, or another environment loader that runs before `lawt` starts.
