@@ -44,6 +44,8 @@ npm start
 
 If no model is configured, `lawt` lists the available models exposed by the provider and exits.
 
+For Ollama-specific setup guidance for longer agent sessions, see [docs/ollama.md](docs/ollama.md).
+
 ## CLI options
 
 - `-v, --version` - print the CLI version
