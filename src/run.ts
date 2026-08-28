@@ -6,6 +6,9 @@ import ora from "ora";
 import pc from "picocolors";
 import { question } from "./io.ts";
 
+type ToolCall = OpenAI.Chat.Completions.ChatCompletionMessageFunctionToolCall;
+type DeltaToolCall = OpenAI.ChatCompletionChunk.Choice.Delta.ToolCall;
+
 type RunType = (_args: {
   client: OpenAI;
   modelId: string;
@@ -42,7 +45,7 @@ export const run: RunType = async ({
 
     let content = "";
     let thinking = "";
-    const tool_calls: OpenAI.ChatCompletionChunk.Choice.Delta.ToolCall[] = [];
+    const toolCalls: ToolCall[] = [];
 
     let mode = "";
     for await (const chunk of response) {
@@ -51,7 +54,8 @@ export const run: RunType = async ({
       if (message?.content) content += message.content;
       const reasoning: string | undefined = message?.["reasoning"];
       if (reasoning) thinking += reasoning;
-      if (message?.tool_calls?.length) tool_calls.push(...message.tool_calls);
+      if (message?.tool_calls?.length)
+        appendToolCalls(toolCalls, message.tool_calls);
       if (!finish_reason) {
         if (reasoning) {
           if (mode !== "thinking") {
@@ -79,20 +83,20 @@ export const run: RunType = async ({
     messages.push({
       role: "assistant",
       content,
-      tool_calls: tool_calls.length ? (tool_calls as any) : undefined,
+      tool_calls: toolCalls.length ? toolCalls : undefined,
       ...(thinking ? { reasoning_content: thinking } : {}),
     });
 
-    if (!tool_calls.length) break;
+    if (!toolCalls.length) break;
 
-    for (const tool_call of tool_calls) {
-      const tool_name = tool_call.function?.name ?? "";
-      const args = tool_call.function?.arguments ?? "";
+    for (const toolCall of toolCalls) {
+      const tool_name = toolCall.function?.name ?? "";
+      const args = toolCall.function?.arguments ?? "";
       const { result } = await executeToolCall(tool_name as any, args);
       const content = result.success ? result.data : `Error: ${result.error}`;
       messages.push({
         role: "tool",
-        tool_call_id: tool_call.id ?? "",
+        tool_call_id: toolCall.id ?? "",
         content,
       });
 
@@ -101,6 +105,29 @@ export const run: RunType = async ({
         pc.dim(ellipsis(`> ${tool_name}(${JSON.stringify(args)})`, 300)),
       );
       console.log(pc.dim(ellipsis(`= ${JSON.stringify(content)}`, 300)));
+    }
+  }
+};
+
+const appendToolCalls = (
+  toolCalls: ToolCall[],
+  deltas: DeltaToolCall[],
+): void => {
+  for (const delta of deltas) {
+    if (delta.function?.name)
+      toolCalls.push({
+        id: delta.id ?? "",
+        type: "function",
+        function: {
+          name: delta.function.name,
+          arguments: delta.function.arguments ?? "",
+        },
+      });
+    else {
+      const lastCall = toolCalls[toolCalls.length - 1].function;
+      if (!lastCall) continue;
+      if (!lastCall.arguments) lastCall.arguments = "";
+      lastCall.arguments += delta.function?.arguments ?? "";
     }
   }
 };
