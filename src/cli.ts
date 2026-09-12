@@ -16,10 +16,12 @@ program
   .option("-m, --model <model>", "model id")
   .option("-t, --think <think>", "reasoning effort")
   .action(async function (options) {
-    const client = new OpenAI({
-      baseURL: process.env.PROVIDER_BASE_URL || "http://localhost:11434/v1",
-      apiKey: process.env.PROVIDER_API_KEY || "ollama",
-    });
+    const client = new OpenAI(
+      await loadProvider({
+        baseURL: "http://localhost:11434/v1",
+        apiKey: "ollama",
+      }),
+    );
 
     const modelId = await assertModel(client, options.model);
 
@@ -84,6 +86,21 @@ const loadSystemPrompt = async (defaultMessage: string) => {
     }
   }
   return systemMessage;
+};
+
+const loadProvider = async (defaultProvider: {
+  baseURL: string;
+  apiKey: string;
+}): Promise<typeof defaultProvider> => {
+  try {
+    const { default: provider } = await import(
+      `${process.env.HOME}/.lawt/provider.ts`
+    );
+    if (provider.baseURL && provider.apiKey) return provider;
+  } catch (_) {
+    // ignore
+  }
+  return defaultProvider;
 };
 
 const assertModel = async (client: OpenAI, modelId: string | undefined) => {
