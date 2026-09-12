@@ -29,15 +29,15 @@ Chrome executable used by browser-backed tools.
 
 1. Make your changes in `src/` and add or update tests under `tests/` when behavior changes
 2. Run the tests: `npm test`
-3. Run the linter: `npm run lint`
+3. Run the formatter and linter checks: `npm run lint`
 4. Run the typecheck: `npm run typecheck`
-5. Check formatting: `npm run format:check`
-6. Apply fixes when needed: `npm run lint:fix` and `npm run format`
+5. Apply formatting and lint fixes when needed: `npm run lint:fix`
 
 ## Code Style
 
-- Code is formatted with [Prettier](https://prettier.io)
-- Code is linted with [ESLint](https://eslint.org) (see [eslint.config.mjs](eslint.config.mjs))
+- Code is formatted and linted with [Biome](https://biomejs.dev) (see [biome.json](biome.json))
+- `npm run lint` checks formatting and lint rules
+- `npm run lint:fix` formats files and applies safe lint fixes
 - TypeScript source files use native ESM imports and explicit `.ts` extensions
 - Tests use Node's built-in test runner
 - Prefer small, workspace-scoped behavior tests for tool changes
@@ -52,7 +52,7 @@ Chrome executable used by browser-backed tools.
 | `src/tools/`            | Workspace and web tool implementations            |
 | `src/tools/web-search/` | Browser-backed search and page extraction helpers |
 | `tests/`                | `node:test` coverage for the tool registry        |
-| `eslint.config.mjs`     | ESLint flat config                                |
+| `biome.json`            | Biome formatter and linter configuration           |
 | `package.json`          | Scripts, runtime metadata, and dependencies       |
 
 ## Notes for Tool Changes
