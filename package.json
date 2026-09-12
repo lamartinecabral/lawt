@@ -12,10 +12,8 @@
   "scripts": {
     "start": "node src/cli.ts",
     "test": "node --test",
-    "lint": "eslint .",
-    "lint:fix": "eslint . --fix",
-    "format": "prettier --write .",
-    "format:check": "prettier --check .",
+    "lint": "npx biome check",
+    "lint:fix": "npx biome check --write",
     "typecheck": "tsc --noEmit"
   },
   "keywords": [
@@ -38,12 +36,9 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
-    "@eslint/js": "^10.0.1",
+    "@biomejs/biome": "^2.5.13",
     "@types/node": "24",
-    "eslint": "^10.2.1",
     "globals": "^17.4.0",
-    "prettier": "^3.8.2",
-    "typescript": "6.0.3",
-    "typescript-eslint": "^8.59.0"
+    "typescript": "6.0.3"
   }
 }

@@ -1,7 +1,6 @@
 import { extractContent } from "@lamartinecabral/extract-content";
-import puppeteer from "puppeteer-core";
-
 import type { Page } from "puppeteer-core";
+import puppeteer from "puppeteer-core";
 
 export const chromePath: string =
   process.env.CHROME_PATH ||

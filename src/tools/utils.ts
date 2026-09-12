@@ -1,7 +1,7 @@
-import { ellipsis } from "../utils.ts";
-import path from "node:path";
 import { spawn } from "node:child_process";
-import z from "zod";
+import path from "node:path";
+import type z from "zod";
+import { ellipsis } from "../utils.ts";
 
 export const TOOL_OUTPUT_LIMIT = 50000;
 

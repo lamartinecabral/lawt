@@ -1,10 +1,9 @@
-import { abortables, ellipsis } from "./utils.ts";
-import { executeToolCall, toolsToOpenAIFormat } from "./tools/index.ts";
-
-import OpenAI from "openai";
+import type OpenAI from "openai";
 import ora from "ora";
 import pc from "picocolors";
 import { question } from "./io.ts";
+import { executeToolCall, toolsToOpenAIFormat } from "./tools/index.ts";
+import { abortables, ellipsis } from "./utils.ts";
 
 type ToolCall = OpenAI.Chat.Completions.ChatCompletionMessageFunctionToolCall;
 type DeltaToolCall = OpenAI.ChatCompletionChunk.Choice.Delta.ToolCall;

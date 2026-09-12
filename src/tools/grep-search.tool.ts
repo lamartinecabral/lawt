@@ -1,8 +1,8 @@
-import { fail, getResolvedPath, ok, tool } from "./utils.ts";
-import fg from "fast-glob";
 import fs from "node:fs/promises";
 import path from "node:path";
+import fg from "fast-glob";
 import z from "zod";
+import { fail, getResolvedPath, ok, tool } from "./utils.ts";
 
 export const grep_search = tool({
   name: "grep_search",
@@ -41,7 +41,7 @@ export const grep_search = tool({
         return fail("maxResults must be a positive integer.");
       }
 
-      let pattern;
+      let pattern: RegExp;
       try {
         pattern = new RegExp(args.isRegexp ? query : escapeRegExp(query), "i");
       } catch (err) {
@@ -127,7 +127,7 @@ function normalizeSearchPattern(query) {
 }
 
 function findGlobIndex(pattern) {
-  const special = new RegExp("[*?\\[\\]{}()]");
+  const special = /[*?[\]{}()]/;
   const match = pattern.match(special);
   return match ? match.index : -1;
 }

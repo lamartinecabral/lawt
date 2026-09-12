@@ -1,7 +1,7 @@
-import { fail, getResolvedPath, ok, tool } from "./utils.ts";
-import fg from "fast-glob";
 import path from "node:path";
+import fg from "fast-glob";
 import z from "zod";
+import { fail, getResolvedPath, ok, tool } from "./utils.ts";
 
 export const file_search = tool({
   name: "file_search",
@@ -70,7 +70,7 @@ function normalizeSearchPattern(query) {
 }
 
 function findGlobIndex(pattern) {
-  const special = new RegExp("[*?\\[\\]{}()]");
+  const special = /[*?[\]{}()]/;
   const match = pattern.match(special);
   return match ? match.index : -1;
 }

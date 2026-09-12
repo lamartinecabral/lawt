@@ -1,5 +1,5 @@
-import { abortables } from "./utils.ts";
 import readline from "node:readline";
+import { abortables } from "./utils.ts";
 
 const rl = readline.createInterface({
   input: process.stdin,

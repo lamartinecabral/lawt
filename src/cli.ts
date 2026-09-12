@@ -1,10 +1,10 @@
 #!/usr/bin/env node
-import { Command } from "commander";
-import { finish } from "./io.ts";
 import fs from "node:fs";
+import { Command } from "commander";
 import OpenAI from "openai";
 import pc from "picocolors";
 import pkg from "../package.json" with { type: "json" };
+import { finish } from "./io.ts";
 import { run } from "./run.ts";
 
 const program = new Command();
@@ -15,7 +15,7 @@ program
   .version(pkg.version, "-v, --version")
   .option("-m, --model <model>", "model id")
   .option("-t, --think <think>", "reasoning effort")
-  .action(async function (options) {
+  .action(async (options) => {
     const client = new OpenAI(
       await loadProvider({
         baseURL: "http://localhost:11434/v1",

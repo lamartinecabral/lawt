@@ -1,6 +1,6 @@
+import z from "zod";
 import { fail, ok, tool } from "./utils.ts";
 import { fullSearchWeb, urlContent } from "./web-search/utils.ts";
-import z from "zod";
 
 export const web_search = tool({
   name: "web_search",

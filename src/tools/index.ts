@@ -1,19 +1,16 @@
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
-
+import type OpenAI from "openai";
 import { create_file } from "./create-file.tool.ts";
-import { fail } from "./utils.ts";
-import { fetch_page_content } from "./web-search.tool.ts";
 import { file_search } from "./file-search.tool.ts";
 import { grep_search } from "./grep-search.tool.ts";
 import { list_directory } from "./list-directory.tool.ts";
 import { read_file } from "./read-file.tool.ts";
 import { replace_string_in_file } from "./replace-string-in-file.tool.ts";
 import { run_shell_command } from "./run-shell-command.tool.ts";
-import { web_search } from "./web-search.tool.ts";
-
-import type OpenAI from "openai";
+import { fail } from "./utils.ts";
+import { fetch_page_content, web_search } from "./web-search.tool.ts";
 
 const getToolLogDir = () =>
   path.join(process.env.HOME || os.homedir(), ".lawt");
@@ -119,7 +116,7 @@ export { executeToolCallWithLogging as executeToolCall };
 
 function parseToolArgs(rawArgs) {
   if (typeof rawArgs === "string") {
-    let parsed;
+    let parsed: unknown;
     try {
       parsed = JSON.parse(rawArgs);
     } catch (err) {
