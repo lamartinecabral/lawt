@@ -24,11 +24,11 @@ export const run: RunType = async ({
 }) => {
   console.log(pc.green("\n--- user ---"));
 
-  const prompt = await question();
+  const prompt = (await question()).trim();
 
-  if (["/exit", "/quit"].includes(prompt.trim())) return prompt;
+  if (["/exit", "/quit", "/export"].includes(prompt)) return prompt;
 
-  messages.push({ role: "user", content: prompt.trim() });
+  messages.push({ role: "user", content: prompt });
 
   while (true) {
     const spinner = ora().start();

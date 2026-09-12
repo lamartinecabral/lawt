@@ -45,6 +45,15 @@ program
 
       if (res?.trim() === "/exit") break;
       if (res?.trim() === "/quit") break;
+      if (res?.trim() === "/export") {
+        const filename = `messages-${Date.now()}.json`;
+        await fs.promises.writeFile(
+          filename,
+          JSON.stringify(messages, null, 2),
+          "utf-8",
+        );
+        console.log(pc.green(`Messages exported to ${filename}`));
+      }
     }
 
     console.log(pc.dim("\nGoodbye!"));
