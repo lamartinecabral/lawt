@@ -33,7 +33,6 @@ pids/
 .DS_Store
 
 # Editors/IDEs
-.vscode/
 .idea/
 *.sublime-workspace
 *.sublime-project
