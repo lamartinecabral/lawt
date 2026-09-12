@@ -52,21 +52,37 @@ For Ollama-specific setup guidance for longer agent sessions, see [docs/ollama.m
 - `-m, --model <model>` - model id to use for chat completions
 - `-t, --think <think>` - provider-specific reasoning effort value
 
-## Environment variables
+## Provider configuration
 
-You can configure the provider without changing code:
+`lawt` uses Ollama by default. To connect to another OpenAI-compatible
+provider, create `~/.lawt/provider.ts` with a default export containing its
+base URL and API key:
 
 ```bash
-PROVIDER_BASE_URL=http://localhost:11434/v1
-PROVIDER_API_KEY=ollama
-CHROME_PATH=/Applications/Google Chrome.app/Contents/MacOS/Google Chrome
+mkdir -p ~/.lawt
 ```
 
-- `PROVIDER_BASE_URL` defaults to `http://localhost:11434/v1`
-- `PROVIDER_API_KEY` defaults to `ollama`
-- `CHROME_PATH` overrides the Chrome executable path used by browser-backed tools
+```ts
+// ~/.lawt/provider.ts
+export default {
+  baseURL: "https://api.example.com/v1",
+  apiKey: "your-api-key",
+};
+```
 
-The CLI reads these values from `process.env`. Export them in your shell, your terminal profile, or another environment loader that runs before `lawt` starts.
+The file is loaded when `lawt` starts. Both `baseURL` and `apiKey` are
+required; if the file is missing or either value is not set, `lawt` falls back
+to Ollama at `http://localhost:11434/v1` with the API key `ollama`.
+
+The provider must expose the OpenAI chat completions API. Select a model from
+that provider with `-m, --model`.
+
+`CHROME_PATH` remains an environment variable and overrides the Chrome
+executable path used by browser-backed tools:
+
+```bash
+CHROME_PATH=/Applications/Google Chrome.app/Contents/MacOS/Google Chrome lawt
+```
 
 ## System prompt loading
 

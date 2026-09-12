@@ -7,17 +7,23 @@
 3. Configure an OpenAI-compatible provider
 4. Install Google Chrome if you want to work on the web-search tools
 
-The default local setup uses Ollama:
+The default local setup uses Ollama, so no provider configuration is needed.
+To use another OpenAI-compatible endpoint, create `~/.lawt/provider.ts`:
 
-```bash
-export PROVIDER_BASE_URL=http://localhost:11434/v1
-export PROVIDER_API_KEY=ollama
-export PROVIDER_MODEL_ID=qwen3:latest
+```ts
+export default {
+  baseURL: "https://api.example.com/v1",
+  apiKey: "your-api-key",
+};
 ```
 
-You can also point the CLI at any other OpenAI-compatible endpoint by changing those environment variables.
+The provider file must export an object with both `baseURL` and `apiKey`.
+The CLI falls back to Ollama when the file is missing or incomplete. Choose a
+model exposed by the provider with `lawt -m <model>`.
 
-The CLI currently reads provider configuration directly from `process.env`; it does not load `.env` files by itself.
+The CLI does not load provider configuration from environment variables or
+`.env` files. `CHROME_PATH` is still read from the environment to configure the
+Chrome executable used by browser-backed tools.
 
 ## Development Workflow
 
@@ -38,16 +44,16 @@ The CLI currently reads provider configuration directly from `process.env`; it d
 
 ## Project Structure
 
-| Path | Purpose |
-| --- | --- |
-| `src/cli.ts` | CLI entry point and provider configuration |
-| `src/run.ts` | Streaming chat loop and tool orchestration |
-| `src/io.ts` | Terminal input handling and request aborts |
-| `src/tools/` | Workspace and web tool implementations |
+| Path                    | Purpose                                           |
+| ----------------------- | ------------------------------------------------- |
+| `src/cli.ts`            | CLI entry point and provider configuration        |
+| `src/run.ts`            | Streaming chat loop and tool orchestration        |
+| `src/io.ts`             | Terminal input handling and request aborts        |
+| `src/tools/`            | Workspace and web tool implementations            |
 | `src/tools/web-search/` | Browser-backed search and page extraction helpers |
-| `tests/` | `node:test` coverage for the tool registry |
-| `eslint.config.mjs` | ESLint flat config |
-| `package.json` | Scripts, runtime metadata, and dependencies |
+| `tests/`                | `node:test` coverage for the tool registry        |
+| `eslint.config.mjs`     | ESLint flat config                                |
+| `package.json`          | Scripts, runtime metadata, and dependencies       |
 
 ## Notes for Tool Changes
 
