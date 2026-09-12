@@ -52,7 +52,8 @@ export const run: RunType = async ({
       const { delta: message, finish_reason } = chunk.choices[0];
       if (spinner.isSpinning) spinner.stop();
       if (message?.content) content += message.content;
-      const reasoning: string | undefined = message?.["reasoning"];
+      const reasoning: string | undefined =
+        "reasoning" in message ? String(message.reasoning) : undefined;
       if (reasoning) thinking += reasoning;
       if (message?.tool_calls?.length)
         appendToolCalls(toolCalls, message.tool_calls);

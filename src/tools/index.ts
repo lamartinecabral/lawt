@@ -91,16 +91,16 @@ const executeToolCallWithLogging: typeof executeToolCall = async (...args) => {
     await fs.promises.mkdir(logDir, { recursive: true });
     await fs.promises.appendFile(
       logFile,
-      JSON.stringify({ time, ...result }) + "\n",
+      `${JSON.stringify({ time, ...result })}\n`,
     );
   } catch (e) {
     await fs.promises.mkdir(logDir, { recursive: true });
     await fs.promises.appendFile(
       logFile,
-      JSON.stringify({
+      `${JSON.stringify({
         time,
         error: e instanceof Error ? e.message : String(e),
-      }) + "\n",
+      })}\n`,
     );
   }
 

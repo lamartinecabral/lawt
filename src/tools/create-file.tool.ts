@@ -20,7 +20,7 @@ export const create_file = tool({
         await fs.stat(resolvedPath);
         fileExists = true;
       } catch (err) {
-        if (!(err instanceof Error && err["code"] === "ENOENT")) {
+        if (!(err instanceof Error && "code" in err && err.code === "ENOENT")) {
           return fail(String(err));
         }
       }
