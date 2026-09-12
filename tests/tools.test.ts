@@ -143,21 +143,6 @@ describe("tool registry", () => {
     );
   });
 
-  it("writes tool logs under ~/.lawt/.tool_logs.jsonl", async () => {
-    await executeToolCall("list_directory", { path: "." });
-
-    const logFile = path.join(homeDir, ".lawt", ".tool_logs.jsonl");
-    const logContent = await fs.readFile(logFile, "utf-8");
-    const entries = logContent
-      .trim()
-      .split("\n")
-      .map((line) => JSON.parse(line));
-
-    assert.strictEqual(entries.length, 1);
-    assert.strictEqual(entries[0].name, "list_directory");
-    assert.ok(entries[0].time);
-  });
-
   it("rejects paths that lexically escape the workspace", async () => {
     const result = await executeToolCall("read_file", {
       file_path: "../outside.txt",

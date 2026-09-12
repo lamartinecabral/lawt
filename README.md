@@ -12,7 +12,6 @@ At runtime it:
 - prompts for user input in the terminal
 - streams assistant output and reasoning
 - executes tool calls against the current workspace
-- appends tool execution logs to `~/.lawt/.tool_logs.jsonl`
 
 ## Prerequisites
 
@@ -141,7 +140,7 @@ src/
   run.ts                   # chat loop, streaming output, tool execution
   utils.ts                 # shared helpers and project root detection
   tools/
-    index.ts               # tool registry, OpenAI schema conversion, call logging
+    index.ts               # tool registry, OpenAI schema conversion
     utils.ts               # tool helpers, workspace path enforcement, shell execution
     *.tool.ts              # individual tool implementations
     web-search/
