@@ -82,9 +82,9 @@ export const run: RunType = async ({
 
     messages.push({
       role: "assistant",
+      ...(thinking ? { reasoning_content: thinking } : {}),
       content,
       tool_calls: toolCalls.length ? toolCalls : undefined,
-      ...(thinking ? { reasoning_content: thinking } : {}),
     });
 
     if (!toolCalls.length) break;
