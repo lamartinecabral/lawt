@@ -1,6 +1,3 @@
-import fs from "node:fs";
-import os from "node:os";
-import path from "node:path";
 import type OpenAI from "openai";
 import { create_file } from "./create-file.tool.ts";
 import { file_search } from "./file-search.tool.ts";
@@ -11,10 +8,6 @@ import { replace_string_in_file } from "./replace-string-in-file.tool.ts";
 import { run_shell_command } from "./run-shell-command.tool.ts";
 import { fail } from "./utils.ts";
 import { fetch_page_content, web_search } from "./web-search.tool.ts";
-
-const getToolLogDir = () =>
-  path.join(process.env.HOME || os.homedir(), ".lawt");
-const getToolLogFile = () => path.join(getToolLogDir(), ".tool_logs.jsonl");
 
 /** @type {{name: string, description: string, schema: z.ZodObject, execute: (...a:any[])=>any}[]} */
 const ALL_TOOLS = {
@@ -42,7 +35,7 @@ export function toolsToOpenAIFormat() {
   );
 }
 
-async function executeToolCall(name: string, rawArgs: unknown) {
+export async function executeToolCall(name: string, rawArgs: unknown) {
   let args = {};
 
   try {
@@ -80,34 +73,6 @@ async function executeToolCall(name: string, rawArgs: unknown) {
     result,
   };
 }
-
-const executeToolCallWithLogging: typeof executeToolCall = async (...args) => {
-  const result = await executeToolCall(...args);
-
-  const time = new Date().toISOString();
-  const logDir = getToolLogDir();
-  const logFile = getToolLogFile();
-  try {
-    await fs.promises.mkdir(logDir, { recursive: true });
-    await fs.promises.appendFile(
-      logFile,
-      `${JSON.stringify({ time, ...result })}\n`,
-    );
-  } catch (e) {
-    await fs.promises.mkdir(logDir, { recursive: true });
-    await fs.promises.appendFile(
-      logFile,
-      `${JSON.stringify({
-        time,
-        error: e instanceof Error ? e.message : String(e),
-      })}\n`,
-    );
-  }
-
-  return result;
-};
-
-export { executeToolCallWithLogging as executeToolCall };
 
 function parseToolArgs(rawArgs) {
   if (typeof rawArgs === "string") {
