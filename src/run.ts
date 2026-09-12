@@ -12,7 +12,7 @@ type RunType = (_args: {
   client: OpenAI;
   modelId: string;
   messages: OpenAI.ChatCompletionMessageParam[];
-  reasoningEffort: any;
+  reasoningEffort: string | null | undefined;
 }) => Promise<string | undefined>;
 
 export const run: RunType = async ({
@@ -37,6 +37,7 @@ export const run: RunType = async ({
       messages,
       stream: true,
       tools: toolsToOpenAIFormat(),
+      // @ts-expect-error setting a valid reasoning value is a responsibility of the user
       reasoning_effort: reasoningEffort,
     });
 
@@ -91,7 +92,7 @@ export const run: RunType = async ({
     for (const toolCall of toolCalls) {
       const tool_name = toolCall.function?.name ?? "";
       const args = toolCall.function?.arguments ?? "";
-      const { result } = await executeToolCall(tool_name as any, args);
+      const { result } = await executeToolCall(tool_name, args);
       const content = result.success ? result.data : `Error: ${result.error}`;
       messages.push({
         role: "tool",

@@ -42,12 +42,7 @@ export function toolsToOpenAIFormat() {
   );
 }
 
-async function executeToolCall<T extends keyof typeof ALL_TOOLS>(
-  name: T,
-  rawArgs: (typeof ALL_TOOLS)[T]["execute"] extends (_args: infer A) => any
-    ? A
-    : unknown,
-) {
+async function executeToolCall(name: string, rawArgs: unknown) {
   let args = {};
 
   try {
@@ -78,7 +73,7 @@ async function executeToolCall<T extends keyof typeof ALL_TOOLS>(
     };
   }
 
-  const result = await tool.execute(parsed.data as any);
+  const result = await tool.execute(parsed.data);
   return {
     name,
     args,

@@ -63,7 +63,7 @@ async function getSearchWebResults(page: Page, query: string) {
 
   await page.waitForFunction(
     () => {
-      const browserDocument = (globalThis as any).document;
+      const browserDocument = globalThis.document;
       const main = browserDocument?.querySelector?.("main");
       if (!main) return false;
 
@@ -83,7 +83,7 @@ async function getSearchWebResults(page: Page, query: string) {
   const results = await page.evaluate((maxResults) => {
     const cleanText = (value: string | null | undefined) =>
       (value ?? "").replace(/\s+/g, " ").trim();
-    const browserDocument = (globalThis as any).document;
+    const browserDocument = globalThis.document;
 
     const parsedResults: SearchResult[] = [];
 
@@ -133,7 +133,7 @@ async function getSearchNewsResults(page: Page, query: string) {
 
   await page.waitForFunction(
     () => {
-      const browserDocument = (globalThis as any).document;
+      const browserDocument = globalThis.document;
       const main = browserDocument?.querySelector?.("main");
       if (!main) return false;
 
@@ -153,7 +153,7 @@ async function getSearchNewsResults(page: Page, query: string) {
   const results = await page.evaluate((maxResults) => {
     const cleanText = (value: string | null | undefined) =>
       (value ?? "").replace(/\s+/g, " ").trim();
-    const browserDocument = (globalThis as any).document;
+    const browserDocument = globalThis.document;
 
     const parsedResults: SearchResult[] = [];
 
@@ -203,7 +203,7 @@ export async function getUrlContent(
 
   await page.waitForFunction(
     () => {
-      const browserDocument = (globalThis as any).document;
+      const browserDocument = globalThis.document;
       const hasContent = browserDocument?.body?.innerText.trim().length > 0;
       return hasContent;
     },

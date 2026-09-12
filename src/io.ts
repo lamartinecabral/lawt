@@ -38,7 +38,7 @@ export const finish = () => {
   rl.close();
 };
 
-process.stdin.on("keypress", (str, key) => {
+process.stdin.on("keypress", (_str, key) => {
   if (key.ctrl && key.name === "c") {
     finish();
   }
