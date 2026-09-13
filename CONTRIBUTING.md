@@ -4,8 +4,10 @@
 
 1. Clone the repository
 2. Install dependencies: `npm install`
-3. Configure an OpenAI-compatible provider
-4. Install Google Chrome if you want to work on the web-search tools
+3. Configure an OpenAI-compatible provider if you do not want to use the
+   default local Ollama endpoint
+4. Configure a web-search backend or install Google Chrome if you want to work
+   on the web-search tools
 
 The default local setup uses Ollama, so no provider configuration is needed.
 To use another OpenAI-compatible endpoint, create `~/.lawt/provider.ts`:
@@ -20,6 +22,21 @@ export default {
 The provider file must export an object with both `baseURL` and `apiKey`.
 The CLI falls back to Ollama when the file is missing or incomplete. Choose a
 model exposed by the provider with `lawt -m <model>`.
+
+Web search uses the first available backend in this order: Ollama Cloud,
+Tavily, then local Chrome. Add one of these optional entries to the same
+`~/.lawt/provider.ts` file:
+
+```ts
+webSearch: {
+  ollama: { apiKey: "your-ollama-web-api-key" },
+  // or: tavily: { apiKey: "your-tavily-api-key" },
+},
+```
+
+If no backend is available, `web_search` and `fetch_page_content` are not
+registered for the model. `CHROME_PATH` can override the local Chrome
+executable path.
 
 The CLI does not load provider configuration from environment variables or
 `.env` files. `CHROME_PATH` is still read from the environment to configure the
@@ -59,4 +76,6 @@ Chrome executable used by browser-backed tools.
 
 - Tool inputs are validated with `zod` schemas in each `*.tool.ts` file.
 - Filesystem tools must stay confined to the current workspace.
-- `web_search` and `fetch_page_content` depend on Puppeteer and a local Chrome executable.
+- `web_search` and `fetch_page_content` use the configured Ollama Cloud or
+  Tavily backend when available; otherwise they fall back to Puppeteer and a
+  local Chrome executable.

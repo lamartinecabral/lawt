@@ -9,13 +9,15 @@ Agentic workflows keep a lot more state than a simple chat prompt. Two Ollama de
 - the default context length is often too short for tool-heavy sessions
 - the default model keepalive is too short, so the model may unload between requests
 
-For `lawt`, adjust both before you rely on Ollama for longer runs.
+For `lawt`, adjust both before you rely on Ollama for longer runs. Ollama's
+current defaults are selected based on available VRAM for context length and
+five minutes for model keepalive.
 
 ## 1. Increase Ollama context length
 
 In the Ollama app, open Settings and move the context length slider to a larger value.
 
-Recommended starting point:
+Recommended starting point for agentic workflows:
 
 - use at least `64000` tokens for agentic workflows
 
@@ -41,23 +43,29 @@ OLLAMA_CONTEXT_LENGTH=64000 ollama serve
 
 Ollama unloads idle models after a short default keepalive window, which is too aggressive for `lawt`. Preload the model manually with a higher `keep_alive` value before starting the CLI.
 
-Example for a 30 minute keepalive:
+Example for a 30-minute keepalive using the CLI:
 
 ```bash
-ollama run gemma4:latest --keepalive=30m ""
+ollama run <model> --keepalive=30m ""
+```
+
+Alternatively, set the server-wide default before starting Ollama:
+
+```bash
+OLLAMA_KEEP_ALIVE=30m ollama serve
 ```
 
 After that, start `lawt` normally:
 
 ```bash
-lawt -m gemma4:latest
+lawt -m <model>
 ```
 
 Notes:
 
-- replace `gemma4:latest` with the model you actually use
+- replace `<model>` with the model you actually use
 - higher keepalive values keep RAM or VRAM reserved for longer
-- to unload the model manually later, run `ollama stop gemma4:latest`
+- to unload the model manually later, run `ollama stop <model>`
 
 ## Troubleshooting
 

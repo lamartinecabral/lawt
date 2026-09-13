@@ -16,7 +16,9 @@ At runtime it:
 ## Prerequisites
 
 - Node.js >= 24
-- Google Chrome installed for `web_search` and `fetch_page_content`
+- One of the supported web-search backends, if you want `web_search` and
+  `fetch_page_content`: Ollama Cloud, Tavily, or a locally installed Google
+  Chrome
 - An OpenAI-compatible provider endpoint
 
 The default local configuration expects Ollama's OpenAI-compatible API at `http://localhost:11434/v1`.
@@ -76,6 +78,25 @@ to Ollama at `http://localhost:11434/v1` with the API key `ollama`.
 The provider must expose the OpenAI chat completions API. Select a model from
 that provider with `-m, --model`.
 
+The same provider file can configure a web-search backend. The first available
+option is selected in this order: Ollama Cloud, Tavily, then local Chrome.
+If none is configured or available, the web-search tools are omitted.
+
+```ts
+// ~/.lawt/provider.ts
+export default {
+  baseURL: "https://api.example.com/v1",
+  apiKey: "your-api-key",
+  webSearch: {
+    ollama: { apiKey: "your-ollama-web-api-key" },
+    // or: tavily: { apiKey: "your-tavily-api-key" },
+  },
+};
+```
+
+Ollama Cloud and Tavily are used only for web search and page fetching;
+the chat provider remains configured by `baseURL` and `apiKey`.
+
 `CHROME_PATH` remains an environment variable and overrides the Chrome
 executable path used by browser-backed tools:
 
@@ -121,14 +142,12 @@ All filesystem tools are constrained to the current working directory. Paths tha
 npm test
 npm run lint
 npm run typecheck
-npm run format:check
 ```
 
 Use these when you need automatic fixes:
 
 ```bash
 npm run lint:fix
-npm run format
 ```
 
 ## Architecture
@@ -144,7 +163,9 @@ src/
     utils.ts               # tool helpers, workspace path enforcement, shell execution
     *.tool.ts              # individual tool implementations
     web-search/
-      utils.ts             # Puppeteer + extract-content integration
+      index.ts             # web-search backend selection
+      *-client.ts          # Ollama, Tavily, and local Chrome backends
+      utils.ts             # shared web-search result types
 tests/
   tools.test.ts            # node:test coverage for the tool registry
 ```
