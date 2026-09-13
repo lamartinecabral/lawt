@@ -53,6 +53,11 @@ For Ollama-specific setup guidance for longer agent sessions, see [docs/ollama.m
 - `-m, --model <model>` - model id to use for chat completions
 - `-t, --think <think>` - provider-specific reasoning effort value
 
+The selected model and reasoning effort are saved in `~/.lawt/settings.json`
+and used as defaults on future executions. Command-line options override the
+saved values. Use `--think null` to save an explicitly disabled reasoning
+effort.
+
 ## Provider configuration
 
 `lawt` uses Ollama by default. To connect to another OpenAI-compatible

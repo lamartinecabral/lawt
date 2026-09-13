@@ -6,6 +6,7 @@ import pc from "picocolors";
 import pkg from "../package.json" with { type: "json" };
 import { finish } from "./io.ts";
 import { run } from "./run.ts";
+import { loadSettings, saveSettings } from "./settings.ts";
 import { getProvider } from "./utils.ts";
 
 const program = new Command();
@@ -17,6 +18,7 @@ program
   .option("-m, --model <model>", "model id")
   .option("-t, --think <think>", "reasoning effort")
   .action(async (options) => {
+    const settings = await loadSettings();
     const client = new OpenAI(
       await loadProvider({
         baseURL: "http://localhost:11434/v1",
@@ -24,7 +26,7 @@ program
       }),
     );
 
-    const modelId = await assertModel(client, options.model);
+    const modelId = await assertModel(client, options.model ?? settings.model);
 
     const systemPrompt = await loadSystemPrompt(
       "You are an assistant with access to tools.",
@@ -34,9 +36,16 @@ program
       { role: "system", content: systemPrompt },
     ];
 
-    const reasoningEffort = parseReasoningEffort(options.think);
+    const reasoningEffort =
+      options.think === undefined
+        ? settings.reasoningEffort
+        : parseReasoningEffort(options.think);
+
+    await saveSettings({ model: modelId, reasoningEffort });
 
     console.log(pc.bgGreen(`LAWT - Local AI With Tools`));
+    console.log(pc.dim(`   model: ${modelId}`));
+    console.log(pc.dim(`thinking: ${String(reasoningEffort)}`));
 
     while (true) {
       const res = await run({
