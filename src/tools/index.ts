@@ -7,7 +7,7 @@ import { read_file } from "./read-file.tool.ts";
 import { replace_string_in_file } from "./replace-string-in-file.tool.ts";
 import { run_shell_command } from "./run-shell-command.tool.ts";
 import { fail } from "./utils.ts";
-import { isChromeAvailable } from "./web-search/utils.ts";
+import { isWebSearchAvailable } from "./web-search/index.ts";
 import { fetch_page_content, web_search } from "./web-search.tool.ts";
 
 /** @type {{name: string, description: string, schema: z.ZodObject, execute: (...a:any[])=>any}[]} */
@@ -19,20 +19,27 @@ const ALL_TOOLS = {
   file_search,
   grep_search,
   run_shell_command,
-  ...(isChromeAvailable() ? { web_search, fetch_page_content } : {}),
+  web_search,
+  fetch_page_content,
 } as const;
 
-export function toolsToOpenAIFormat() {
-  return Object.values(ALL_TOOLS).map<OpenAI.ChatCompletionFunctionTool>(
-    (tool) => ({
-      type: "function",
-      function: {
-        name: tool.name,
-        description: tool.description,
-        parameters: tool.schema.toJSONSchema(),
-      },
-    }),
-  );
+export async function toolsToOpenAIFormat() {
+  const webSearchAvailable = await isWebSearchAvailable();
+
+  const tools = Object.values(ALL_TOOLS).filter((t) => {
+    if (!webSearchAvailable)
+      return t !== web_search && t !== fetch_page_content;
+    return true;
+  });
+
+  return tools.map<OpenAI.ChatCompletionFunctionTool>((tool) => ({
+    type: "function",
+    function: {
+      name: tool.name,
+      description: tool.description,
+      parameters: tool.schema.toJSONSchema(),
+    },
+  }));
 }
 
 export async function executeToolCall(name: string, rawArgs: unknown) {

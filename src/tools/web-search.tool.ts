@@ -1,6 +1,6 @@
 import z from "zod";
 import { fail, ok, tool } from "./utils.ts";
-import { fullSearchWeb, urlContent } from "./web-search/utils.ts";
+import { getWebSearchClient } from "./web-search/index.ts";
 
 export const web_search = tool({
   name: "web_search",
@@ -16,7 +16,8 @@ export const web_search = tool({
         throw new Error("Query must be a non-empty string.");
       }
 
-      const results = await fullSearchWeb(query);
+      const client = await getWebSearchClient();
+      const results = await client.webSearch(query);
 
       const formatted = results
         .map((result) =>
@@ -51,7 +52,8 @@ export const fetch_page_content = tool({
         return fail("URL must be a non-empty string.");
       }
 
-      const { title, content } = await urlContent(url);
+      const client = await getWebSearchClient();
+      const { title, content } = await client.webFetch(url);
 
       return ok([`**TITLE**: ${title}`, `**CONTENT**:`, content].join("\n"));
     } catch (err) {

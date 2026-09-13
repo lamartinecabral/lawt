@@ -16,6 +16,14 @@ export const projectRoot = path.resolve(
 let provider: Promise<{
   baseURL?: string;
   apiKey?: string;
+  webSearch?: {
+    ollama?: {
+      apiKey?: string;
+    };
+    tavily?: {
+      apiKey?: string;
+    };
+  };
 }>;
 
 export const getProvider = async () => {

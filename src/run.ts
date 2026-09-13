@@ -36,7 +36,7 @@ export const run: RunType = async ({
       model: modelId,
       messages,
       stream: true,
-      tools: toolsToOpenAIFormat(),
+      tools: await toolsToOpenAIFormat(),
       // @ts-expect-error setting a valid reasoning value is a responsibility of the user
       reasoning_effort: reasoningEffort,
     });

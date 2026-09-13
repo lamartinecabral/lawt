@@ -3,9 +3,8 @@ import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { afterEach, beforeEach, describe, it } from "node:test";
-
 import { executeToolCall, toolsToOpenAIFormat } from "../src/tools/index.ts";
-import { isChromeAvailable } from "../src/tools/web-search/utils.ts";
+import { isChromeAvailable } from "../src/tools/web-search/local-client.ts";
 
 const originalCwd = process.cwd();
 const originalHome = process.env.HOME;
@@ -52,9 +51,10 @@ describe("tool registry", () => {
     }
   });
 
-  it("exports the active tool set", () => {
+  it("exports the active tool set", async () => {
+    const tools = await toolsToOpenAIFormat();
     assert.deepStrictEqual(
-      toolsToOpenAIFormat().map((tool) => tool.function.name),
+      tools.map((tool) => tool.function.name),
       [
         "list_directory",
         "read_file",
