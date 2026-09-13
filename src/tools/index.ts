@@ -7,6 +7,7 @@ import { read_file } from "./read-file.tool.ts";
 import { replace_string_in_file } from "./replace-string-in-file.tool.ts";
 import { run_shell_command } from "./run-shell-command.tool.ts";
 import { fail } from "./utils.ts";
+import { isChromeAvailable } from "./web-search/utils.ts";
 import { fetch_page_content, web_search } from "./web-search.tool.ts";
 
 /** @type {{name: string, description: string, schema: z.ZodObject, execute: (...a:any[])=>any}[]} */
@@ -18,8 +19,7 @@ const ALL_TOOLS = {
   file_search,
   grep_search,
   run_shell_command,
-  web_search,
-  fetch_page_content,
+  ...(isChromeAvailable() ? { web_search, fetch_page_content } : {}),
 } as const;
 
 export function toolsToOpenAIFormat() {

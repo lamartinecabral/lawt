@@ -1,14 +1,26 @@
+import fs from "node:fs";
 import { extractContent } from "@lamartinecabral/extract-content";
 import type { Page } from "puppeteer-core";
 import puppeteer from "puppeteer-core";
 
-export const chromePath: string =
+export const chromePath: string | undefined =
   process.env.CHROME_PATH ||
   {
     darwin: "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
     win32: "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
     linux: "/usr/bin/google-chrome",
   }[process.platform];
+
+export function isChromeAvailable() {
+  if (!chromePath) return false;
+
+  try {
+    fs.accessSync(chromePath, fs.constants.F_OK | fs.constants.X_OK);
+    return true;
+  } catch {
+    return false;
+  }
+}
 
 const BRAVE_SEARCH_URL = "https://search.brave.com";
 const WEB_TIMEOUT_MS = 25000;

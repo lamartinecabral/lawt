@@ -5,6 +5,7 @@ import path from "node:path";
 import { afterEach, beforeEach, describe, it } from "node:test";
 
 import { executeToolCall, toolsToOpenAIFormat } from "../src/tools/index.ts";
+import { isChromeAvailable } from "../src/tools/web-search/utils.ts";
 
 const originalCwd = process.cwd();
 const originalHome = process.env.HOME;
@@ -62,8 +63,7 @@ describe("tool registry", () => {
         "file_search",
         "grep_search",
         "run_shell_command",
-        "web_search",
-        "fetch_page_content",
+        ...(isChromeAvailable() ? ["web_search", "fetch_page_content"] : []),
       ],
     );
   });
