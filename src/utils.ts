@@ -12,3 +12,22 @@ export const projectRoot = path.resolve(
   path.dirname(fs.realpathSync(process.argv[1])),
   "..",
 );
+
+let provider: Promise<{
+  baseURL?: string;
+  apiKey?: string;
+}>;
+
+export const getProvider = async () => {
+  if (provider) return provider;
+  provider = (async () => {
+    try {
+      const obj = (await import(`${process.env.HOME}/.lawt/provider.ts`))
+        .default;
+      return obj && typeof obj === "object" ? obj : {};
+    } catch (_) {
+      return {};
+    }
+  })();
+  return provider;
+};

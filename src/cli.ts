@@ -6,6 +6,7 @@ import pc from "picocolors";
 import pkg from "../package.json" with { type: "json" };
 import { finish } from "./io.ts";
 import { run } from "./run.ts";
+import { getProvider } from "./utils.ts";
 
 const program = new Command();
 
@@ -92,14 +93,12 @@ const loadProvider = async (defaultProvider: {
   baseURL: string;
   apiKey: string;
 }): Promise<typeof defaultProvider> => {
-  try {
-    const { default: provider } = await import(
-      `${process.env.HOME}/.lawt/provider.ts`
-    );
-    if (provider.baseURL && provider.apiKey) return provider;
-  } catch (_) {
-    // ignore
-  }
+  const provider = await getProvider();
+  if (provider.baseURL && provider.apiKey)
+    return {
+      baseURL: provider.baseURL,
+      apiKey: provider.apiKey,
+    };
   return defaultProvider;
 };
 
