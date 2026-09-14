@@ -6,8 +6,8 @@
 2. Install dependencies: `npm install`
 3. Configure an OpenAI-compatible provider if you do not want to use the
    default local Ollama endpoint
-4. Configure a web-search backend or install Google Chrome if you want to work
-   on the web-search tools
+4. Configure a web-search backend, install Google Chrome, or ensure access to
+   DuckDuckGo's HTML endpoint if you want to work on the web-search tools
 
 The default local setup uses Ollama, so no provider configuration is needed.
 To use another OpenAI-compatible endpoint, create `~/.lawt/provider.ts`:
@@ -24,8 +24,8 @@ The CLI falls back to Ollama when the file is missing or incomplete. Choose a
 model exposed by the provider with `lawt -m <model>`.
 
 Web search uses the first available backend in this order: Ollama Cloud,
-Tavily, then local Chrome. Add one of these optional entries to the same
-`~/.lawt/provider.ts` file:
+Tavily, local Chrome, then DuckDuckGo's HTML endpoint. Add one of the first
+two optional entries to the same `~/.lawt/provider.ts` file:
 
 ```ts
 webSearch: {
@@ -34,9 +34,11 @@ webSearch: {
 },
 ```
 
-If no backend is available, `web_search` and `fetch_page_content` are not
-registered for the model. `CHROME_PATH` can override the local Chrome
-executable path.
+If the configured services and Chrome are unavailable, the CLI probes
+DuckDuckGo's HTML endpoint automatically. This fallback needs no API key, but
+it does require network access. If every backend is unavailable,
+`web_search` and `fetch_page_content` are not registered for the model.
+`CHROME_PATH` can override the local Chrome executable path.
 
 The CLI does not load provider configuration from environment variables or
 `.env` files. `CHROME_PATH` is still read from the environment to configure the
@@ -76,6 +78,7 @@ Chrome executable used by browser-backed tools.
 
 - Tool inputs are validated with `zod` schemas in each `*.tool.ts` file.
 - Filesystem tools must stay confined to the current workspace.
-- `web_search` and `fetch_page_content` use the configured Ollama Cloud or
-  Tavily backend when available; otherwise they fall back to Puppeteer and a
-  local Chrome executable.
+- `web_search` and `fetch_page_content` use the first available backend in the
+  order documented above. The final fallback uses `happy-dom` to parse
+  DuckDuckGo's HTML search results and fetched pages without launching a
+  browser.

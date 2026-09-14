@@ -1,4 +1,5 @@
 import { getProvider } from "../../utils.ts";
+import FetchClient, { isDuckduckgoAvailable } from "./fetch-client.ts";
 import LocalClient, { isChromeAvailable } from "./local-client.ts";
 import OllamaClient from "./ollama-client.ts";
 import TavilyClient from "./tavily-client.ts";
@@ -8,6 +9,7 @@ export const getWebSearchClient = async () => {
   if (provider.webSearch?.ollama?.apiKey) return OllamaClient;
   if (provider.webSearch?.tavily?.apiKey) return TavilyClient;
   if (isChromeAvailable()) return LocalClient;
+  if (await isDuckduckgoAvailable()) return FetchClient;
   throw new Error("Web search feature is not available");
 };
 

@@ -17,8 +17,8 @@ At runtime it:
 
 - Node.js >= 24
 - One of the supported web-search backends, if you want `web_search` and
-  `fetch_page_content`: Ollama Cloud, Tavily, or a locally installed Google
-  Chrome
+  `fetch_page_content`: Ollama Cloud, Tavily, a locally installed Google
+  Chrome, or access to DuckDuckGo's HTML endpoint
 - An OpenAI-compatible provider endpoint
 
 The default local configuration expects Ollama's OpenAI-compatible API at `http://localhost:11434/v1`.
@@ -84,8 +84,10 @@ The provider must expose the OpenAI chat completions API. Select a model from
 that provider with `-m, --model`.
 
 The same provider file can configure a web-search backend. The first available
-option is selected in this order: Ollama Cloud, Tavily, then local Chrome.
-If none is configured or available, the web-search tools are omitted.
+option is selected in this order: Ollama Cloud, Tavily, local Chrome, then
+DuckDuckGo's HTML endpoint. The DuckDuckGo backend requires no API key and is
+checked automatically when the configured or local backends are unavailable.
+If no backend is available, the web-search tools are omitted.
 
 ```ts
 // ~/.lawt/provider.ts
@@ -100,7 +102,9 @@ export default {
 ```
 
 Ollama Cloud and Tavily are used only for web search and page fetching;
-the chat provider remains configured by `baseURL` and `apiKey`.
+the chat provider remains configured by `baseURL` and `apiKey`. The Chrome and
+DuckDuckGo backends fetch search results and pages directly from the local
+runtime.
 
 `CHROME_PATH` remains an environment variable and overrides the Chrome
 executable path used by browser-backed tools:
@@ -169,7 +173,7 @@ src/
     *.tool.ts              # individual tool implementations
     web-search/
       index.ts             # web-search backend selection
-      *-client.ts          # Ollama, Tavily, and local Chrome backends
+      *-client.ts          # Ollama, Tavily, Chrome, and DuckDuckGo backends
       utils.ts             # shared web-search result types
 tests/
   tools.test.ts            # node:test coverage for the tool registry
