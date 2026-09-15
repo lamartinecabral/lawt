@@ -1,6 +1,15 @@
+import { getWebSearchClient } from "@lamartinecabral/web-search";
 import z from "zod";
+import { getProvider } from "../utils.ts";
 import { fail, ok, tool } from "./utils.ts";
-import { getWebSearchClient } from "./web-search/index.ts";
+
+export const getClient = async () => {
+  const provider = await getProvider();
+  return await getWebSearchClient({
+    ollama: { apiKey: provider.webSearch?.ollama?.apiKey },
+    tavily: { apiKey: provider.webSearch?.tavily?.apiKey },
+  });
+};
 
 export const web_search = tool({
   name: "web_search",
@@ -16,7 +25,7 @@ export const web_search = tool({
         throw new Error("Query must be a non-empty string.");
       }
 
-      const client = await getWebSearchClient();
+      const client = await getClient();
       const results = await client.webSearch(query);
 
       const formatted = results
@@ -52,7 +61,7 @@ export const fetch_page_content = tool({
         return fail("URL must be a non-empty string.");
       }
 
-      const client = await getWebSearchClient();
+      const client = await getClient();
       const { title, content } = await client.webFetch(url);
 
       return ok([`**TITLE**: ${title}`, `**CONTENT**:`, content].join("\n"));
