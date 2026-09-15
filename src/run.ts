@@ -49,6 +49,7 @@ export const run: RunType = async ({
 
     let mode = "";
     for await (const chunk of response) {
+      if (!chunk.choices.length) continue;
       const { delta: message, finish_reason } = chunk.choices[0];
       if (spinner.isSpinning) spinner.stop();
       if (message?.content) content += message.content;
