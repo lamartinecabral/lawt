@@ -54,7 +54,11 @@ export const run: RunType = async ({
       if (spinner.isSpinning) spinner.stop();
       if (message?.content) content += message.content;
       const reasoning: string | undefined =
-        "reasoning" in message ? String(message.reasoning) : undefined;
+        "reasoning" in message
+          ? String(message.reasoning)
+          : "reasoning_content" in message
+            ? String(message.reasoning_content)
+            : undefined;
       if (reasoning) thinking += reasoning;
       if (message?.tool_calls?.length)
         appendToolCalls(toolCalls, message.tool_calls);
