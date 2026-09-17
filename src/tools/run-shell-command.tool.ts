@@ -17,8 +17,8 @@ export const run_shell_command = tool({
       const result = await runCommand(command);
       return ok(
         JSON.stringify({
-          stdout: result.stdout,
-          stderr: result.stderr,
+          ...(result.stdout ? { stdout: result.stdout } : {}),
+          ...(result.stderr ? { stderr: result.stderr } : {}),
         }),
       );
     } catch (err) {
