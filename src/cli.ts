@@ -121,9 +121,13 @@ const assertModel = async (client: OpenAI, modelId: string | undefined) => {
 
   if (modelId && models.data.find((m) => m.id === modelId)) return modelId;
 
+  const modelIds = models.data
+    .map((m) => m.id)
+    .sort((a, b) => a.localeCompare(b));
+
   console.log(pc.green("\nAvailable Models:\n"));
-  for (const model of models.data) {
-    console.log(`- ${pc.cyan(model.id)}`);
+  for (const id of modelIds) {
+    console.log(`- ${pc.cyan(id)}`);
   }
   console.log();
 
