@@ -78,7 +78,10 @@ export const run: RunType = async ({
           process.stdout.write(message.content);
         }
       } else {
-        if (mode) console.log("");
+        if (mode) {
+          mode = "";
+          console.log("");
+        }
       }
     }
 
