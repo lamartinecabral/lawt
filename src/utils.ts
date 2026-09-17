@@ -8,6 +8,18 @@ export const ellipsis = (str = "", len = 50) => {
   return str;
 };
 
+export const stringify = (value: unknown): string => {
+  if (typeof value === "string") return value;
+  if (typeof value === "object") {
+    try {
+      return JSON.stringify(value);
+    } catch (_) {
+      // ignore
+    }
+  }
+  return String(value);
+};
+
 export const projectRoot = path.resolve(
   path.dirname(fs.realpathSync(process.argv[1])),
   "..",

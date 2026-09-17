@@ -1,5 +1,8 @@
 import readline from "node:readline";
-import { abortables } from "./utils.ts";
+import type OpenAI from "openai";
+import pc from "picocolors";
+import { getThinking } from "./thinking.ts";
+import { abortables, ellipsis, stringify } from "./utils.ts";
 
 const rl = readline.createInterface({
   input: process.stdin,
@@ -46,3 +49,67 @@ process.stdin.on("keypress", (_str, key) => {
     abort();
   }
 });
+
+export const printMessage = (
+  label: "user" | "bot" | "thinking" | "tool",
+  content?: string,
+) => {
+  const color = (() => {
+    switch (label) {
+      case "user":
+        return pc.green;
+      case "bot":
+        return pc.blue;
+      case "thinking":
+        return pc.magenta;
+      case "tool":
+        return pc.yellow;
+    }
+  })();
+  console.log(color(`\n--- ${label} ---`));
+  if (content === undefined) return;
+  console.log(["thinking", "tool"].includes(label) ? pc.dim(content) : content);
+};
+
+export const printMessages = (
+  messages: OpenAI.ChatCompletionMessageParam[],
+) => {
+  const toolCalls: OpenAI.Chat.Completions.ChatCompletionMessageFunctionToolCall[] =
+    [];
+  for (const message of messages) {
+    if (message.role === "user") {
+      printMessage("user", String(message.content));
+      continue;
+    }
+
+    if (message.role === "assistant") {
+      const reasoning = getThinking(message);
+
+      if (reasoning) printMessage("thinking", reasoning);
+
+      if (message.content) printMessage("bot", String(message.content));
+
+      if (message.tool_calls)
+        toolCalls.push(...message.tool_calls.filter(isFunctionCall));
+      continue;
+    }
+
+    if (message.role === "tool") {
+      const toolCall = toolCalls.find(({ id }) => id === message.tool_call_id);
+      if (!toolCall) continue;
+      const { name, arguments: args } = toolCall.function ?? {};
+      const content = message.content;
+      const text = [
+        ellipsis(`> ${name}(${stringify(args)})`, 300),
+        ellipsis(`= ${stringify(content)}`, 300),
+      ].join("\n");
+      printMessage("tool", text);
+    }
+  }
+};
+
+const isFunctionCall = (
+  toolCall: OpenAI.Chat.Completions.ChatCompletionMessageToolCall,
+): toolCall is OpenAI.Chat.Completions.ChatCompletionMessageFunctionToolCall => {
+  return toolCall.type === "function";
+};

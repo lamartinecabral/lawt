@@ -1,9 +1,11 @@
 import type OpenAI from "openai";
 import ora from "ora";
 import pc from "picocolors";
-import { question } from "./io.ts";
+import { printMessage, question } from "./io.ts";
+import type { Thinking } from "./thinking.ts";
+import { appendThinking, getThinking } from "./thinking.ts";
 import { executeToolCall, toolsToOpenAIFormat } from "./tools/index.ts";
-import { abortables, ellipsis } from "./utils.ts";
+import { abortables, ellipsis, stringify } from "./utils.ts";
 
 type ToolCall = OpenAI.Chat.Completions.ChatCompletionMessageFunctionToolCall;
 type DeltaToolCall = OpenAI.ChatCompletionChunk.Choice.Delta.ToolCall;
@@ -21,7 +23,7 @@ export const run: RunType = async ({
   messages,
   reasoningEffort,
 }) => {
-  console.log(pc.green("\n--- user ---"));
+  printMessage("user");
 
   const prompt = (await question()).trim();
 
@@ -44,7 +46,7 @@ export const run: RunType = async ({
     abortables.add(response.controller);
 
     let content = "";
-    let thinking = "";
+    const thinking: Thinking = {};
     const toolCalls: ToolCall[] = [];
 
     let mode = "";
@@ -53,20 +55,15 @@ export const run: RunType = async ({
       const { delta: message, finish_reason } = chunk.choices[0];
       if (spinner.isSpinning) spinner.stop();
       if (message?.content) content += message.content;
-      const reasoning: string | undefined =
-        "reasoning" in message
-          ? String(message.reasoning)
-          : "reasoning_content" in message
-            ? String(message.reasoning_content)
-            : undefined;
-      if (reasoning) thinking += reasoning;
+      const reasoning = getThinking(message);
+      appendThinking(thinking, message);
       if (message?.tool_calls?.length)
         appendToolCalls(toolCalls, message.tool_calls);
       if (!finish_reason) {
         if (reasoning) {
           if (mode !== "thinking") {
             if (mode) console.log("");
-            console.log(pc.magenta("\n--- thinking ---"));
+            printMessage("thinking");
             mode = "thinking";
           }
           process.stdout.write(pc.dim(reasoning));
@@ -74,7 +71,7 @@ export const run: RunType = async ({
         if (message.content) {
           if (mode !== "content") {
             if (mode) console.log("");
-            console.log(pc.blue("\n--- bot ---"));
+            printMessage("bot");
             mode = "content";
           }
           process.stdout.write(message.content);
@@ -88,7 +85,7 @@ export const run: RunType = async ({
 
     messages.push({
       role: "assistant",
-      ...(thinking ? { reasoning_content: thinking } : {}),
+      ...thinking,
       content,
       tool_calls: toolCalls.length ? toolCalls : undefined,
     });
@@ -106,11 +103,13 @@ export const run: RunType = async ({
         content,
       });
 
-      console.log(pc.yellow("\n--- tool ---"));
-      console.log(
-        pc.dim(ellipsis(`> ${tool_name}(${JSON.stringify(args)})`, 300)),
+      printMessage(
+        "tool",
+        [
+          ellipsis(`> ${tool_name}(${stringify(args)})`, 300),
+          ellipsis(`= ${stringify(content)}`, 300),
+        ].join("\n"),
       );
-      console.log(pc.dim(ellipsis(`= ${JSON.stringify(content)}`, 300)));
     }
   }
 };
