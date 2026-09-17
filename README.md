@@ -52,6 +52,7 @@ For Ollama-specific setup guidance for longer agent sessions, see [docs/ollama.m
 - `-v, --version` - print the CLI version
 - `-m, --model <model>` - model id to use for chat completions
 - `-t, --think <think>` - provider-specific reasoning effort value
+- `-r, --resume` - resume and display the last session for the current directory
 
 The selected model and reasoning effort are saved in `~/.lawt/settings.json`
 and used as defaults on future executions. Command-line options override the

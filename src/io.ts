@@ -71,11 +71,13 @@ export const printMessage = (
   console.log(["thinking", "tool"].includes(label) ? pc.dim(content) : content);
 };
 
+type ToolCall = OpenAI.ChatCompletionMessageToolCall;
+type FunctionToolCall = OpenAI.ChatCompletionMessageFunctionToolCall;
+
 export const printMessages = (
   messages: OpenAI.ChatCompletionMessageParam[],
 ) => {
-  const toolCalls: OpenAI.Chat.Completions.ChatCompletionMessageFunctionToolCall[] =
-    [];
+  const toolCalls: FunctionToolCall[] = [];
   for (const message of messages) {
     if (message.role === "user") {
       printMessage("user", String(message.content));
@@ -90,7 +92,11 @@ export const printMessages = (
       if (message.content) printMessage("bot", String(message.content));
 
       if (message.tool_calls)
-        toolCalls.push(...message.tool_calls.filter(isFunctionCall));
+        toolCalls.push(
+          ...message.tool_calls.filter(
+            (t: ToolCall): t is FunctionToolCall => t.type === "function",
+          ),
+        );
       continue;
     }
 
@@ -106,10 +112,4 @@ export const printMessages = (
       printMessage("tool", text);
     }
   }
-};
-
-const isFunctionCall = (
-  toolCall: OpenAI.Chat.Completions.ChatCompletionMessageToolCall,
-): toolCall is OpenAI.Chat.Completions.ChatCompletionMessageFunctionToolCall => {
-  return toolCall.type === "function";
 };

@@ -4,8 +4,9 @@ import { Command } from "commander";
 import OpenAI from "openai";
 import pc from "picocolors";
 import pkg from "../package.json" with { type: "json" };
-import { finish } from "./io.ts";
+import { finish, printMessages } from "./io.ts";
 import { run } from "./run.ts";
+import { Session } from "./session.ts";
 import { loadSettings, saveSettings } from "./settings.ts";
 import { getProvider } from "./utils.ts";
 
@@ -17,6 +18,7 @@ program
   .version(pkg.version, "-v, --version")
   .option("-m, --model <model>", "model id")
   .option("-t, --think <think>", "reasoning effort")
+  .option("-r, --resume", "resume session")
   .action(async (options) => {
     const settings = await loadSettings();
     const client = new OpenAI(
@@ -32,9 +34,10 @@ program
       "You are an assistant with access to tools.",
     );
 
-    const messages: OpenAI.ChatCompletionMessageParam[] = [
-      { role: "system", content: systemPrompt },
-    ];
+    const session = new Session(
+      [{ role: "system", content: systemPrompt }],
+      options.resume,
+    );
 
     const reasoningEffort =
       options.think === undefined
@@ -47,11 +50,13 @@ program
     console.log(pc.dim(`   model: ${modelId}`));
     console.log(pc.dim(`thinking: ${String(reasoningEffort)}`));
 
+    if (session.resumed) printMessages(session.messages);
+
     while (true) {
       const res = await run({
         client,
         modelId,
-        messages,
+        session,
         reasoningEffort,
       });
 
@@ -61,7 +66,7 @@ program
         const filename = `messages-${Date.now()}.json`;
         await fs.promises.writeFile(
           filename,
-          JSON.stringify(messages, null, 2),
+          JSON.stringify(session.messages, null, 2),
           "utf-8",
         );
         console.log(pc.green(`Messages exported to ${filename}`));

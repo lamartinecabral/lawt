@@ -2,6 +2,7 @@ import type OpenAI from "openai";
 import ora from "ora";
 import pc from "picocolors";
 import { printMessage, question } from "./io.ts";
+import type { Session } from "./session.ts";
 import type { Thinking } from "./thinking.ts";
 import { appendThinking, getThinking } from "./thinking.ts";
 import { executeToolCall, toolsToOpenAIFormat } from "./tools/index.ts";
@@ -13,14 +14,14 @@ type DeltaToolCall = OpenAI.ChatCompletionChunk.Choice.Delta.ToolCall;
 type RunType = (_args: {
   client: OpenAI;
   modelId: string;
-  messages: OpenAI.ChatCompletionMessageParam[];
+  session: Session;
   reasoningEffort: string | null | undefined;
 }) => Promise<string | undefined>;
 
 export const run: RunType = async ({
   client,
   modelId,
-  messages,
+  session,
   reasoningEffort,
 }) => {
   printMessage("user");
@@ -29,14 +30,14 @@ export const run: RunType = async ({
 
   if (["/exit", "/quit", "/export"].includes(prompt)) return prompt;
 
-  messages.push({ role: "user", content: prompt });
+  session.push({ role: "user", content: prompt });
 
   while (true) {
     const spinner = ora().start();
 
     const response = await client.chat.completions.create({
       model: modelId,
-      messages,
+      messages: session.messages,
       stream: true,
       tools: await toolsToOpenAIFormat(),
       // @ts-expect-error setting a valid reasoning value is a responsibility of the user
@@ -83,7 +84,7 @@ export const run: RunType = async ({
 
     abortables.delete(response.controller);
 
-    messages.push({
+    session.push({
       role: "assistant",
       ...thinking,
       content,
@@ -97,7 +98,7 @@ export const run: RunType = async ({
       const args = toolCall.function?.arguments ?? "";
       const { result } = await executeToolCall(tool_name, args);
       const content = result.success ? result.data : `Error: ${result.error}`;
-      messages.push({
+      session.push({
         role: "tool",
         tool_call_id: toolCall.id ?? "",
         content,
