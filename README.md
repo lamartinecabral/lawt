@@ -1,6 +1,6 @@
 # lawt
 
-Local AI With Tools. A lightweight CLI agent that talks to any OpenAI-compatible chat endpoint and gives the model a small, workspace-scoped tool registry.
+**Local AI With Tools**. A lightweight CLI agent that talks to any OpenAI-compatible chat endpoint and gives the model a small, workspace-scoped tool registry.
 
 ## Overview
 
@@ -16,9 +16,6 @@ At runtime it:
 ## Prerequisites
 
 - Node.js >= 24
-- One of the supported web-search backends, if you want `web_search` and
-  `fetch_page_content`: Ollama Cloud, Tavily, a locally installed Google
-  Chrome, or access to DuckDuckGo's HTML endpoint
 - An OpenAI-compatible provider endpoint
 
 The default local configuration expects Ollama's OpenAI-compatible API at `http://localhost:11434/v1`.
@@ -27,20 +24,13 @@ The default local configuration expects Ollama's OpenAI-compatible API at `http:
 
 ```bash
 npm install
-chmod +x src/cli.ts
-npm link
+npm run install:global
 ```
 
 ## Running
 
 ```bash
 lawt [options]
-```
-
-Or directly from the repository:
-
-```bash
-npm start
 ```
 
 If no model is configured, `lawt` lists the available models exposed by the provider and exits.
@@ -54,20 +44,11 @@ For Ollama-specific setup guidance for longer agent sessions, see [docs/ollama.m
 - `-t, --think <think>` - provider-specific reasoning effort value
 - `-r, --resume` - resume and display the last session for the current directory
 
-The selected model and reasoning effort are saved in `~/.lawt/settings.json`
-and used as defaults on future executions. Command-line options override the
-saved values. Use `--think null` to save an explicitly disabled reasoning
-effort.
+The selected model and reasoning effort are saved in `~/.lawt/settings.json` and used as defaults on future executions. Command-line options override the saved values. Use `--think null` to save an explicitly disabled reasoning effort. Sessions are stored per working directory under `~/.lawt/sessions/` and can be restored with `--resume`.
 
 ## Provider configuration
 
-`lawt` uses Ollama by default. To connect to another OpenAI-compatible
-provider, create `~/.lawt/provider.ts` with a default export containing its
-base URL and API key:
-
-```bash
-mkdir -p ~/.lawt
-```
+`lawt` uses Ollama by default. To connect to another OpenAI-compatible provider, create `~/.lawt/provider.ts` with a default export containing its base URL and API key:
 
 ```ts
 // ~/.lawt/provider.ts
@@ -77,18 +58,11 @@ export default {
 };
 ```
 
-The file is loaded when `lawt` starts. Both `baseURL` and `apiKey` are
-required; if the file is missing or either value is not set, `lawt` falls back
-to Ollama at `http://localhost:11434/v1` with the API key `ollama`.
+The file is loaded when `lawt` starts. Both `baseURL` and `apiKey` are required; if the file is missing or either value is not set, `lawt` falls back to Ollama at `http://localhost:11434/v1` with the dummy API key.
 
-The provider must expose the OpenAI chat completions API. Select a model from
-that provider with `-m, --model`.
+The provider must expose the OpenAI chat completions API. Select a model from that provider with `-m, --model`.
 
-The same provider file can configure a web-search backend. The first available
-option is selected in this order: Ollama Cloud, Tavily, local Chrome, then
-DuckDuckGo's HTML endpoint. The DuckDuckGo backend requires no API key and is
-checked automatically when the configured or local backends are unavailable.
-If no backend is available, the web-search tools are omitted.
+The same provider file can configure a web-search backend. The first available option is selected in this order: Ollama Cloud, Tavily, local Chrome, then DuckDuckGo's HTML endpoint. The DuckDuckGo backend requires no API key and is checked automatically when the configured or local backends are unavailable. If no backend is available, calls to the web-search tools return an error.
 
 ```ts
 // ~/.lawt/provider.ts
@@ -102,13 +76,9 @@ export default {
 };
 ```
 
-Ollama Cloud and Tavily are used only for web search and page fetching;
-the chat provider remains configured by `baseURL` and `apiKey`. The Chrome and
-DuckDuckGo backends fetch search results and pages directly from the local
-runtime.
+Ollama Cloud and Tavily are used only for web search and page fetching; the chat provider remains configured by `baseURL` and `apiKey`. The Chrome and DuckDuckGo backends fetch search results and pages directly from the local runtime.
 
-`CHROME_PATH` remains an environment variable and overrides the Chrome
-executable path used by browser-backed tools:
+`CHROME_PATH` remains an environment variable and overrides the Chrome executable path used by browser-backed tools:
 
 ```bash
 CHROME_PATH=/Applications/Google Chrome.app/Contents/MacOS/Google Chrome lawt
@@ -127,6 +97,8 @@ CHROME_PATH=/Applications/Google Chrome.app/Contents/MacOS/Google Chrome lawt
 - Type normally for single-line prompts.
 - Enter `"""` on its own line to start a multi-line prompt, then `"""` again to submit it.
 - Use `/exit` or `/quit` to end the session.
+- Use `/model` to list the models available from the provider.
+- Use `/export` to export the current messages to a timestamped JSON file.
 - Press `Esc` to abort an in-flight request.
 - Press `Ctrl+C` to exit cleanly.
 
@@ -171,12 +143,9 @@ src/
   tools/
     index.ts               # tool registry, OpenAI schema conversion
     utils.ts               # tool helpers, workspace path enforcement, shell execution
-    *.tool.ts              # individual tool implementations
-    web-search/
-      index.ts             # web-search backend selection
-      *-client.ts          # Ollama, Tavily, Chrome, and DuckDuckGo backends
-      utils.ts             # shared web-search result types
+    *.tool.ts              # individual tool implementations, including web search
 tests/
+  settings.test.ts         # settings persistence tests
   tools.test.ts            # node:test coverage for the tool registry
 ```
 
