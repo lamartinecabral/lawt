@@ -28,7 +28,7 @@ export const run: RunType = async ({
 
   const prompt = (await question()).trim();
 
-  if (["/exit", "/quit", "/export"].includes(prompt)) return prompt;
+  if (["/exit", "/quit", "/export", "/model"].includes(prompt)) return prompt;
 
   session.push({ role: "user", content: prompt });
 

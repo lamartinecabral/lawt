@@ -71,6 +71,9 @@ program
         );
         console.log(pc.green(`Messages exported to ${filename}`));
       }
+      if (res?.trim() === "/model") {
+        await assertModel(client, "");
+      }
     }
 
     console.log(pc.dim("\nGoodbye!"));
