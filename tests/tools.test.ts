@@ -138,7 +138,6 @@ describe("tool registry", () => {
       expectSuccess(result),
       JSON.stringify({
         stdout: "hello from shell",
-        stderr: "",
       }),
     );
   });

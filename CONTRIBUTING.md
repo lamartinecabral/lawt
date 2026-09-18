@@ -50,19 +50,22 @@ The CLI does not load provider configuration from environment variables or `.env
 
 ## Project Structure
 
-| Path                    | Purpose                                           |
-| ----------------------- | ------------------------------------------------- |
-| `src/cli.ts`            | CLI entry point and provider configuration        |
-| `src/run.ts`            | Streaming chat loop and tool orchestration        |
-| `src/io.ts`             | Terminal input handling and request aborts        |
-| `src/tools/`            | Workspace and web tool implementations            |
-| `src/tools/web-search/` | Browser-backed search and page extraction helpers |
-| `tests/`                | `node:test` coverage for the tool registry        |
-| `biome.json`            | Biome formatter and linter configuration          |
-| `package.json`          | Scripts, runtime metadata, and dependencies       |
+| Path              | Purpose                                           |
+| ----------------- | ------------------------------------------------- |
+| `src/cli.ts`      | CLI entry point and provider configuration        |
+| `src/run.ts`      | Streaming chat loop and tool orchestration        |
+| `src/io.ts`       | Terminal input handling and request aborts        |
+| `src/session.ts`  | Session persistence and resume support            |
+| `src/settings.ts` | Persistent model and reasoning settings           |
+| `src/thinking.ts` | Reasoning output handling                         |
+| `src/utils.ts`    | Shared helpers and provider configuration loading |
+| `src/tools/`      | Workspace and web tool implementations            |
+| `tests/`          | `node:test` coverage for settings and tools       |
+| `biome.json`      | Biome formatter and linter configuration          |
+| `package.json`    | Scripts, runtime metadata, and dependencies       |
 
 ## Notes for Tool Changes
 
 - Tool inputs are validated with `zod` schemas in each `*.tool.ts` file.
 - Filesystem tools must stay confined to the current workspace.
-- `web_search` and `fetch_page_content` use the first available backend in the order documented above. The final fallback uses `happy-dom` to parse DuckDuckGo's HTML search results and fetched pages without launching a browser.
+- `web_search` and `fetch_page_content` are always registered and use the first available backend in the order documented above. If no backend is available, they return an error. The final fallback uses `happy-dom` to parse DuckDuckGo's HTML search results and fetched pages without launching a browser.
