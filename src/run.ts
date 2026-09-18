@@ -8,7 +8,7 @@ import { appendThinking, getThinking } from "./thinking.ts";
 import { executeToolCall, toolsToOpenAIFormat } from "./tools/index.ts";
 import { abortables, ellipsis, stringify } from "./utils.ts";
 
-type ToolCall = OpenAI.Chat.Completions.ChatCompletionMessageFunctionToolCall;
+type ToolCall = OpenAI.ChatCompletionMessageFunctionToolCall;
 type DeltaToolCall = OpenAI.ChatCompletionChunk.Choice.Delta.ToolCall;
 
 type RunType = (_args: {
@@ -35,31 +35,34 @@ export const run: RunType = async ({
   while (true) {
     const spinner = ora().start();
 
-    const response = await client.chat.completions.create({
+    const stream = await client.chat.completions.create({
       model: modelId,
       messages: session.messages,
       stream: true,
       tools: await toolsToOpenAIFormat(),
       // @ts-expect-error setting a valid reasoning value is a responsibility of the user
       reasoning_effort: reasoningEffort,
+      stream_options: {
+        include_usage: true,
+      },
     });
 
-    abortables.add(response.controller);
+    abortables.add(stream.controller);
 
     let content = "";
     const thinking: Thinking = {};
     const toolCalls: ToolCall[] = [];
 
     let mode = "";
-    for await (const chunk of response) {
+    for await (const chunk of stream) {
       if (!chunk.choices.length) continue;
-      const { delta: message, finish_reason } = chunk.choices[0];
+      const { delta, finish_reason } = chunk.choices[0];
       if (spinner.isSpinning) spinner.stop();
-      if (message?.content) content += message.content;
-      const reasoning = getThinking(message);
-      appendThinking(thinking, message);
-      if (message?.tool_calls?.length)
-        appendToolCalls(toolCalls, message.tool_calls);
+      if (delta?.content) content += delta.content;
+      const reasoning = getThinking(delta);
+      appendThinking(thinking, delta);
+      if (delta?.tool_calls?.length)
+        appendToolCalls(toolCalls, delta.tool_calls);
       if (!finish_reason) {
         if (reasoning) {
           if (mode !== "thinking") {
@@ -69,13 +72,13 @@ export const run: RunType = async ({
           }
           process.stdout.write(pc.dim(reasoning));
         }
-        if (message.content) {
+        if (delta.content) {
           if (mode !== "content") {
             if (mode) console.log("");
             printMessage("bot");
             mode = "content";
           }
-          process.stdout.write(message.content);
+          process.stdout.write(delta.content);
         }
       } else {
         if (mode) {
@@ -85,7 +88,7 @@ export const run: RunType = async ({
       }
     }
 
-    abortables.delete(response.controller);
+    abortables.delete(stream.controller);
 
     session.push({
       role: "assistant",

@@ -8,6 +8,9 @@ export const ellipsis = (str = "", len = 50) => {
   return str;
 };
 
+export const isRecord = (value: unknown): value is Record<string, unknown> =>
+  !!value && typeof value === "object" && !Array.isArray(value);
+
 export const stringify = (value: unknown): string => {
   if (typeof value === "string") return value;
   if (typeof value === "object") {

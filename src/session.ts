@@ -2,6 +2,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import type OpenAI from "openai";
+import { isRecord } from "./utils.ts";
 
 type Message = OpenAI.ChatCompletionMessageParam;
 
@@ -63,9 +64,6 @@ const saveSession = (messages: Message[]) => {
 const saveMessage = (message: Message) => {
   fs.appendFileSync(sessionPath(), `${JSON.stringify(message)}\n`, "utf8");
 };
-
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  !!value && typeof value === "object" && !Array.isArray(value);
 
 const isMessage = (value: unknown): value is Message =>
   isRecord(value) &&
