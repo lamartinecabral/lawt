@@ -139,12 +139,17 @@ src/
   cli.ts                   # CLI setup, provider configuration, system prompt loading
   io.ts                    # readline loop, multiline input, abort handling
   run.ts                   # chat loop, streaming output, tool execution
+  session.ts               # session persistence and resume handling
+  settings.ts              # model and reasoning-effort settings persistence
+  thinking.ts              # reasoning content helpers
   utils.ts                 # shared helpers and project root detection
   tools/
     index.ts               # tool registry, OpenAI schema conversion
     utils.ts               # tool helpers, workspace path enforcement, shell execution
     *.tool.ts              # individual tool implementations, including web search
 tests/
+  helpers.test.ts          # reasoning and utility helper tests
+  session.test.ts          # session persistence and resume tests
   settings.test.ts         # settings persistence tests
   tools.test.ts            # node:test coverage for the tool registry
 ```
