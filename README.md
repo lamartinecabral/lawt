@@ -1,122 +1,78 @@
 # lawt
 
-**Local AI With Tools**. A lightweight CLI agent that talks to any OpenAI-compatible chat endpoint and gives the model a small, workspace-scoped tool registry.
+**Local AI With Tools** is a terminal agent for OpenAI-compatible chat endpoints. It can inspect and modify the current workspace, run shell commands, and optionally search the web.
 
-## Overview
+## Requirements
 
-`lawt` runs a terminal chat loop backed by the OpenAI Node SDK. By default it targets a local Ollama-compatible endpoint, but it can be pointed at any provider that implements the OpenAI chat completions API.
+- Node.js 24 or newer
+- An OpenAI-compatible provider
 
-At runtime it:
+The default provider is Ollama at `http://localhost:11434/v1`.
 
-- loads a system prompt from `./AGENTS.md` or `~/.lawt/AGENTS.md` when present
-- prompts for user input in the terminal
-- streams assistant output and reasoning
-- executes tool calls against the current workspace
-
-## Prerequisites
-
-- Node.js >= 24
-- An OpenAI-compatible provider endpoint
-
-The default local configuration expects Ollama's OpenAI-compatible API at `http://localhost:11434/v1`.
-
-## Installation
+## Install
 
 ```bash
 npm install
 npm run install:lawt
 ```
 
-## Running
+Start a chat with:
 
 ```bash
-lawt [options]
+lawt -m <model>
 ```
 
-If no model is configured, `lawt` lists the available models exposed by the provider and exits.
+If no model is configured, `lawt` lists the models available from the provider. See [docs/ollama.md](docs/ollama.md) for Ollama settings recommended for longer sessions.
 
-For Ollama-specific setup guidance for longer agent sessions, see [docs/ollama.md](docs/ollama.md).
+## Configuration
 
-## CLI options
-
-- `-v, --version` - print the CLI version
-- `-m, --model <model>` - model id to use for chat completions
-- `-t, --think <think>` - provider-specific reasoning effort value
-- `-r, --resume` - resume and display the last session for the current directory
-
-The selected model and reasoning effort are saved in `~/.lawt/settings.json` and used as defaults on future executions. Command-line options override the saved values. Use `--think null` to save an explicitly disabled reasoning effort. Sessions are stored per working directory under `~/.lawt/sessions/` and can be restored with `--resume`.
-
-## Provider configuration
-
-`lawt` uses Ollama by default. To connect to another OpenAI-compatible provider, create `~/.lawt/provider.ts` with a default export containing its base URL and API key:
+To use another OpenAI-compatible provider, create `~/.lawt/provider.ts`:
 
 ```ts
-// ~/.lawt/provider.ts
 export default {
   baseURL: "https://api.example.com/v1",
   apiKey: "your-api-key",
 };
 ```
 
-The file is loaded when `lawt` starts. Both `baseURL` and `apiKey` are required; if the file is missing or either value is not set, `lawt` falls back to Ollama at `http://localhost:11434/v1` with the dummy API key.
-
-The provider must expose the OpenAI chat completions API. Select a model from that provider with `-m, --model`.
-
-The same provider file can configure a web-search backend. The first available option is selected in this order: Ollama Cloud, Tavily, local Chrome, then DuckDuckGo's HTML endpoint. The DuckDuckGo backend requires no API key and is checked automatically when the configured or local backends are unavailable. If no backend is available, calls to the web-search tools return an error.
+The same file can configure an optional web-search provider:
 
 ```ts
-// ~/.lawt/provider.ts
 export default {
   baseURL: "https://api.example.com/v1",
   apiKey: "your-api-key",
   webSearch: {
-    ollama: { apiKey: "your-ollama-web-api-key" },
-    // or: tavily: { apiKey: "your-tavily-api-key" },
+    tavily: { apiKey: "your-tavily-api-key" },
   },
 };
 ```
 
-Ollama Cloud and Tavily are used only for web search and page fetching; the chat provider remains configured by `baseURL` and `apiKey`. The Chrome and DuckDuckGo backends fetch search results and pages directly from the local runtime.
+The chat provider must implement the OpenAI chat completions API. If the provider file is missing or incomplete, `lawt` falls back to Ollama. `CHROME_PATH` can be used to select the Chrome executable for browser-backed web tools.
 
-`CHROME_PATH` remains an environment variable and overrides the Chrome executable path used by browser-backed tools:
+## Options and commands
 
-```bash
-CHROME_PATH=/Applications/Google Chrome.app/Contents/MacOS/Google Chrome lawt
+```text
+-m, --model <model>   Model to use
+-t, --think <value>   Reasoning effort
+-r, --resume          Resume the current directory's last session
+-v, --version         Print the version
 ```
 
-## System prompt loading
+Inside a session:
 
-`lawt` uses this precedence for the system prompt:
+- `/model` lists available models
+- `/export` saves the conversation as JSON
+- `/exit` or `/quit` ends the session
+- Enter `"""` on its own line to start or finish a multiline prompt
+- Press `Esc` to cancel a request or `Ctrl+C` to exit
 
-1. `./AGENTS.md`
-2. `~/.lawt/AGENTS.md`
-3. the built-in default: `You are an assistant with access to tools.`
+Model and reasoning settings are saved in `~/.lawt/settings.json`; sessions are stored in `~/.lawt/sessions/`.
 
-## Interactive usage
-
-- Type normally for single-line prompts.
-- Enter `"""` on its own line to start a multi-line prompt, then `"""` again to submit it.
-- Use `/exit` or `/quit` to end the session.
-- Use `/model` to list the models available from the provider.
-- Use `/export` to export the current messages to a timestamped JSON file.
-- Press `Esc` to abort an in-flight request.
-- Press `Ctrl+C` to exit cleanly.
+Optional instructions are loaded from `./AGENTS.md`, then `~/.lawt/AGENTS.md`.
 
 ## Tools
 
-The current tool registry exposes these functions to the model:
-
-- `list_directory`
-- `read_file`
-- `create_file`
-- `replace_string_in_file`
-- `file_search`
-- `grep_search`
-- `run_shell_command`
-- `web_search`
-- `fetch_page_content`
-
-All filesystem tools are constrained to the current working directory. Paths that resolve outside the workspace are rejected.
+The agent can list, read, search, create, and edit workspace files; run shell commands; and search or fetch web pages. Filesystem tools are restricted to the current working directory.
 
 ## Development
 
@@ -126,33 +82,7 @@ npm run lint
 npm run typecheck
 ```
 
-Use these when you need automatic fixes:
-
-```bash
-npm run lint:fix
-```
-
-## Architecture
-
-```text
-src/
-  cli.ts                   # CLI setup, provider configuration, system prompt loading
-  io.ts                    # readline loop, multiline input, abort handling
-  run.ts                   # chat loop, streaming output, tool execution
-  session.ts               # session persistence and resume handling
-  settings.ts              # model and reasoning-effort settings persistence
-  thinking.ts              # reasoning content helpers
-  utils.ts                 # shared helpers and project root detection
-  tools/
-    index.ts               # tool registry, OpenAI schema conversion
-    utils.ts               # tool helpers, workspace path enforcement, shell execution
-    *.tool.ts              # individual tool implementations, including web search
-tests/
-  helpers.test.ts          # reasoning and utility helper tests
-  session.test.ts          # session persistence and resume tests
-  settings.test.ts         # settings persistence tests
-  tools.test.ts            # node:test coverage for the tool registry
-```
+See [CONTRIBUTING.md](CONTRIBUTING.md) for the development workflow.
 
 ## License
 
