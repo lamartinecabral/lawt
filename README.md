@@ -24,7 +24,7 @@ The default local configuration expects Ollama's OpenAI-compatible API at `http:
 
 ```bash
 npm install
-npm run install:global
+npm run install:lawt
 ```
 
 ## Running
