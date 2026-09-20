@@ -42,7 +42,8 @@ export default {
   baseURL: "https://api.example.com/v1",
   apiKey: "your-api-key",
   webSearch: {
-    tavily: { apiKey: "your-tavily-api-key" },
+    ollama: { apiKey: "your-ollama-api-key" },
+    // or tavily: { apiKey: "your-tavily-api-key" },
   },
 };
 ```
