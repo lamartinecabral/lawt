@@ -1,5 +1,4 @@
 import type OpenAI from "openai";
-import { create_file } from "./create-file.tool.ts";
 import { file_search } from "./file-search.tool.ts";
 import { grep_search } from "./grep-search.tool.ts";
 import { list_directory } from "./list-directory.tool.ts";
@@ -8,12 +7,13 @@ import { replace_string_in_file } from "./replace-string-in-file.tool.ts";
 import { run_shell_command } from "./run-shell-command.tool.ts";
 import { fail } from "./utils.ts";
 import { fetch_page_content, web_search } from "./web-search.tool.ts";
+import { write_file } from "./write-file.tool.ts";
 
 /** @type {{name: string, description: string, schema: z.ZodObject, execute: (...a:any[])=>any}[]} */
 const ALL_TOOLS = {
   list_directory,
   read_file,
-  create_file,
+  write_file,
   replace_string_in_file,
   file_search,
   grep_search,

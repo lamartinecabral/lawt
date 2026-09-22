@@ -57,7 +57,7 @@ describe("tool registry", () => {
       [
         "list_directory",
         "read_file",
-        "create_file",
+        "write_file",
         "replace_string_in_file",
         "file_search",
         "grep_search",

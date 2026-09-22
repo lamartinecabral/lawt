@@ -3,12 +3,12 @@ import path from "node:path";
 import z from "zod";
 import { fail, getResolvedPath, ok, tool } from "./utils.ts";
 
-export const create_file = tool({
-  name: "create_file",
+export const write_file = tool({
+  name: "write_file",
   description:
-    "This is a tool for creating a new file in the workspace. The file will be created with the specified content. The directory will be created if it does not already exist. If the file already exists, it will be overwritten.",
+    "This is a tool for writing a file in the workspace. The directory will be created if it does not already exist. If the file already exists, it will be overwritten.",
   schema: z.object({
-    file_path: z.string().describe("The relative path to the file to create."),
+    file_path: z.string().describe("The relative path to the file to write."),
     content: z.string().describe("The content to write to the file."),
   }),
   async execute(args) {
