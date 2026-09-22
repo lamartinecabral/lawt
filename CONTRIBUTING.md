@@ -27,7 +27,7 @@ webSearch: {
 },
 ```
 
-If the configured services and Chrome are unavailable, the CLI probes DuckDuckGo's HTML endpoint automatically. This fallback needs no API key, but it does require network access. If every backend is unavailable, `web_search` and `fetch_page_content` are not registered for the model. `CHROME_PATH` can override the local Chrome executable path.
+If the configured services and Chrome are unavailable, the CLI probes DuckDuckGo's HTML endpoint automatically. This fallback needs no API key, but it does require network access. `CHROME_PATH` can override the local Chrome executable path.
 
 The CLI does not load provider configuration from environment variables or `.env` files. `CHROME_PATH` is still read from the environment to configure the Chrome executable used by browser-backed tools.
 
