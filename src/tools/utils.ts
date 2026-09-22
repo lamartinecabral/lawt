@@ -1,4 +1,5 @@
 import { spawn } from "node:child_process";
+import fs from "node:fs";
 import path from "node:path";
 import type z from "zod";
 import { ellipsis } from "../utils.ts";
@@ -21,10 +22,42 @@ export function getResolvedPath(unresolvedPath = "") {
     : path.resolve(process.cwd(), requestedPath);
 
   const relative = path.relative(process.cwd(), resolvedPath);
-  if (relative.startsWith("..")) {
+  if (relative.startsWith("..") || path.isAbsolute(relative)) {
     throw new Error(`Path is outside the workspace: ${unresolvedPath}`);
   }
-  return resolvedPath;
+
+  const workspacePath = fs.realpathSync(process.cwd());
+  const realPath = resolveExistingPath(resolvedPath);
+  const realRelative = path.relative(workspacePath, realPath);
+  if (realRelative.startsWith("..") || path.isAbsolute(realRelative)) {
+    throw new Error(`Path is outside the workspace: ${unresolvedPath}`);
+  }
+
+  return realPath;
+}
+
+function resolveExistingPath(targetPath: string) {
+  const missingParts: string[] = [];
+  let currentPath = targetPath;
+
+  while (true) {
+    try {
+      fs.lstatSync(currentPath);
+    } catch (err) {
+      if (!(err instanceof Error && "code" in err && err.code === "ENOENT")) {
+        throw err;
+      }
+
+      const parentPath = path.dirname(currentPath);
+      if (parentPath === currentPath)
+        throw new Error("Unable to resolve path.");
+      missingParts.unshift(path.basename(currentPath));
+      currentPath = parentPath;
+      continue;
+    }
+
+    return path.join(fs.realpathSync(currentPath), ...missingParts);
+  }
 }
 
 export function ok(data: string) {

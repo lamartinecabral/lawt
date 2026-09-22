@@ -10,6 +10,7 @@ const originalHome = process.env.HOME;
 
 let workspaceDir = "";
 let homeDir = "";
+let outsideDir = "";
 
 function expectSuccess(result: Awaited<ReturnType<typeof executeToolCall>>) {
   assert.partialDeepStrictEqual(result.result, { success: true });
@@ -31,6 +32,7 @@ describe("tool registry", () => {
   beforeEach(async () => {
     workspaceDir = await fs.mkdtemp(path.join(os.tmpdir(), "lawt-tools-"));
     homeDir = await fs.mkdtemp(path.join(os.tmpdir(), "lawt-home-"));
+    outsideDir = await fs.mkdtemp(path.join(os.tmpdir(), "lawt-outside-"));
     process.chdir(workspaceDir);
     process.env.HOME = homeDir;
   });
@@ -47,6 +49,9 @@ describe("tool registry", () => {
     }
     if (homeDir) {
       await fs.rm(homeDir, { recursive: true, force: true });
+    }
+    if (outsideDir) {
+      await fs.rm(outsideDir, { recursive: true, force: true });
     }
   });
 
@@ -69,7 +74,7 @@ describe("tool registry", () => {
   });
 
   it("searches file contents with grep_search", async () => {
-    await executeToolCall("create_file", {
+    await executeToolCall("write_file", {
       file_path: "notes/example.txt",
       content: "alpha\nbeta\ngamma\n",
     });
@@ -84,7 +89,7 @@ describe("tool registry", () => {
   });
 
   it("can create, update, read, and search files inside the workspace", async () => {
-    const created = await executeToolCall("create_file", {
+    const created = await executeToolCall("write_file", {
       file_path: "notes/example.txt",
       content: "alpha\nbeta\ngamma\n",
     });
@@ -145,6 +150,19 @@ describe("tool registry", () => {
   it("rejects paths that lexically escape the workspace", async () => {
     const result = await executeToolCall("read_file", {
       file_path: "../outside.txt",
+      start_line: 1,
+      end_line: 1,
+    });
+
+    assert.ok(expectFailure(result).includes("outside the workspace"));
+  });
+
+  it("rejects paths that escape the workspace through symlinks", async () => {
+    await fs.writeFile(path.join(outsideDir, "secret.txt"), "secret");
+    await fs.symlink(outsideDir, path.join(workspaceDir, "linked"), "dir");
+
+    const result = await executeToolCall("read_file", {
+      file_path: "linked/secret.txt",
       start_line: 1,
       end_line: 1,
     });
