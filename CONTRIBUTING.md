@@ -35,15 +35,17 @@ The CLI does not load provider configuration from environment variables or `.env
 
 1. Make your changes in `src/` and add or update tests under `tests/` when behavior changes
 2. Run the tests: `npm test`
-3. Run the formatter and linter checks: `npm run lint`
-4. Run the typecheck: `npm run typecheck`
-5. Apply formatting and lint fixes when needed: `npm run lint:fix`
+3. Format the code: `npm run format`
+4. Run the linter checks: `npm run lint`
+5. Run the typecheck: `npm run typecheck`
+6. Apply lint fixes when needed: `npm run lint:fix`
 
 ## Code Style
 
-- Code is formatted and linted with [Biome](https://biomejs.dev) (see [biome.json](biome.json))
-- `npm run lint` checks formatting and lint rules
-- `npm run lint:fix` formats files and applies safe lint fixes
+- Code is formatted with [Prettier](https://prettier.io) and linted with [Biome](https://biomejs.dev) (see [biome.json](biome.json))
+- `npm run format` formats files with Prettier
+- `npm run lint` checks lint rules with Biome
+- `npm run lint:fix` applies safe Biome lint fixes
 - TypeScript source files use native ESM imports and explicit `.ts` extensions
 - Tests use Node's built-in test runner
 - Prefer small, workspace-scoped behavior tests for tool changes
@@ -61,7 +63,7 @@ The CLI does not load provider configuration from environment variables or `.env
 | `src/utils.ts`    | Shared helpers and provider configuration loading |
 | `src/tools/`      | Workspace and web tool implementations            |
 | `tests/`          | `node:test` coverage for settings and tools       |
-| `biome.json`      | Biome formatter and linter configuration          |
+| `biome.json`      | Biome linter configuration                        |
 | `package.json`    | Scripts, runtime metadata, and dependencies       |
 
 ## Notes for Tool Changes
