@@ -28,9 +28,10 @@ export const write_file = tool({
       const directory = path.dirname(resolvedPath);
       await fs.mkdir(directory, { recursive: true });
       await fs.writeFile(resolvedPath, args.content, "utf-8");
+      const relativePath = path.relative(process.cwd(), resolvedPath);
 
       return ok(
-        `file ${fileExists ? "overwritten" : "created"}: ${resolvedPath}`,
+        `file ${fileExists ? "overwritten" : "created"}: ${relativePath}`,
       );
     } catch (err) {
       return fail(err instanceof Error ? err.message : String(err));
