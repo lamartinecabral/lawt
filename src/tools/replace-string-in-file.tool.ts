@@ -1,4 +1,5 @@
 import fs from "node:fs/promises";
+import path from "node:path";
 import z from "zod";
 import { fail, getResolvedPath, ok, tool } from "./utils.ts";
 
@@ -7,7 +8,7 @@ export const replace_string_in_file = tool({
   description:
     "This tool allows you to replace a specific string in a file with a new string. You must provide the exact text to be replaced and the new text. Use this tool for making precise edits to files when you know the exact content that needs to be changed.",
   schema: z.object({
-    file_path: z.string().describe("The relative path of the file to update."),
+    path: z.string().describe("The relative path of the file to update."),
     old_text: z
       .string()
       .describe("The exact text in the file that should be replaced."),
@@ -17,10 +18,10 @@ export const replace_string_in_file = tool({
   }),
   async execute(args) {
     try {
-      const resolvedPath = getResolvedPath(args.file_path);
+      const resolvedPath = getResolvedPath(args.path);
       const stats = await fs.stat(resolvedPath);
       if (!stats.isFile()) {
-        return fail(`Not a file: ${args.file_path}`);
+        return fail(`Not a file: ${args.path}`);
       }
 
       const original = await fs.readFile(resolvedPath, "utf-8");
@@ -44,12 +45,14 @@ export const replace_string_in_file = tool({
 
       updated = original.replace(args.old_text, replacement);
 
+      const relativePath = path.relative(process.cwd(), resolvedPath);
+
       if (updated === original) {
-        return ok(`file updated: ${resolvedPath} (no changes made)`);
+        return ok(`file updated: ${relativePath} (no changes made)`);
       }
 
       await fs.writeFile(resolvedPath, updated, "utf-8");
-      return ok(`file updated: ${resolvedPath}`);
+      return ok(`file updated: ${relativePath}`);
     } catch (err) {
       return fail(err instanceof Error ? err.message : String(err));
     }

@@ -8,12 +8,12 @@ export const write_file = tool({
   description:
     "This is a tool for writing a file in the workspace. The directory will be created if it does not already exist. If the file already exists, it will be overwritten.",
   schema: z.object({
-    file_path: z.string().describe("The relative path to the file to write."),
+    path: z.string().describe("The relative path to the file to write."),
     content: z.string().describe("The content to write to the file."),
   }),
   async execute(args) {
     try {
-      const resolvedPath = getResolvedPath(args.file_path);
+      const resolvedPath = getResolvedPath(args.path);
       let fileExists = false;
 
       try {

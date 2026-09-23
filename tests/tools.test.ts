@@ -75,7 +75,7 @@ describe("tool registry", () => {
 
   it("searches file contents with grep_search", async () => {
     await executeToolCall("write_file", {
-      file_path: "notes/example.txt",
+      path: "notes/example.txt",
       content: "alpha\nbeta\ngamma\n",
     });
 
@@ -90,7 +90,7 @@ describe("tool registry", () => {
 
   it("can create, update, read, and search files inside the workspace", async () => {
     const created = await executeToolCall("write_file", {
-      file_path: "notes/example.txt",
+      path: "notes/example.txt",
       content: "alpha\nbeta\ngamma\n",
     });
 
@@ -102,7 +102,7 @@ describe("tool registry", () => {
       });
 
     const updated = await executeToolCall("replace_string_in_file", {
-      file_path: "notes/example.txt",
+      path: "notes/example.txt",
       old_text: "beta",
       new_text: "beta-updated",
     });
@@ -110,7 +110,7 @@ describe("tool registry", () => {
     expectSuccess(updated);
 
     const read = await executeToolCall("read_file", {
-      file_path: "notes/example.txt",
+      path: "notes/example.txt",
       start_line: 1,
       end_line: 3,
     });
@@ -149,7 +149,7 @@ describe("tool registry", () => {
 
   it("rejects paths that lexically escape the workspace", async () => {
     const result = await executeToolCall("read_file", {
-      file_path: "../outside.txt",
+      path: "../outside.txt",
       start_line: 1,
       end_line: 1,
     });
@@ -162,7 +162,7 @@ describe("tool registry", () => {
     await fs.symlink(outsideDir, path.join(workspaceDir, "linked"), "dir");
 
     const result = await executeToolCall("read_file", {
-      file_path: "linked/secret.txt",
+      path: "linked/secret.txt",
       start_line: 1,
       end_line: 1,
     });

@@ -7,7 +7,7 @@ export const read_file = tool({
   description:
     "Read the contents of a file. You must specify the line range you're interested in. Line numbers are 1-indexed.",
   schema: z.object({
-    file_path: z.string().describe("The relative path of the file to read."),
+    path: z.string().describe("The relative path of the file to read."),
     start_line: z
       .number()
       .optional()
@@ -21,11 +21,11 @@ export const read_file = tool({
   }),
   async execute(args) {
     try {
-      const resolvedPath = getResolvedPath(args.file_path);
+      const resolvedPath = getResolvedPath(args.path);
       const stats = await fs.stat(resolvedPath);
 
       if (!stats.isFile()) {
-        return fail(`Not a file: ${args.file_path}`);
+        return fail(`Not a file: ${args.path}`);
       }
 
       const content = await fs.readFile(resolvedPath, "utf-8");
