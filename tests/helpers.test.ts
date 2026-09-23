@@ -6,28 +6,37 @@ import { ellipsis, stringify } from "../src/utils.ts";
 describe("thinking helpers", () => {
   it("appends both supported reasoning fields", () => {
     const thinking: { reasoning?: string; reasoning_content?: string } = {};
-    assert.deepStrictEqual(
-      appendThinking(thinking, { reasoning: "first" } as never),
-      {
-        reasoning: "first",
-      },
-    );
-    assert.deepStrictEqual(
-      appendThinking(thinking, { reasoning: " second" } as never),
-      {
-        reasoning: "first second",
-      },
-    );
-    assert.deepStrictEqual(
-      appendThinking({}, { reasoning_content: "details" } as never),
-      { reasoning_content: "details" },
-    );
+    appendThinking(thinking, { reasoning: "first" } as never);
+    assert.deepStrictEqual(thinking, { reasoning: "first" });
+
+    appendThinking(thinking, { reasoning: " second" } as never);
+    assert.deepStrictEqual(thinking, { reasoning: "first second" });
+
+    const reasoningContent: { reasoning_content?: string } = {};
+    appendThinking(reasoningContent, { reasoning_content: "details" } as never);
+    assert.deepStrictEqual(reasoningContent, { reasoning_content: "details" });
+
     assert.strictEqual(appendThinking({}, { content: "ordinary" }), undefined);
   });
 
+  it("accepts empty strings and ignores non-string reasoning values", () => {
+    const thinking: { reasoning?: string; reasoning_content?: string } = {};
+    appendThinking(thinking, { reasoning: "" } as never);
+    assert.deepStrictEqual(thinking, { reasoning: "" });
+
+    appendThinking(thinking, { reasoning: 42 } as never);
+    appendThinking(thinking, { reasoning_content: false } as never);
+    assert.deepStrictEqual(thinking, { reasoning: "" });
+  });
+
   it("reads reasoning from messages and ignores other values", () => {
-    assert.strictEqual(getThinking({ reasoning: 42 }), "42");
+    assert.strictEqual(getThinking({ reasoning: 42 }), undefined);
     assert.strictEqual(getThinking({ reasoning_content: "trace" }), "trace");
+    assert.strictEqual(getThinking({ reasoning: "" }), "");
+    assert.strictEqual(
+      getThinking({ reasoning: 42, reasoning_content: "trace" }),
+      "trace",
+    );
     assert.strictEqual(getThinking({ content: "answer" }), undefined);
     assert.strictEqual(getThinking(null), undefined);
     assert.strictEqual(getThinking("text"), undefined);

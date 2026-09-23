@@ -10,23 +10,31 @@ export const appendThinking = (
   obj: Thinking,
   delta: OpenAI.ChatCompletionChunk.Choice.Delta,
 ) => {
-  if ("reasoning" in delta && delta.reasoning) {
+  if ("reasoning" in delta && typeof delta.reasoning === "string") {
     if (!obj.reasoning) obj.reasoning = "";
-    obj.reasoning += String(delta.reasoning);
-    return obj;
+    obj.reasoning += delta.reasoning;
+    return;
   }
-  if ("reasoning_content" in delta && delta.reasoning_content) {
+  if (
+    "reasoning_content" in delta &&
+    typeof delta.reasoning_content === "string"
+  ) {
     if (!obj.reasoning_content) obj.reasoning_content = "";
-    obj.reasoning_content += String(delta.reasoning_content);
-    return obj;
+    obj.reasoning_content += delta.reasoning_content;
+    return;
   }
 };
 
 export const getThinking = (message: unknown) => {
   if (!isRecord(message)) return undefined;
-  if ("reasoning" in message && message.reasoning)
-    return String(message.reasoning);
-  if ("reasoning_content" in message && message.reasoning_content)
-    return String(message.reasoning_content);
+  if ("reasoning" in message && typeof message.reasoning === "string") {
+    return message.reasoning;
+  }
+  if (
+    "reasoning_content" in message &&
+    typeof message.reasoning_content === "string"
+  ) {
+    return message.reasoning_content;
+  }
   return undefined;
 };
