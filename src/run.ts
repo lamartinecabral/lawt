@@ -69,8 +69,10 @@ export const run: RunType = async ({
             if (mode) console.log("");
             printMessage("thinking");
             mode = "thinking";
+            process.stdout.write(pc.dim(reasoning.trimStart()));
+          } else {
+            process.stdout.write(pc.dim(reasoning));
           }
-          process.stdout.write(pc.dim(reasoning));
         }
         if (delta.content) {
           if (mode !== "content") {
