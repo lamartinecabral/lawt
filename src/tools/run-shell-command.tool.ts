@@ -16,10 +16,13 @@ export const run_shell_command = tool({
 
       const result = await runCommand(command);
       return ok(
-        JSON.stringify({
-          ...(result.stdout ? { stdout: result.stdout } : {}),
-          ...(result.stderr ? { stderr: result.stderr } : {}),
-        }),
+        result.stdout && !result.stderr
+          ? result.stdout
+          : JSON.stringify({
+              ...(result.stdout ? { stdout: result.stdout } : {}),
+              ...(result.stderr ? { stderr: result.stderr } : {}),
+              ...(!result.stdout && !result.stderr ? result : {}),
+            }),
       );
     } catch (err) {
       return fail(err instanceof Error ? err.message : String(err));

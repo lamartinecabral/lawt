@@ -5,14 +5,9 @@ import { fail, getResolvedPath, ok, tool } from "./utils.ts";
 
 export const file_search = tool({
   name: "file_search",
-  description:
-    "Search for files in the workspace by glob pattern. This only returns the paths of matching files. Use this tool when you know the exact filename pattern of the files you're searching for. Glob patterns match from the root of the workspace folder. Examples:\n- **/*.{js,ts} to match all js/ts files in the workspace.\n- src/** to match all files under the top-level src folder.\n- **/foo/**/*.js to match all js files under any foo folder in the workspace.\n\nIn a multi-root workspace, you can scope the search to a specific workspace folder by using the absolute path to the folder as the query, e.g. /path/to/folder/**/*.ts.",
+  description: "Search for files in the workspace by glob pattern.",
   schema: z.object({
-    query: z
-      .string()
-      .describe(
-        "Search for files with names or paths matching this glob pattern. Can also be an absolute path to a workspace folder to scope the search in a multi-root workspace.",
-      ),
+    query: z.string().describe("The glob pattern to match."),
   }),
   async execute(args) {
     try {

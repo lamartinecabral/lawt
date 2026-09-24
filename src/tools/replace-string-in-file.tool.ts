@@ -6,7 +6,7 @@ import { fail, getResolvedPath, ok, tool } from "./utils.ts";
 export const replace_string_in_file = tool({
   name: "replace_string_in_file",
   description:
-    "This tool allows you to replace a specific string in a file with a new string. You must provide the exact text to be replaced and the new text. Use this tool for making precise edits to files when you know the exact content that needs to be changed.",
+    "This tool allows you to replace a specific string in a file with a new string.",
   schema: z.object({
     path: z.string().describe("The relative path of the file to update."),
     old_text: z
