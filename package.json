@@ -13,8 +13,8 @@
     "install:lawt": "chmod +x src/cli.ts && npm link",
     "start": "node src/cli.ts",
     "test": "node --test",
-    "lint": "npx -y biome check",
-    "lint:fix": "npx -y biome check --write",
+    "lint": "npx -y @biomejs/biome check",
+    "lint:fix": "npm run lint -- --write",
     "typecheck": "tsc --noEmit"
   },
   "keywords": [
