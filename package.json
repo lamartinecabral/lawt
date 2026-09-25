@@ -27,7 +27,7 @@
   ],
   "license": "MIT",
   "dependencies": {
-    "@lamartinecabral/web-search": "github:lamartinecabral/web-search",
+    "@lamartinecabral/web-search": "1.0.0",
     "commander": "15.0.0",
     "dotenv": "17.4.2",
     "fast-glob": "3.3.3",
