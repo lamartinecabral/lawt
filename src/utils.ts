@@ -38,6 +38,9 @@ let provider: Promise<{
     tavily?: {
       apiKey?: string;
     };
+    local?: {
+      chromePath?: string;
+    }
   };
 }>;
 

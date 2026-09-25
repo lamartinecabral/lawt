@@ -36,6 +36,7 @@ export default {
   webSearch: {
     tavily: { apiKey: "your-tavily-api-key" },
     // or ollama: { apiKey: "your-ollama-api-key" },
+    // or local: { chromePath: "default or path/to/chrome" },
   },
 };
 ```
