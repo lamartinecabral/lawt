@@ -110,6 +110,7 @@ export const run: RunType = async ({
         role: "tool",
         tool_call_id: toolCall.id ?? "",
         content,
+        ...extraContent(toolCall),
       });
 
       printMessage(
@@ -136,6 +137,7 @@ const appendToolCalls = (
           name: delta.function.name,
           arguments: delta.function.arguments ?? "",
         },
+        ...extraContent(delta),
       });
     else {
       const lastCall = toolCalls[toolCalls.length - 1].function;
@@ -144,4 +146,11 @@ const appendToolCalls = (
       lastCall.arguments += delta.function?.arguments ?? "";
     }
   }
+};
+
+// this is a necessary to support gemini api
+const extraContent = (obj: unknown) => {
+  return typeof obj === "object" && obj && "extra_content" in obj
+    ? { extra_content: obj.extra_content }
+    : {};
 };
