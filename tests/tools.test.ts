@@ -139,12 +139,7 @@ describe("tool registry", () => {
       command: "printf 'hello from shell'",
     });
 
-    assert.strictEqual(
-      expectSuccess(result),
-      JSON.stringify({
-        stdout: "hello from shell",
-      }),
-    );
+    assert.strictEqual(expectSuccess(result), "hello from shell");
   });
 
   it("rejects paths that lexically escape the workspace", async () => {
