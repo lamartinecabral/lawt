@@ -10,12 +10,11 @@
     "node": ">=24.0.0"
   },
   "scripts": {
-    "format": "prettier . --write",
     "install:lawt": "chmod +x src/cli.ts && npm link",
     "start": "node src/cli.ts",
     "test": "node --test",
-    "lint": "biome lint",
-    "lint:fix": "biome lint --write",
+    "lint": "npx -y biome check",
+    "lint:fix": "npx -y biome check --write",
     "typecheck": "tsc --noEmit"
   },
   "keywords": [
@@ -37,9 +36,7 @@
     "zod": "4.6.2"
   },
   "devDependencies": {
-    "@biomejs/biome": "2.5.13",
     "@types/node": "24",
-    "prettier": "3.9.8",
     "typescript": "6.0.3"
   }
 }

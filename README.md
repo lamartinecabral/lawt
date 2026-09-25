@@ -48,5 +48,4 @@ For more details on web search settings, see [github.com/lamartinecabral/web-sea
 npm test
 npm run typecheck
 npm run lint
-npm run format
 ```

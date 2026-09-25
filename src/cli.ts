@@ -1,6 +1,6 @@
 #!/usr/bin/env node
-import { Command } from "commander";
 import fs from "node:fs";
+import { Command } from "commander";
 import OpenAI from "openai";
 import pc from "picocolors";
 import pkg from "../package.json" with { type: "json" };

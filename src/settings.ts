@@ -18,11 +18,11 @@ export const loadSettings = async (): Promise<LawtSettings> => {
     if (!value || typeof value !== "object" || Array.isArray(value)) return {};
 
     const settings = value as Record<string, unknown>;
+    const { model, reasoningEffort } = settings;
     return {
-      ...(typeof settings.model === "string" ? { model: settings.model } : {}),
-      ...(typeof settings.reasoningEffort === "string" ||
-      settings.reasoningEffort === null
-        ? { reasoningEffort: settings.reasoningEffort }
+      ...(typeof model === "string" ? { model } : {}),
+      ...(typeof reasoningEffort === "string" || reasoningEffort === null
+        ? { reasoningEffort }
         : {}),
     };
   } catch (_) {
