@@ -3,9 +3,10 @@ import path from "node:path";
 
 export const abortables = new Set<{ abort: () => unknown }>();
 
-export const ellipsis = (str = "", len = 50) => {
-  if (str.length > len) return `${str.substring(0, len - 1)}…`;
-  return str;
+export const ellipsis = (str = "", len = 50, lines = -1) => {
+  const result = str.length > len ? `${str.substring(0, len - 1)}…` : str;
+  if (lines === -1) return result;
+  return result.split("\n").slice(0, lines).join("\n");
 };
 
 export const isRecord = (value: unknown): value is Record<string, unknown> =>
@@ -40,7 +41,7 @@ let provider: Promise<{
     };
     local?: {
       chromePath?: string;
-    }
+    };
   };
 }>;
 

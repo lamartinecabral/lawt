@@ -117,7 +117,7 @@ export const run: RunType = async ({
         "tool",
         [
           ellipsis(`> ${tool_name}(${stringify(args)})`, 300),
-          ellipsis(`= ${stringify(content)}`, 300),
+          ellipsis(`${stringify(content)}`, 300, 5),
         ].join("\n"),
       );
     }

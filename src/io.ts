@@ -107,7 +107,7 @@ export const printMessages = (
       const content = message.content;
       const text = [
         ellipsis(`> ${name}(${stringify(args)})`, 300),
-        ellipsis(`= ${stringify(content)}`, 300),
+        ellipsis(`${stringify(content)}`, 300, 5),
       ].join("\n");
       printMessage("tool", text);
     }
