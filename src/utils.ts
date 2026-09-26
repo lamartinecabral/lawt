@@ -3,10 +3,13 @@ import path from "node:path";
 
 export const abortables = new Set<{ abort: () => unknown }>();
 
-export const ellipsis = (str = "", len = 50, lines = -1) => {
-  const result = str.length > len ? `${str.substring(0, len - 1)}…` : str;
-  if (lines === -1) return result;
-  return result.split("\n").slice(0, lines).join("\n");
+export const ellipsis = (str = "", len = 50, lines = 0) => {
+  const result =
+    len && str.length > len ? `${str.substring(0, len - 1)}…` : str;
+  if (!lines) return result;
+  const resultLines = result.split("\n");
+  if (resultLines.length <= lines) return result;
+  return result.split("\n").slice(0, lines).concat("…").join("\n");
 };
 
 export const isRecord = (value: unknown): value is Record<string, unknown> =>
