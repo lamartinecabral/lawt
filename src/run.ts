@@ -47,12 +47,14 @@ export const run: RunType = async ({
       },
     });
 
-    abortables.add({
+    const controller = {
       abort: () => {
         stream.controller.abort();
         if (spinner.isSpinning) spinner.stop();
       },
-    });
+    };
+
+    abortables.add(controller);
 
     let content = "";
     const thinking: Thinking = {};
@@ -95,7 +97,7 @@ export const run: RunType = async ({
       }
     }
 
-    abortables.delete(stream.controller);
+    abortables.delete(controller);
 
     session.push({
       role: "assistant",
