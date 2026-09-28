@@ -4,7 +4,7 @@ import path from "node:path";
 import type z from "zod";
 import { ellipsis } from "../utils.ts";
 
-export const TOOL_OUTPUT_LIMIT = 50000;
+export const TOOL_OUTPUT_LIMIT = 10000;
 
 export const tool = <T extends z.ZodObject>(params: {
   name: string;
