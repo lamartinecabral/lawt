@@ -47,7 +47,12 @@ export const run: RunType = async ({
       },
     });
 
-    abortables.add(stream.controller);
+    abortables.add({
+      abort: () => {
+        stream.controller.abort();
+        if (spinner.isSpinning) spinner.stop();
+      },
+    });
 
     let content = "";
     const thinking: Thinking = {};
