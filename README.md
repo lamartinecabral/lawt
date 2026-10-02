@@ -34,14 +34,12 @@ export default {
   // Optional: use a non-default model provider
   baseURL: "https://api.example.com/v1",
   apiKey: "your-api-key",
-  // Optional: configure cloud web search independently
+  // Optional: choose one web search backend
   webSearch: {
-    local: {
-      chromePath: "default",
-      // or: chromePath: "path/to/chrome",
-    },
+    local: { chromePath: "default" },
+    // or local: { chromePath: "path/to/chrome" },
     // or tavily: { apiKey: "your-tavily-api-key" },
-    // or ollama: { apiKey: "your-ollamacloud-api-key" },
+    // or ollama: { apiKey: "your-ollama-cloud-api-key" },
   },
 };
 ```
