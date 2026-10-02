@@ -1,6 +1,8 @@
 # lawt
 
-**Local AI With Tools** is a terminal assistant that chats with an OpenAI-compatible model and can use tools to work with files, run shell commands, and search the web.
+**Local AI With Tools** is a small terminal agent for OpenAI-compatible models. It can work with files in the current directory, run shell commands, and search the web.
+
+`lawt` is intentionally a minimal implementation: the code should be easy for anyone to understand, own, and adapt to their own workflow. Its small surface area also keeps the context sent to local models clean and lightweight, leaving more room for the task at hand.
 
 ## Requirements
 
@@ -34,9 +36,12 @@ export default {
   apiKey: "your-api-key",
   // Optional: configure cloud web search independently
   webSearch: {
-    tavily: { apiKey: "your-tavily-api-key" },
-    // or ollama: { apiKey: "your-ollama-api-key" },
-    // or local: { chromePath: "default or path/to/chrome" },
+    local: {
+      chromePath: "default",
+      // or: chromePath: "path/to/chrome",
+    },
+    // or tavily: { apiKey: "your-tavily-api-key" },
+    // or ollama: { apiKey: "your-ollamacloud-api-key" },
   },
 };
 ```
