@@ -11,27 +11,6 @@ const rl = readline.createInterface({
 
 readline.emitKeypressEvents(process.stdin, rl);
 
-export const question = async () => {
-  const read = () => {
-    return new Promise<string>((resolve) => rl.question("", resolve));
-  };
-
-  const line = await read();
-
-  if (line.trim() === '"""') {
-    const lines: string[] = [];
-    while (true) {
-      const nextLine = await read();
-      if (nextLine.trim() === '"""') break;
-      lines.push(nextLine);
-    }
-
-    return lines.join("\n");
-  }
-
-  return line;
-};
-
 export const finish = () => {
   Abortables.abort();
   rl.close();
@@ -46,6 +25,63 @@ process.stdin.on("keypress", (_str, key) => {
     Abortables.abort();
   }
 });
+
+const read = async (rl: readline.Interface): Promise<string> => {
+  const cleaners: (() => void)[] = [];
+  const lines: string[] = [];
+  let lastChunk = "";
+  let resolve: (value: string) => void;
+  let done = false;
+  const end = () => {
+    if (!done) done = true;
+    cleaners.forEach((clean) => {
+      clean();
+    });
+    resolve(lines.join("\n"));
+  };
+
+  const onData = (chunk0: Buffer<ArrayBuffer>) => {
+    const text = Buffer.from(chunk0).toString();
+    lastChunk = text;
+    if (text.endsWith("\r")) done = true;
+  };
+  process.stdin.on("data", onData);
+  cleaners.push(() => process.stdin.off("data", onData));
+
+  (async () => {
+    while (!done) {
+      const line = String(await new Promise((r) => rl.question("", r)));
+      lines.push(
+        ...(line.length >= lastChunk.length
+          ? [line]
+          : // pasted content is captured here
+            lastChunk.split("\r").slice(0, -1)),
+      );
+    }
+    end();
+  })();
+
+  return new Promise((r) => {
+    resolve = r;
+  });
+};
+
+export const input = async () => {
+  const line = await read(rl);
+
+  if (line.trim() === '"""') {
+    const lines: string[] = [];
+    while (true) {
+      const nextLine = await read(rl);
+      if (nextLine.trim() === '"""') break;
+      lines.push(nextLine);
+    }
+
+    return lines.join("\n");
+  }
+
+  return line;
+};
 
 export const printMessage = (
   label: "user" | "bot" | "thinking" | "tool",

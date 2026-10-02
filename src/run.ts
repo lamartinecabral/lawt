@@ -1,7 +1,7 @@
 import type OpenAI from "openai";
 import ora from "ora";
 import pc from "picocolors";
-import { printMessage, question } from "./io.ts";
+import { input, printMessage } from "./io.ts";
 import type { Session } from "./session.ts";
 import type { Thinking } from "./thinking.ts";
 import { appendThinking, getThinking } from "./thinking.ts";
@@ -26,7 +26,7 @@ export const run: RunType = async ({
 }) => {
   printMessage("user");
 
-  const prompt = (await question()).trim();
+  const prompt = (await input()).trim();
 
   if (["/exit", "/quit", "/export", "/model"].includes(prompt)) return prompt;
 
