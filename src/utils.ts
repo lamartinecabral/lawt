@@ -1,7 +1,23 @@
 import fs from "node:fs";
 import path from "node:path";
 
-export const abortables = new Set<{ abort: () => unknown }>();
+type Abortable = { abort: () => unknown };
+export const Abortables = {
+  entries: new Set<Abortable>(),
+  get size() {
+    return this.entries.size;
+  },
+  add: function (entry: Abortable) {
+    this.entries.add(entry);
+  },
+  delete: function (entry: Abortable) {
+    if (this.entries.has(entry)) this.entries.delete(entry);
+  },
+  abort: function () {
+    for (const entry of this.entries) entry.abort();
+    this.entries.clear();
+  },
+};
 
 export const ellipsis = (str = "", len = 50, lines = 0) => {
   const result =

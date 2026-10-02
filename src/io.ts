@@ -2,7 +2,7 @@ import readline from "node:readline";
 import type OpenAI from "openai";
 import pc from "picocolors";
 import { getThinking } from "./thinking.ts";
-import { abortables, ellipsis, stringify } from "./utils.ts";
+import { Abortables, ellipsis, stringify } from "./utils.ts";
 
 const rl = readline.createInterface({
   input: process.stdin,
@@ -32,21 +32,18 @@ export const question = async () => {
   return line;
 };
 
-const abort = () => {
-  for (const abortable of abortables) abortable.abort();
-};
-
 export const finish = () => {
-  abort();
+  Abortables.abort();
   rl.close();
 };
 
 process.stdin.on("keypress", (_str, key) => {
   if (key.ctrl && key.name === "c") {
-    finish();
+    if (Abortables.size) Abortables.abort();
+    else finish();
   }
   if (key.name === "escape") {
-    abort();
+    Abortables.abort();
   }
 });
 

@@ -6,7 +6,7 @@ import type { Session } from "./session.ts";
 import type { Thinking } from "./thinking.ts";
 import { appendThinking, getThinking } from "./thinking.ts";
 import { executeToolCall, toolsToOpenAIFormat } from "./tools/index.ts";
-import { abortables, ellipsis, stringify } from "./utils.ts";
+import { Abortables, ellipsis, stringify } from "./utils.ts";
 
 type ToolCall = OpenAI.ChatCompletionMessageFunctionToolCall;
 type DeltaToolCall = OpenAI.ChatCompletionChunk.Choice.Delta.ToolCall;
@@ -54,7 +54,7 @@ export const run: RunType = async ({
       },
     };
 
-    abortables.add(controller);
+    Abortables.add(controller);
 
     let content = "";
     const thinking: Thinking = {};
@@ -97,7 +97,7 @@ export const run: RunType = async ({
       }
     }
 
-    abortables.delete(controller);
+    Abortables.delete(controller);
 
     session.push({
       role: "assistant",
