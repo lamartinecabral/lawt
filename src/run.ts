@@ -120,13 +120,7 @@ export const run: RunType = async ({
         ...extraContent(toolCall),
       });
 
-      printMessage(
-        "tool",
-        [
-          ellipsis(`> ${tool_name}(${stringify(args)})`, 300),
-          ellipsis(`${stringify(content)}`, 300, 5),
-        ].join("\n"),
-      );
+      printMessage("tool", tool_name, args, content);
     }
   }
 };

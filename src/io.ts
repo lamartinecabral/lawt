@@ -85,7 +85,7 @@ export const input = async () => {
 
 export const printMessage = (
   label: "user" | "bot" | "thinking" | "tool",
-  content?: string,
+  ...content: unknown[]
 ) => {
   const color = (() => {
     switch (label) {
@@ -100,8 +100,26 @@ export const printMessage = (
     }
   })();
   console.log(color(`\n--- ${label} ---`));
-  if (content === undefined) return;
-  console.log(["thinking", "tool"].includes(label) ? pc.dim(content) : content);
+  if (!content.length) return;
+  switch (label) {
+    case "tool": {
+      const [toolName, args, output] = content;
+      console.log(
+        [
+          `> ${ellipsis(`${toolName}(${stringify(args)})`, 300)}`,
+          pc.dim(ellipsis(stringify(output), 300, 5)),
+        ].join("\n"),
+      );
+      break;
+    }
+    case "thinking": {
+      console.log(pc.dim(content.join("\n")));
+      break;
+    }
+    default: {
+      console.log(content.join("\n"));
+    }
+  }
 };
 
 type ToolCall = OpenAI.ChatCompletionMessageToolCall;
@@ -138,11 +156,7 @@ export const printMessages = (
       if (!toolCall) continue;
       const { name, arguments: args } = toolCall.function ?? {};
       const content = message.content;
-      const text = [
-        ellipsis(`> ${name}(${stringify(args)})`, 300),
-        ellipsis(`${stringify(content)}`, 300, 5),
-      ].join("\n");
-      printMessage("tool", text);
+      printMessage("tool", name, args, content);
     }
   }
 };
