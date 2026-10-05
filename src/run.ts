@@ -6,7 +6,7 @@ import type { Session } from "./session.ts";
 import type { Thinking } from "./thinking.ts";
 import { appendThinking, getThinking } from "./thinking.ts";
 import { executeToolCall, toolsToOpenAIFormat } from "./tools/index.ts";
-import { Abortables, ellipsis, stringify } from "./utils.ts";
+import { Abortables } from "./utils.ts";
 
 type ToolCall = OpenAI.ChatCompletionMessageFunctionToolCall;
 type DeltaToolCall = OpenAI.ChatCompletionChunk.Choice.Delta.ToolCall;
