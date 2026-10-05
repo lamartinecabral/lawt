@@ -72,7 +72,9 @@ program
         console.log(pc.green(`Messages exported to ${filename}`));
       }
       if (res?.trim() === "/model") {
-        showAvailableModels(client);
+        await showAvailableModels({ client });
+        finish();
+        process.exit(0);
       }
     }
 
@@ -124,6 +126,18 @@ const assertModel = async (client: OpenAI, modelId: string | undefined) => {
 
   if (modelId && models.data.find((m) => m.id === modelId)) return modelId;
 
+  showAvailableModels({ models });
+
+  finish();
+  process.exit(1);
+};
+
+const showAvailableModels = async (
+  params: { client: OpenAI } | { models: OpenAI.Models.ModelsPage },
+) => {
+  const models =
+    "models" in params ? params.models : await params.client.models.list();
+
   const modelIds = models.data
     .map((m) => m.id)
     .sort((a, b) => a.localeCompare(b));
@@ -133,13 +147,6 @@ const assertModel = async (client: OpenAI, modelId: string | undefined) => {
     console.log(`- ${pc.cyan(id)}`);
   }
   console.log();
-
-  finish();
-  process.exit(0);
-};
-
-const showAvailableModels = (client: OpenAI) => {
-  assertModel(client, "");
 };
 
 program.parse();
