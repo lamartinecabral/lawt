@@ -19,7 +19,7 @@ npm run install:lawt
 lawt --model <model>
 ```
 
-Use `--think <effort>` to set reasoning effort, or `--resume` to continue the session for the current working directory. Options can also be passed as `-m`, `-t`, and `-r`. The selected model and reasoning effort are saved in `~/.lawt/settings.json`.
+Use `--think <effort>` to set reasoning effort, `--resume` to continue the session for the current working directory, or `--list` to print the available models. Options can also be passed as `-m`, `-t`, `-r`, and `-l`. The selected model and reasoning effort are saved in `~/.lawt/settings.json`.
 
 ## Using the assistant
 
