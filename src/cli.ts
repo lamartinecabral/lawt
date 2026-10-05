@@ -19,14 +19,22 @@ program
   .option("-m, --model <model>", "model id")
   .option("-t, --think <think>", "reasoning effort")
   .option("-r, --resume", "resume session")
+  .option("-l, --list", "list available models")
   .action(async (options) => {
-    const settings = await loadSettings();
     const client = new OpenAI(
       await loadProvider({
         baseURL: "http://localhost:11434/v1",
         apiKey: "ollama",
       }),
     );
+
+    if (options.list) {
+      await showAvailableModels({ client });
+      finish();
+      process.exit(0);
+    }
+
+    const settings = await loadSettings();
 
     const modelId = await assertModel(client, options.model ?? settings.model);
 
