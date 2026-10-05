@@ -31,4 +31,4 @@ jobs:
         run: npm run typecheck
 
       - name: Run lint
-        run: npm run lint
+        run: npm run lint -- --error-on-warnings
