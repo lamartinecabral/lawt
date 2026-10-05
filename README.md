@@ -1,10 +1,12 @@
-# lawt
+# LAWT
 
 [![Tests](https://github.com/lamartinecabral/lawt/actions/workflows/test.yml/badge.svg)](https://github.com/lamartinecabral/lawt/actions/workflows/test.yml)
 
 **Local AI With Tools** is a small terminal agent for OpenAI-compatible models. It can work with files in the current directory, run shell commands, and search the web.
 
 `lawt` is intentionally a minimal implementation: the code should be easy for anyone to understand, own, and adapt to their own workflow. Its small surface area also keeps the context sent to local models clean and lightweight, leaving more room for the task at hand.
+
+![lawt screenshot](./screenshot.png)
 
 ## Requirements
 
@@ -51,7 +53,7 @@ For more details on web search settings, see [github.com/lamartinecabral/web-sea
 ## Development
 
 ```bash
-npm test
-npm run typecheck
 npm run lint
+npm run typecheck
+npm test
 ```
