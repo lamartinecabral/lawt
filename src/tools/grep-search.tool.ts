@@ -1,4 +1,4 @@
-import fs from "node:fs/promises";
+import fsp from "node:fs/promises";
 import path from "node:path";
 import fg from "fast-glob";
 import z from "zod";
@@ -56,7 +56,7 @@ export const grep_search = tool({
       for (const file of files) {
         try {
           const fullPath = getResolvedPath(file);
-          const content = await fs.readFile(fullPath, "utf-8");
+          const content = await fsp.readFile(fullPath, "utf-8");
           const lines = content.split(/\r\n|\r|\n/);
 
           for (let index = 0; index < lines.length; index += 1) {
@@ -138,7 +138,7 @@ async function getSearchFiles(includePattern) {
   if (findGlobIndex(query) === -1) {
     try {
       const resolvedPath = getResolvedPath(query);
-      const stats = await fs.stat(resolvedPath);
+      const stats = await fsp.stat(resolvedPath);
       const relativePath = path
         .relative(process.cwd(), resolvedPath)
         .split(path.sep)

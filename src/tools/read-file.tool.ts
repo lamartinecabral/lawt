@@ -1,4 +1,4 @@
-import fs from "node:fs/promises";
+import fsp from "node:fs/promises";
 import z from "zod";
 import { fail, getResolvedPath, ok, tool } from "./utils.ts";
 
@@ -22,13 +22,13 @@ export const read_file = tool({
   async execute(args) {
     try {
       const resolvedPath = getResolvedPath(args.path);
-      const stats = await fs.stat(resolvedPath);
+      const stats = await fsp.stat(resolvedPath);
 
       if (!stats.isFile()) {
         return fail(`Not a file: ${args.path}`);
       }
 
-      const content = await fs.readFile(resolvedPath, "utf-8");
+      const content = await fsp.readFile(resolvedPath, "utf-8");
 
       if (!args.start_line && !args.end_line) {
         if (content.length > 20_000)

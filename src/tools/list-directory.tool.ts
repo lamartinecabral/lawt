@@ -1,4 +1,4 @@
-import fs from "node:fs/promises";
+import fsp from "node:fs/promises";
 import z from "zod";
 import { fail, getResolvedPath, ok, tool } from "./utils.ts";
 
@@ -13,12 +13,12 @@ export const list_directory = tool({
     try {
       const resolvedPath = getResolvedPath(args.path);
 
-      const stats = await fs.stat(resolvedPath);
+      const stats = await fsp.stat(resolvedPath);
       if (!stats.isDirectory()) {
         return fail(`Not a directory: ${args.path}`);
       }
 
-      const entries = await fs.readdir(resolvedPath, { withFileTypes: true });
+      const entries = await fsp.readdir(resolvedPath, { withFileTypes: true });
       const sorted = entries.slice().sort((a, b) => {
         if (a.isDirectory() !== b.isDirectory()) {
           return a.isDirectory() ? -1 : 1;

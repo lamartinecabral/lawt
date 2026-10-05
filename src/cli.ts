@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import fs from "node:fs";
+import fsp from "node:fs/promises";
 import { Command } from "commander";
 import OpenAI from "openai";
 import pc from "picocolors";
@@ -64,7 +64,7 @@ program
       if (res?.trim() === "/quit") break;
       if (res?.trim() === "/export") {
         const filename = `messages-${Date.now()}.json`;
-        await fs.promises.writeFile(
+        await fsp.writeFile(
           filename,
           JSON.stringify(session.messages, null, 2),
           "utf-8",
@@ -94,7 +94,7 @@ const loadSystemPrompt = async (defaultMessage: string) => {
   ];
   for (const p of systemPromptPaths) {
     try {
-      const content = await fs.promises.readFile(p, "utf-8");
+      const content = await fsp.readFile(p, "utf-8");
       if (content.trim()) {
         systemMessage = content.trim();
         break;

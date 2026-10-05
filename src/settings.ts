@@ -1,4 +1,4 @@
-import fs from "node:fs/promises";
+import fsp from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 
@@ -13,7 +13,7 @@ const settingsPath = () =>
 export const loadSettings = async (): Promise<LawtSettings> => {
   try {
     const value: unknown = JSON.parse(
-      await fs.readFile(settingsPath(), "utf8"),
+      await fsp.readFile(settingsPath(), "utf8"),
     );
     if (!value || typeof value !== "object" || Array.isArray(value)) return {};
 
@@ -38,7 +38,7 @@ export const saveSettings = async (settings: {
   let existing: Record<string, unknown> = {};
 
   try {
-    const value: unknown = JSON.parse(await fs.readFile(filePath, "utf8"));
+    const value: unknown = JSON.parse(await fsp.readFile(filePath, "utf8"));
     if (value && typeof value === "object" && !Array.isArray(value)) {
       existing = value as Record<string, unknown>;
     }
@@ -46,8 +46,8 @@ export const saveSettings = async (settings: {
     // A missing or malformed settings file can be replaced with valid settings.
   }
 
-  await fs.mkdir(path.dirname(filePath), { recursive: true });
-  await fs.writeFile(
+  await fsp.mkdir(path.dirname(filePath), { recursive: true });
+  await fsp.writeFile(
     filePath,
     `${JSON.stringify(
       {

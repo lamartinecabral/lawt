@@ -1,4 +1,4 @@
-import fs from "node:fs/promises";
+import fsp from "node:fs/promises";
 import path from "node:path";
 import z from "zod";
 import { fail, getResolvedPath, ok, tool } from "./utils.ts";
@@ -17,7 +17,7 @@ export const write_file = tool({
       let fileExists = false;
 
       try {
-        await fs.stat(resolvedPath);
+        await fsp.stat(resolvedPath);
         fileExists = true;
       } catch (err) {
         if (!(err instanceof Error && "code" in err && err.code === "ENOENT")) {
@@ -26,8 +26,8 @@ export const write_file = tool({
       }
 
       const directory = path.dirname(resolvedPath);
-      await fs.mkdir(directory, { recursive: true });
-      await fs.writeFile(resolvedPath, args.content, "utf-8");
+      await fsp.mkdir(directory, { recursive: true });
+      await fsp.writeFile(resolvedPath, args.content, "utf-8");
       const relativePath = path.relative(process.cwd(), resolvedPath);
 
       return ok(

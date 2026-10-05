@@ -1,4 +1,4 @@
-import fs from "node:fs/promises";
+import fsp from "node:fs/promises";
 import path from "node:path";
 import z from "zod";
 import { fail, getResolvedPath, ok, tool } from "./utils.ts";
@@ -19,12 +19,12 @@ export const replace_string_in_file = tool({
   async execute(args) {
     try {
       const resolvedPath = getResolvedPath(args.path);
-      const stats = await fs.stat(resolvedPath);
+      const stats = await fsp.stat(resolvedPath);
       if (!stats.isFile()) {
         return fail(`Not a file: ${args.path}`);
       }
 
-      const original = await fs.readFile(resolvedPath, "utf-8");
+      const original = await fsp.readFile(resolvedPath, "utf-8");
       const replacement = args.new_text;
       let updated = original;
 
@@ -51,7 +51,7 @@ export const replace_string_in_file = tool({
         return ok(`file updated: ${relativePath} (no changes made)`);
       }
 
-      await fs.writeFile(resolvedPath, updated, "utf-8");
+      await fsp.writeFile(resolvedPath, updated, "utf-8");
       return ok(`file updated: ${relativePath}`);
     } catch (err) {
       return fail(err instanceof Error ? err.message : String(err));
