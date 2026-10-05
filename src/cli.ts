@@ -72,7 +72,7 @@ program
         console.log(pc.green(`Messages exported to ${filename}`));
       }
       if (res?.trim() === "/model") {
-        await assertModel(client, "");
+        showAvailableModels(client);
       }
     }
 
@@ -136,6 +136,10 @@ const assertModel = async (client: OpenAI, modelId: string | undefined) => {
 
   finish();
   process.exit(0);
+};
+
+const showAvailableModels = (client: OpenAI) => {
+  assertModel(client, "");
 };
 
 program.parse();
