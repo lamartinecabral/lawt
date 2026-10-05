@@ -103,10 +103,10 @@ export const printMessage = (
   if (!content.length) return;
   switch (label) {
     case "tool": {
-      const [toolName, args, output] = content;
+      const [name, args, output] = content;
       console.log(
         [
-          `> ${ellipsis(`${toolName}(${stringify(args)})`, 300)}`,
+          `> ${ellipsis(`${name}(${stringify(args)})`, 300)}`,
           pc.dim(ellipsis(stringify(output), 300, 5)),
         ].join("\n"),
       );
@@ -155,8 +155,8 @@ export const printMessages = (
       const toolCall = toolCalls.find(({ id }) => id === message.tool_call_id);
       if (!toolCall) continue;
       const { name, arguments: args } = toolCall.function ?? {};
-      const content = message.content;
-      printMessage("tool", name, args, content);
+      const output = message.content;
+      printMessage("tool", name, args, output);
     }
   }
 };
