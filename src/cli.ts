@@ -16,10 +16,10 @@ program
   .name(pkg.name)
   .description(pkg.description)
   .version(pkg.version, "-v, --version")
-  .option("-m, --model <model>", "model id")
+  .option("-m, --model <model>", "model ID")
   .option("-t, --think <think>", "reasoning effort")
   .option("-r, --resume", "resume session")
-  .option("-l, --list", "list available models")
+  .option("-c, --custom", "allow a custom model ID")
   .action(async (options) => {
     const client = new OpenAI(
       await loadProvider({
@@ -28,15 +28,11 @@ program
       }),
     );
 
-    if (options.list) {
-      await showAvailableModels({ client });
-      finish();
-      process.exit(0);
-    }
-
     const settings = await loadSettings();
 
-    const modelId = await assertModel(client, options.model ?? settings.model);
+    const modelId = options.custom
+      ? String(options.model ?? settings.model)
+      : await assertModel(client, options.model ?? settings.model);
 
     const systemPrompt = await loadSystemPrompt(
       "You are an assistant with access to tools.",
@@ -88,6 +84,22 @@ program
 
     console.log(pc.dim("\nGoodbye!"));
     finish();
+  });
+
+program
+  .command("list")
+  .description("list available models")
+  .action(async () => {
+    const client = new OpenAI(
+      await loadProvider({
+        baseURL: "http://localhost:11434/v1",
+        apiKey: "ollama",
+      }),
+    );
+
+    await showAvailableModels({ client });
+    finish();
+    process.exit(0);
   });
 
 const parseReasoningEffort = (value: string) => {

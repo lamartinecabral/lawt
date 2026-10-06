@@ -22,20 +22,23 @@
 ```bash
 npm install
 npm run install:lawt
+lawt list
 lawt --model <model>
 ```
 
-Use `--think <effort>` to set reasoning effort, `--resume` to continue the session for the current working directory, or `--list` to print the available models. Options can also be passed as `-m`, `-t`, `-r`, and `-l`. The selected model and reasoning effort are saved in `~/.lawt/settings.json`.
+Use `--think <effort>` to set reasoning effort, `--resume` to continue the session for the current working directory, or `--custom` to allow a model ID now shown in the available list.
 
 ## Using the assistant
 
 Enter a prompt at the terminal. For a multi-line prompt, put `"""` on a line by itself before and after the text. Available commands are `/exit` or `/quit` to leave, `/export` to save the conversation as JSON, and `/model` to list available models.
 
-The assistant can browse and edit files in the current workspace, run shell commands, and search or fetch web pages. Optional instructions load from `./AGENTS.md` or `~/.lawt/AGENTS.md`. Sessions are saved under `~/.lawt/sessions/` by working directory. See [docs/ollama.md](docs/ollama.md) for Ollama usage tips.
+The assistant can browse and edit files in the current workspace, run shell commands, and search or fetch web pages. A custom system prompt is loaded from `./AGENTS.md` or `~/.lawt/AGENTS.md`.
+
+See [docs/ollama.md](docs/ollama.md) for Ollama usage tips.
 
 ## Providers
 
-Use `~/.lawt/provider.ts` to configure a different OpenAI-compatible model provider or a cloud web search provider:
+Use `~/.lawt/provider.ts` to configure a different OpenAI-compatible model provider or a web search provider:
 
 ```ts
 export default {
