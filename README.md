@@ -47,8 +47,8 @@ export default {
   apiKey: "your-api-key",
   // Optional: choose one web search backend
   webSearch: {
-    local: { chromePath: "default" },
-    // or local: { chromePath: "path/to/chrome" },
+    puppeteer: { chromePath: "default" },
+    // or puppeteer: { chromePath: "path/to/chrome" },
     // or tavily: { apiKey: "your-tavily-api-key" },
     // or ollama: { apiKey: "your-ollama-cloud-api-key" },
   },
