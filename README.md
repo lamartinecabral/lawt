@@ -1,6 +1,12 @@
 # LAWT
 
 [![Tests](https://github.com/lamartinecabral/lawt/actions/workflows/test.yml/badge.svg)](https://github.com/lamartinecabral/lawt/actions/workflows/test.yml)
+[![License: MIT](https://img.shields.io/github/license/lamartinecabral/lawt)](./LICENSE)
+![Node.js 24+](https://img.shields.io/badge/node.js-24%2B-339933?logo=node.js&logoColor=white)
+![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=white)
+![Ollama](https://img.shields.io/badge/Ollama-FFFFFF?logo=ollama&logoColor=black)
+![Gemma](https://img.shields.io/badge/Gemma-376cf2?logo=googlegemini&logoColor=white)
+![Qwen](https://img.shields.io/badge/Qwen-6950EF?&logo=qwen&logoColor=white)
 
 **Local AI With Tools** is a small terminal agent for OpenAI-compatible models. It can work with files in the current directory, run shell commands, and search the web.
 
