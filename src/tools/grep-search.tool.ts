@@ -1,6 +1,6 @@
 import fsp from "node:fs/promises";
 import path from "node:path";
-import fg from "fast-glob";
+import { glob } from "tinyglobby";
 import z from "zod";
 import { fail, getResolvedPath, ok, tool } from "./utils.ts";
 
@@ -150,11 +150,10 @@ async function getSearchFiles(includePattern) {
 
       if (stats.isDirectory()) {
         const directoryPattern = relativePath ? `${relativePath}/**/*` : "**/*";
-        return await fg(directoryPattern, {
+        return await glob(directoryPattern, {
           cwd: process.cwd(),
           onlyFiles: true,
           dot: true,
-          unique: true,
         });
       }
     } catch (err) {
@@ -165,11 +164,10 @@ async function getSearchFiles(includePattern) {
   }
 
   const normalizedPattern = normalizeSearchPattern(query);
-  return await fg(normalizedPattern, {
+  return await glob(normalizedPattern, {
     cwd: process.cwd(),
     onlyFiles: true,
     dot: true,
-    unique: true,
   });
 }
 

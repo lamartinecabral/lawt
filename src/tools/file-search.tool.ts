@@ -1,5 +1,5 @@
 import path from "node:path";
-import fg from "fast-glob";
+import { glob } from "tinyglobby";
 import z from "zod";
 import { fail, getResolvedPath, ok, tool } from "./utils.ts";
 
@@ -17,11 +17,10 @@ export const file_search = tool({
       }
 
       const normalizedPattern = normalizeSearchPattern(query);
-      const matches = await fg(normalizedPattern, {
+      const matches = await glob(normalizedPattern, {
         cwd: process.cwd(),
         onlyFiles: true,
         dot: true,
-        unique: true,
       });
 
       return ok(matches.sort((a, b) => a.localeCompare(b)).join("\n"));
