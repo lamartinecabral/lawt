@@ -2,7 +2,7 @@
 
 [![Tests](https://github.com/lamartinecabral/lawt/actions/workflows/test.yml/badge.svg)](https://github.com/lamartinecabral/lawt/actions/workflows/test.yml)
 [![License: MIT](https://img.shields.io/github/license/lamartinecabral/lawt)](./LICENSE)
-[![Node.js 24+](https://img.shields.io/badge/node.js-24%2B-339933?logo=node.js&logoColor=white)](https://nodejs.org/)
+[![Node.js](https://img.shields.io/badge/Node.js-339933?logo=node.js&logoColor=white)](https://nodejs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Ollama](https://img.shields.io/badge/Ollama-FFFFFF?logo=ollama&logoColor=black)](https://ollama.com/)
 
