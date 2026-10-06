@@ -58,7 +58,7 @@ let provider: Promise<{
     tavily?: {
       apiKey?: string;
     };
-    local?: {
+    puppeteer?: {
       chromePath?: string;
     };
   };

@@ -8,7 +8,7 @@ export const getClient = async () => {
   return await getWebSearchClient({
     ollama: { apiKey: provider.webSearch?.ollama?.apiKey },
     tavily: { apiKey: provider.webSearch?.tavily?.apiKey },
-    local: { chromePath: provider.webSearch?.local?.chromePath },
+    puppeteer: { chromePath: provider.webSearch?.puppeteer?.chromePath },
   });
 };
 
