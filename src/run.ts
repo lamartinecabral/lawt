@@ -25,13 +25,13 @@ export const run: RunType = async ({
   reasoningEffort,
 }) => {
   if (isUsersTurn(session)) {
-  printMessage("user");
+    printMessage("user");
 
-  const prompt = (await input()).trim();
+    const prompt = (await input()).trim();
 
-  if (["/exit", "/quit", "/export", "/model"].includes(prompt)) return prompt;
+    if (["/exit", "/quit", "/export", "/model"].includes(prompt)) return prompt;
 
-  session.push({ role: "user", content: prompt });
+    session.push({ role: "user", content: prompt });
   }
 
   while (true) {
