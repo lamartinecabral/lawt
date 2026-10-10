@@ -24,6 +24,7 @@ export const run: RunType = async ({
   session,
   reasoningEffort,
 }) => {
+  if (isUsersTurn(session)) {
   printMessage("user");
 
   const prompt = (await input()).trim();
@@ -31,6 +32,7 @@ export const run: RunType = async ({
   if (["/exit", "/quit", "/export", "/model"].includes(prompt)) return prompt;
 
   session.push({ role: "user", content: prompt });
+  }
 
   while (true) {
     const spinner = ora().start();
@@ -154,4 +156,10 @@ const extraContent = (obj: unknown) => {
   return typeof obj === "object" && obj && "extra_content" in obj
     ? { extra_content: obj.extra_content }
     : {};
+};
+
+const isUsersTurn = (session: Session) => {
+  if (!session.messages.length) return true;
+  const lastMessage = session.messages[session.messages.length - 1];
+  return lastMessage.role !== "user" && lastMessage.role !== "tool";
 };
