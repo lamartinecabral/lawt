@@ -17,6 +17,7 @@ program
   .description(pkg.description)
   .version(pkg.version, "-v, --version")
   .option("-m, --model <model>", "model ID")
+  .option("-e, --exec <task_prompt>", "execute one task and exit")
   .option("-t, --think <think>", "reasoning effort")
   .option("-r, --resume", "resume session")
   .option("-c, --custom", "allow a custom model ID")
@@ -43,6 +44,13 @@ program
       options.resume,
     );
 
+    if (!options.resume && options.exec) {
+      session.push({
+        role: "user",
+        content: options.exec,
+      });
+    }
+
     const reasoningEffort =
       options.think === undefined
         ? settings.reasoningEffort
@@ -57,16 +65,20 @@ program
     if (session.resumed) printMessages(session.messages);
 
     while (true) {
-      const res = await run({
+      const finishReason = await run({
         client,
         modelId,
         session,
         reasoningEffort,
       });
 
-      if (res?.trim() === "/exit") break;
-      if (res?.trim() === "/quit") break;
-      if (res?.trim() === "/export") {
+      if (!options.resume && options.exec && finishReason !== "cancelled") {
+        finish();
+        process.exit(0);
+      }
+
+      if (finishReason === "exit_command") break;
+      if (finishReason === "export_command") {
         const filename = `messages-${Date.now()}.json`;
         await fsp.writeFile(
           filename,
@@ -75,7 +87,7 @@ program
         );
         console.log(pc.green(`Messages exported to ${filename}`));
       }
-      if (res?.trim() === "/model") {
+      if (finishReason === "list_command") {
         await showAvailableModels({ client });
         finish();
         process.exit(0);

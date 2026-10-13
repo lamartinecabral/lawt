@@ -26,7 +26,7 @@ lawt list
 lawt --model <model>
 ```
 
-Use `--think <effort>` to set reasoning effort, `--resume` to continue the session for the current working directory, or `--custom` to allow a model ID now shown in the available list.
+Use `--exec <task>` to run one task and exit, `--think <effort>` to set reasoning effort, `--resume` to continue the session for the current working directory, or `--custom` to allow a model ID now shown in the available list.
 
 ## Using the assistant
 

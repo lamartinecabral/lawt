@@ -11,12 +11,19 @@ import { Abortables } from "./utils.ts";
 type ToolCall = OpenAI.ChatCompletionMessageFunctionToolCall;
 type DeltaToolCall = OpenAI.ChatCompletionChunk.Choice.Delta.ToolCall;
 
+type FinishReason =
+  | "done"
+  | "cancelled"
+  | "exit_command"
+  | "export_command"
+  | "list_command";
+
 type RunType = (_args: {
   client: OpenAI;
   modelId: string;
   session: Session;
   reasoningEffort: string | null | undefined;
-}) => Promise<string | undefined>;
+}) => Promise<FinishReason>;
 
 export const run: RunType = async ({
   client,
@@ -29,7 +36,9 @@ export const run: RunType = async ({
 
     const prompt = (await input()).trim();
 
-    if (["/exit", "/quit", "/export", "/model"].includes(prompt)) return prompt;
+    if (["/exit", "/quit"].includes(prompt)) return "exit_command";
+    if (["/export"].includes(prompt)) return "export_command";
+    if (["/model"].includes(prompt)) return "list_command";
 
     session.push({ role: "user", content: prompt });
   }
@@ -50,9 +59,11 @@ export const run: RunType = async ({
     });
 
     const controller = {
-      abort: () => {
+      aborted: false,
+      abort: function () {
         stream.controller.abort();
         if (spinner.isSpinning) spinner.stop();
+        this.aborted = true;
       },
     };
 
@@ -108,7 +119,10 @@ export const run: RunType = async ({
       tool_calls: toolCalls.length ? toolCalls : undefined,
     });
 
-    if (!toolCalls.length) break;
+    if (!toolCalls.length) {
+      if (controller.aborted) return "cancelled";
+      return "done";
+    }
 
     for (const toolCall of toolCalls) {
       const tool_name = toolCall.function?.name ?? "";
