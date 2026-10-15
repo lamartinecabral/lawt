@@ -46,6 +46,18 @@ export const run: RunType = async ({
   while (true) {
     const spinner = ora().start();
 
+    const controller = {
+      aborted: false,
+      onAbort: undefined as (() => void) | undefined,
+      abort: function () {
+        this.onAbort?.();
+        if (spinner.isSpinning) spinner.stop();
+        this.aborted = true;
+      },
+    };
+
+    Abortables.add(controller);
+
     const stream = await client.chat.completions.create({
       model: modelId,
       messages: session.messages,
@@ -58,16 +70,16 @@ export const run: RunType = async ({
       },
     });
 
-    const controller = {
-      aborted: false,
-      abort: function () {
-        stream.controller.abort();
-        if (spinner.isSpinning) spinner.stop();
-        this.aborted = true;
-      },
-    };
+    if (controller.aborted) {
+      Abortables.delete(controller);
+      if (!isUsersTurn(session)) {
+        session.push({ role: "assistant", content: "" });
+        printMessage("bot", "");
+      }
+      return "cancelled";
+    }
 
-    Abortables.add(controller);
+    controller.onAbort = () => stream.controller.abort();
 
     let content = "";
     const thinking: Thinking = {};
