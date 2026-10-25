@@ -1,5 +1,4 @@
 import type OpenAI from "openai";
-import type { Stream } from "openai/streaming";
 import ora from "ora";
 import pc from "picocolors";
 import { input, printMessage } from "./io.ts";
@@ -62,20 +61,14 @@ export const run: RunType = async ({
 
     Abortables.add(controller);
 
-    let stream: Stream<OpenAI.ChatCompletionChunk>;
+    let stream: ReturnType<typeof generate>;
     try {
-      const params: OpenAI.ChatCompletionCreateParamsStreaming = {
+      stream = generate({
+        client,
         model: modelId,
-        messages: session.messages,
+        session,
+        reasoningEffort,
         stream: true,
-        tools: await toolsToOpenAIFormat(),
-        // @ts-expect-error setting a valid reasoning value is a responsibility of the user
-        reasoning_effort: reasoningEffort,
-        stream_options: {
-          include_usage: true,
-        },
-      };
-      stream = await client.chat.completions.create(params, {
         signal: controller.signal,
       });
     } catch (err) {
@@ -96,16 +89,13 @@ export const run: RunType = async ({
     const toolCalls: ToolCall[] = [];
 
     let mode = "";
-    for await (const chunk of stream) {
-      if (!chunk.choices.length) continue;
-      const { delta, finish_reason } = chunk.choices[0];
+    for await (const delta of stream) {
       if (spinner.isSpinning) spinner.stop();
-      if (delta?.content) content += delta.content;
       const reasoning = getThinking(delta);
       appendThinking(thinking, delta);
-      if (delta?.tool_calls?.length)
-        appendToolCalls(toolCalls, delta.tool_calls);
-      if (!finish_reason) {
+      if (delta.content) content += delta.content;
+      if (delta.tool_calls?.length) toolCalls.push(...delta.tool_calls);
+      if (!delta.finish_reason) {
         if (reasoning) {
           if (mode !== "thinking") {
             if (mode) console.log("");
@@ -165,6 +155,96 @@ export const run: RunType = async ({
     }
   }
 };
+
+type GenerateParams = {
+  client: OpenAI;
+  model: string;
+  session: Session;
+  reasoningEffort: string | null | undefined;
+  stream: boolean;
+  signal: AbortSignal;
+};
+
+type GenerateResult = Partial<
+  { content: string } & Thinking & { tool_calls: ToolCall[] } & {
+      finish_reason: string;
+      usage?: OpenAI.Completions.CompletionUsage | null;
+    }
+>;
+
+async function* generate({
+  client,
+  model,
+  session,
+  reasoningEffort,
+  stream,
+  signal,
+}: GenerateParams): AsyncGenerator<GenerateResult> {
+  const params: OpenAI.ChatCompletionCreateParams = {
+    model,
+    messages: session.messages,
+    tools: await toolsToOpenAIFormat(),
+    // @ts-expect-error setting a valid reasoning value is a responsibility of the user
+    reasoning_effort: reasoningEffort,
+    stream_options: {
+      include_usage: true,
+    },
+  };
+  if (stream) {
+    const stream = await client.chat.completions.create(
+      { ...params, stream: true },
+      { signal },
+    );
+
+    const toolCalls: ToolCall[] = [];
+
+    for await (const chunk of stream) {
+      if (!chunk.choices.length) continue;
+      const { delta, finish_reason } = chunk.choices[0];
+      if (getThinking(delta)) {
+        const thinking: Thinking = {};
+        appendThinking(thinking, delta);
+        yield thinking;
+      }
+      if (delta?.content) {
+        yield { content: delta.content };
+      }
+      if (delta?.tool_calls?.length) {
+        appendToolCalls(toolCalls, delta.tool_calls);
+      }
+      if (finish_reason) {
+        if (toolCalls.length) {
+          yield { tool_calls: toolCalls };
+        }
+        yield { finish_reason, usage: chunk.usage };
+        return;
+      }
+    }
+  } else {
+    const response = await client.chat.completions.create(
+      { ...params, stream: false },
+      { signal },
+    );
+    if (!response.choices.length) {
+      yield { finish_reason: "done", usage: response.usage };
+    }
+    const { message, finish_reason } = response.choices[0];
+    if (getThinking(message)) {
+      const thinking: Thinking = {};
+      appendThinking(thinking, message);
+      yield thinking;
+    }
+    if (message.content) {
+      yield { content: message.content };
+    }
+    if (message.tool_calls?.length) {
+      // @ts-expect-error multiple types of tools calls are not expected
+      yield { tool_calls: message.tool_calls };
+    }
+    yield { finish_reason, usage: response.usage };
+    return;
+  }
+}
 
 const appendToolCalls = (
   toolCalls: ToolCall[],

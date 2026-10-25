@@ -1,4 +1,3 @@
-import type OpenAI from "openai";
 import { isRecord } from "./utils.ts";
 
 export type Thinking = {
@@ -6,10 +5,7 @@ export type Thinking = {
   reasoning_content?: string;
 };
 
-export const appendThinking = (
-  obj: Thinking,
-  delta: OpenAI.ChatCompletionChunk.Choice.Delta,
-) => {
+export const appendThinking = (obj: Thinking, delta: object) => {
   if ("reasoning" in delta && typeof delta.reasoning === "string") {
     if (!obj.reasoning) obj.reasoning = "";
     obj.reasoning += delta.reasoning;
