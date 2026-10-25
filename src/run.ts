@@ -16,13 +16,15 @@ type FinishReason =
   | "cancelled"
   | "exit_command"
   | "export_command"
-  | "list_command";
+  | "list_command"
+  | "toggle_stream";
 
 type RunType = (_args: {
   client: OpenAI;
   modelId: string;
   session: Session;
   reasoningEffort: string | null | undefined;
+  stream: boolean;
 }) => Promise<FinishReason>;
 
 export const run: RunType = async ({
@@ -30,6 +32,7 @@ export const run: RunType = async ({
   modelId,
   session,
   reasoningEffort,
+  stream: streamFlag,
 }) => {
   if (isUsersTurn(session)) {
     printMessage("user");
@@ -39,6 +42,7 @@ export const run: RunType = async ({
     if (["/exit", "/quit"].includes(prompt)) return "exit_command";
     if (["/export"].includes(prompt)) return "export_command";
     if (["/model"].includes(prompt)) return "list_command";
+    if (["/stream"].includes(prompt)) return "toggle_stream";
 
     session.push({ role: "user", content: prompt });
   }
@@ -68,7 +72,7 @@ export const run: RunType = async ({
         model: modelId,
         session,
         reasoningEffort,
-        stream: true,
+        stream: streamFlag,
         signal: controller.signal,
       });
     } catch (err) {

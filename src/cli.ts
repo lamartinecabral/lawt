@@ -64,12 +64,15 @@ program
 
     if (session.resumed) printMessages(session.messages);
 
+    let stream = true;
+
     while (true) {
       const finishReason = await run({
         client,
         modelId,
         session,
         reasoningEffort,
+        stream,
       });
 
       if (!options.resume && options.exec && finishReason !== "cancelled") {
@@ -91,6 +94,12 @@ program
         await showAvailableModels({ client });
         finish();
         process.exit(0);
+      }
+      if (finishReason === "toggle_stream") {
+        stream = !stream;
+        console.log(
+          pc.green(`Streaming is now ${stream ? "enabled" : "disabled"}.`),
+        );
       }
     }
 
