@@ -1,4 +1,5 @@
 import type OpenAI from "openai";
+import type { Stream } from "openai/streaming";
 import ora from "ora";
 import pc from "picocolors";
 import { input, printMessage } from "./io.ts";
@@ -47,10 +48,13 @@ export const run: RunType = async ({
     const spinner = ora().start();
 
     const controller = {
+      instance: new AbortController(),
+      get signal() {
+        return this.instance.signal;
+      },
       aborted: false,
-      onAbort: undefined as (() => void) | undefined,
       abort: function () {
-        this.onAbort?.();
+        this.instance.abort();
         if (spinner.isSpinning) spinner.stop();
         this.aborted = true;
       },
@@ -58,28 +62,34 @@ export const run: RunType = async ({
 
     Abortables.add(controller);
 
-    const stream = await client.chat.completions.create({
-      model: modelId,
-      messages: session.messages,
-      stream: true,
-      tools: await toolsToOpenAIFormat(),
-      // @ts-expect-error setting a valid reasoning value is a responsibility of the user
-      reasoning_effort: reasoningEffort,
-      stream_options: {
-        include_usage: true,
-      },
-    });
-
-    if (controller.aborted) {
-      Abortables.delete(controller);
-      if (!isUsersTurn(session)) {
-        session.push({ role: "assistant", content: "" });
-        printMessage("bot", "");
+    let stream: Stream<OpenAI.ChatCompletionChunk>;
+    try {
+      const params: OpenAI.ChatCompletionCreateParamsStreaming = {
+        model: modelId,
+        messages: session.messages,
+        stream: true,
+        tools: await toolsToOpenAIFormat(),
+        // @ts-expect-error setting a valid reasoning value is a responsibility of the user
+        reasoning_effort: reasoningEffort,
+        stream_options: {
+          include_usage: true,
+        },
+      };
+      stream = await client.chat.completions.create(params, {
+        signal: controller.signal,
+      });
+    } catch (err) {
+      if (controller.aborted) {
+        Abortables.delete(controller);
+        if (!isUsersTurn(session)) {
+          session.push({ role: "assistant", content: "" });
+          printMessage("bot", "");
+        }
+        return "cancelled";
+      } else {
+        throw err;
       }
-      return "cancelled";
     }
-
-    controller.onAbort = () => stream.controller.abort();
 
     let content = "";
     const thinking: Thinking = {};
@@ -118,6 +128,9 @@ export const run: RunType = async ({
         if (mode) {
           mode = "";
           console.log("");
+        } else {
+          if (reasoning) printMessage("thinking", reasoning);
+          if (delta.content) printMessage("bot", delta.content);
         }
       }
     }
