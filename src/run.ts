@@ -25,7 +25,7 @@ type RunType = (_args: {
   session: Session;
   reasoningEffort: string | null | undefined;
   stream: boolean;
-}) => Promise<FinishReason>;
+}) => Promise<ReturnType<typeof done>>;
 
 export const run: RunType = async ({
   client,
@@ -39,10 +39,10 @@ export const run: RunType = async ({
 
     const prompt = (await input()).trim();
 
-    if (["/exit", "/quit"].includes(prompt)) return "exit_command";
-    if (["/export"].includes(prompt)) return "export_command";
-    if (["/model"].includes(prompt)) return "list_command";
-    if (["/stream"].includes(prompt)) return "toggle_stream";
+    if (["/exit", "/quit"].includes(prompt)) return done("exit_command");
+    if (["/export"].includes(prompt)) return done("export_command");
+    if (["/model"].includes(prompt)) return done("list_command");
+    if (["/stream"].includes(prompt)) return done("toggle_stream");
 
     session.push({ role: "user", content: prompt });
   }
@@ -82,7 +82,7 @@ export const run: RunType = async ({
           session.push({ role: "assistant", content: "" });
           printMessage("bot", "");
         }
-        return "cancelled";
+        return done("cancelled");
       } else {
         throw err;
       }
@@ -91,6 +91,7 @@ export const run: RunType = async ({
     let content = "";
     const thinking: Thinking = {};
     const toolCalls: ToolCall[] = [];
+    let usage: GenerateResult["usage"];
 
     let mode = "";
     for await (const delta of stream) {
@@ -127,6 +128,7 @@ export const run: RunType = async ({
           if (delta.content) printMessage("bot", delta.content);
         }
       }
+      usage = delta.usage;
     }
 
     Abortables.delete(controller);
@@ -139,8 +141,8 @@ export const run: RunType = async ({
     });
 
     if (!toolCalls.length) {
-      if (controller.aborted) return "cancelled";
-      return "done";
+      if (controller.aborted) return done("cancelled");
+      return done("done", usage);
     }
 
     for (const toolCall of toolCalls) {
@@ -158,6 +160,10 @@ export const run: RunType = async ({
       printMessage("tool", tool_name, args, content);
     }
   }
+};
+
+const done = (finishReason: FinishReason, usage?: GenerateResult["usage"]) => {
+  return { finishReason, usage };
 };
 
 type GenerateParams = {

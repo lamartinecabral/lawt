@@ -160,3 +160,11 @@ export const printMessages = (
     }
   }
 };
+
+export const printUsage = (usage?: object | null) => {
+  if (!usage) return;
+  console.log();
+  for (const [key, value] of Object.entries(usage)) {
+    console.log(pc.dim(`${key}: ${stringify(value)}`));
+  }
+};

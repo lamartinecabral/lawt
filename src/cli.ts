@@ -4,7 +4,7 @@ import { Command } from "commander";
 import OpenAI from "openai";
 import pc from "picocolors";
 import pkg from "../package.json" with { type: "json" };
-import { finish, printMessages } from "./io.ts";
+import { finish, printMessages, printUsage } from "./io.ts";
 import { run } from "./run.ts";
 import { Session } from "./session.ts";
 import { loadSettings, saveSettings } from "./settings.ts";
@@ -65,15 +65,17 @@ program
     if (session.resumed) printMessages(session.messages);
 
     let stream = true;
+    let usage: Awaited<ReturnType<typeof run>>["usage"];
 
     while (true) {
-      const finishReason = await run({
+      const { finishReason, usage: usageData } = await run({
         client,
         modelId,
         session,
         reasoningEffort,
         stream,
       });
+      if (usageData) usage = usageData;
 
       if (!options.resume && options.exec && finishReason !== "cancelled") {
         finish();
@@ -104,6 +106,7 @@ program
     }
 
     console.log(pc.dim("\nGoodbye!"));
+    if (usage) printUsage(usage);
     finish();
   });
 
