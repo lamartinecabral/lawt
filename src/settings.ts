@@ -18,8 +18,9 @@ export const loadSettings = async (): Promise<LawtSettings> => {
     if (!value || typeof value !== "object" || Array.isArray(value)) return {};
 
     const settings = value as Record<string, unknown>;
-    const { model, reasoningEffort } = settings;
+    const { model, reasoningEffort, ...rest } = settings;
     return {
+      ...rest,
       ...(typeof model === "string" ? { model } : {}),
       ...(typeof reasoningEffort === "string" || reasoningEffort === null
         ? { reasoningEffort }

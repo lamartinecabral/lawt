@@ -24,6 +24,7 @@ type RunType = (_args: {
   modelId: string;
   session: Session;
   reasoningEffort: string | null | undefined;
+  otherSettings: Record<string, unknown>;
   stream: boolean;
 }) => Promise<ReturnType<typeof done>>;
 
@@ -32,6 +33,7 @@ export const run: RunType = async ({
   modelId,
   session,
   reasoningEffort,
+  otherSettings,
   stream: streamFlag,
 }) => {
   if (isUsersTurn(session)) {
@@ -72,6 +74,7 @@ export const run: RunType = async ({
         model: modelId,
         session,
         reasoningEffort,
+        otherSettings,
         stream: streamFlag,
         signal: controller.signal,
       });
@@ -171,6 +174,7 @@ type GenerateParams = {
   model: string;
   session: Session;
   reasoningEffort: string | null | undefined;
+  otherSettings: Record<string, unknown>;
   stream: boolean;
   signal: AbortSignal;
 };
@@ -187,10 +191,12 @@ async function* generate({
   model,
   session,
   reasoningEffort,
+  otherSettings,
   stream,
   signal,
 }: GenerateParams): AsyncGenerator<GenerateResult> {
   const params: OpenAI.ChatCompletionCreateParams = {
+    ...otherSettings,
     model,
     messages: session.messages,
     tools: await toolsToOpenAIFormat(),

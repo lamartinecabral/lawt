@@ -29,11 +29,11 @@ program
       }),
     );
 
-    const settings = await loadSettings();
+    const { model, reasoningEffort, ...otherSettings } = await loadSettings();
 
     const modelId = options.custom
-      ? String(options.model ?? settings.model)
-      : await assertModel(client, options.model ?? settings.model);
+      ? String(options.model ?? model)
+      : await assertModel(client, options.model ?? model);
 
     const systemPrompt = await loadSystemPrompt(
       "You are an assistant with access to tools.",
@@ -51,16 +51,16 @@ program
       });
     }
 
-    const reasoningEffort =
+    const thinking =
       options.think === undefined
-        ? settings.reasoningEffort
+        ? reasoningEffort
         : parseReasoningEffort(options.think);
 
-    await saveSettings({ model: modelId, reasoningEffort });
+    await saveSettings({ model: modelId, reasoningEffort: thinking });
 
     console.log(pc.bgGreen(`LAWT - Local AI With Tools`));
     console.log(pc.dim(`   model: ${modelId}`));
-    console.log(pc.dim(`thinking: ${String(reasoningEffort)}`));
+    console.log(pc.dim(`thinking: ${String(thinking)}`));
 
     if (session.resumed) printMessages(session.messages);
 
@@ -72,8 +72,9 @@ program
         client,
         modelId,
         session,
-        reasoningEffort,
+        reasoningEffort: thinking,
         stream,
+        otherSettings,
       });
       if (usageData) usage = usageData;
 
