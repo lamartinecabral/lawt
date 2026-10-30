@@ -38,17 +38,17 @@ Interactive commands are `/exit` and `/quit` to leave, `/model` to list models, 
 
 The model can call these built-in tools:
 
-| Tool | Purpose |
-| --- | --- |
-| `list_directory` | List files and subdirectories at a workspace path. |
-| `read_file` | Read a file, optionally selecting a 1-indexed line range. |
-| `write_file` | Create a file and parent directories, or overwrite an existing file. |
-| `replace_string_in_file` | Replace one exact, unique string in a file. |
-| `file_search` | Find files by glob pattern. |
-| `grep_search` | Search file contents with a literal string or regular expression. |
-| `run_shell_command` | Run a shell command from the current working directory. |
-| `web_search` | Search the live web. |
-| `fetch_page_content` | Fetch a URL and extract its page text. |
+| Tool                     | Purpose                                                              |
+| ------------------------ | -------------------------------------------------------------------- |
+| `list_directory`         | List files and subdirectories at a workspace path.                   |
+| `read_file`              | Read a file, optionally selecting a 1-indexed line range.            |
+| `write_file`             | Create a file and parent directories, or overwrite an existing file. |
+| `replace_string_in_file` | Replace one exact, unique string in a file.                          |
+| `file_search`            | Find files by glob pattern.                                          |
+| `grep_search`            | Search file contents with a literal string or regular expression.    |
+| `run_shell_command`      | Run a shell command from the current working directory.              |
+| `web_search`             | Search the live web.                                                 |
+| `fetch_page_content`     | Fetch a URL and extract its page text.                               |
 
 File tools resolve paths against the current working directory and reject paths that resolve outside it. Shell commands run from that directory with a 15-second timeout. Successful tool output is limited to 10,000 characters before being passed back to the model.
 
