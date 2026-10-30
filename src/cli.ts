@@ -21,6 +21,8 @@ program
   .option("-t, --think <think>", "reasoning effort")
   .option("-r, --resume", "resume session")
   .option("-c, --custom", "allow a custom model ID")
+  .option("--temperature <temperature>", "set the temperature for the model")
+  .option("--top-p <top_p>", "set the top_p for the model")
   .action(async (options) => {
     const client = new OpenAI(
       await loadProvider({
@@ -50,6 +52,10 @@ program
         content: options.exec,
       });
     }
+
+    if (options.temperature)
+      otherSettings["temperature"] = parseFloat(options.temperature);
+    if (options.topP) otherSettings["top_p"] = parseFloat(options.topP);
 
     const thinking =
       options.think === undefined
