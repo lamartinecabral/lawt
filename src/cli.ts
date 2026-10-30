@@ -54,8 +54,8 @@ program
     }
 
     if (options.temperature)
-      otherSettings["temperature"] = parseFloat(options.temperature);
-    if (options.topP) otherSettings["top_p"] = parseFloat(options.topP);
+      otherSettings.temperature = parseFloat(options.temperature);
+    if (options.topP) otherSettings.top_p = parseFloat(options.topP);
 
     const thinking =
       options.think === undefined

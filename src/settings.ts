@@ -5,6 +5,7 @@ import path from "node:path";
 export type LawtSettings = {
   model?: string;
   reasoningEffort?: string | null;
+  [other: string]: unknown;
 };
 
 const settingsPath = () =>
