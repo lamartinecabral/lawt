@@ -7,6 +7,10 @@
 
 Requires Node.js 24 or newer and an OpenAI-compatible provider. Ollama is the default provider and should be running locally.
 
+`lawt` is intentionally a minimal implementation: the code should be easy for anyone to understand, own, and adapt to their own workflow. Its small surface area also keeps the context sent to local models clean and lightweight, leaving more room for the task at hand.
+
+![lawt screenshot](./docs/screenshot.png)
+
 ## Quick start
 
 ```bash
