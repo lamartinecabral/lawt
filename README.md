@@ -2,6 +2,7 @@
 
 [![Tests](https://github.com/lamartinecabral/lawt/actions/workflows/test.yml/badge.svg)](https://github.com/lamartinecabral/lawt/actions/workflows/test.yml)
 [![License: MIT](https://img.shields.io/github/license/lamartinecabral/lawt)](./LICENSE)
+[![Made by humans](https://img.shields.io/badge/made%20by-humans-brightgreen)](https://github.com/lamartinecabral)
 
 **Local AI With Tools** is a small terminal assistant for OpenAI-compatible chat models. It can search and edit files in your current workspace, run shell commands, and look up web pages.
 
