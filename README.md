@@ -29,6 +29,6 @@ lawt --model <model-id>
 
 Enter a request at the prompt, for example `Summarize the files in this project`. Use `lawt --exec "<task>"` to run a single task and exit. Run `lawt --help` for command-line options.
 
-In an interactive session, use `/exit` or `/quit` to leave, `/model` to list models, `/stream` to toggle streamed output, and `/export` to save the conversation as JSON. Start a multi-line prompt by entering `"""` on a line, and finish it with another `"""` line. Press Escape to cancel a response.
+In an interactive session, model responses appear as they are generated. Enter a multi-line prompt by typing `"""` on a line by itself, then close it with another `"""` line. Press Escape to cancel a response. Use `/exit` or `/quit` to leave, `/model` to list models, and `/export` to save the conversation as JSON.
 
 See [PROJECT.md](./PROJECT.md) for project details and [docs/ollama.md](./docs/ollama.md) for Ollama setup tips. To connect a different provider or configure web search, see the provider section in [PROJECT.md](./PROJECT.md).
