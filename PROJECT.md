@@ -32,7 +32,7 @@ With `--exec <task>`, the prompt is sent immediately and the process exits after
 - `--resume` (`-r`) loads the saved conversation for the current working directory.
 - `--temperature <number>` and `--top-p <number>` pass sampling settings to the chat completion request.
 
-Interactive commands are `/exit` and `/quit` to leave, `/model` to list models, and `/export` to save the conversation to a timestamped JSON file in the current directory. To enter a multi-line prompt, enter `"""` on a line by itself, type the prompt, and close it with another `"""`. Escape cancels an in-progress response; Ctrl+C cancels the response or exits when idle.
+Interactive commands are `/exit` and `/quit` to leave, and `/export` to save the conversation to a timestamped JSON file in the current directory. To enter a multi-line prompt, enter `"""` on a line by itself, type the prompt, and close it with another `"""`. Escape cancels an in-progress response; Ctrl+C cancels the response or exits when idle.
 
 ### Workspace tools
 

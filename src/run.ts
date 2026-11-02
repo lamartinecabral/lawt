@@ -11,12 +11,7 @@ import { Abortables } from "./utils.ts";
 type ToolCall = OpenAI.ChatCompletionMessageFunctionToolCall;
 type DeltaToolCall = OpenAI.ChatCompletionChunk.Choice.Delta.ToolCall;
 
-type FinishReason =
-  | "done"
-  | "cancelled"
-  | "exit_command"
-  | "export_command"
-  | "list_command";
+type FinishReason = "done" | "cancelled" | "exit_command" | "export_command";
 
 type RunType = (_args: {
   client: OpenAI;
@@ -40,7 +35,6 @@ export const run: RunType = async ({
 
     if (["/exit", "/quit"].includes(prompt)) return done("exit_command");
     if (["/export"].includes(prompt)) return done("export_command");
-    if (["/model"].includes(prompt)) return done("list_command");
 
     session.push({ role: "user", content: prompt });
   }

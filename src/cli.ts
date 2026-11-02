@@ -97,11 +97,6 @@ program
         );
         console.log(pc.green(`Messages exported to ${filename}`));
       }
-      if (finishReason === "list_command") {
-        await showAvailableModels({ client });
-        finish();
-        process.exit(0);
-      }
     }
 
     console.log(pc.dim("\nGoodbye!"));
