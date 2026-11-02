@@ -26,8 +26,8 @@ program
   .action(async (options) => {
     const client = new OpenAI(
       await loadProvider({
-        baseURL: "http://localhost:11434/v1",
-        apiKey: "ollama",
+        baseURL: "http://localhost:9931/v1",
+        apiKey: "llama.app",
       }),
     );
 
@@ -115,8 +115,8 @@ program
   .action(async () => {
     const client = new OpenAI(
       await loadProvider({
-        baseURL: "http://localhost:11434/v1",
-        apiKey: "ollama",
+        baseURL: "http://localhost:9931/v1",
+        apiKey: "llama.app",
       }),
     );
 

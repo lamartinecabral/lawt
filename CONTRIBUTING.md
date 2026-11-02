@@ -16,7 +16,7 @@ To run the CLI from the checkout while developing, use:
 npm start
 ```
 
-The CLI connects to Ollama at `http://localhost:11434/v1` by default. For another OpenAI-compatible provider, configure `~/.lawt/provider.ts` as described in [PROJECT.md](./PROJECT.md).
+The CLI connects to Llama at `http://localhost:9931/v1` by default. For another OpenAI-compatible provider, configure `~/.lawt/provider.ts` as described in [PROJECT.md](./PROJECT.md).
 
 ## Before submitting a change
 

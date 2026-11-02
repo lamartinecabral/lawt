@@ -7,7 +7,7 @@ The project favors a small, readable implementation that can be understood and a
 ## Requirements and installation
 
 - Node.js 24 or newer.
-- An OpenAI-compatible API endpoint that supports chat completions and tool calls. Ollama at `http://localhost:11434/v1` is the default.
+- An OpenAI-compatible API endpoint that supports chat completions and tool calls. Llama at `http://localhost:9931/v1` is the default.
 
 Install and link the CLI from a checkout:
 
@@ -62,7 +62,7 @@ By default, the system prompt is `You are an assistant with access to tools.` LA
 
 ### Provider configuration
 
-The default chat provider is Ollama's local OpenAI-compatible endpoint at `http://localhost:11434/v1` with the API key value `ollama`. To use another provider, create `~/.lawt/provider.ts` and export a default object with a `baseURL` and `apiKey`:
+The default chat provider is Llama at `http://localhost:9931/v1` with the API key value `llama.app`. Start Llama and install a model; no provider configuration file is needed for this default. To use another provider, create `~/.lawt/provider.ts` and export a default object with a `baseURL` and `apiKey`:
 
 ```ts
 export default {
@@ -86,7 +86,7 @@ export default {
 };
 ```
 
-If either `baseURL` or `apiKey` is missing, LAWT uses its default Ollama chat provider. Web search settings are optional. See the guides for [Ollama](./docs/ollama.md) and [Llama for macOS](./docs/llama.md) for provider-specific setup details.
+If either `baseURL` or `apiKey` is missing, LAWT uses its default Llama provider. Web search settings are optional. See the guides for [Llama](./docs/llama.md) and [Ollama](./docs/ollama.md) for provider-specific setup details.
 
 ## Development
 

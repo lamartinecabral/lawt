@@ -1,6 +1,29 @@
 # Running lawt With Ollama
 
-This guide covers the extra Ollama setup that makes `lawt` workable for longer, tool-using sessions.
+This guide explains how to configure Ollama as `lawt`'s provider and adjust Ollama for longer, tool-using sessions.
+
+## Configure lawt to use Ollama
+
+Llama is `lawt`'s default provider. To use Ollama, create `~/.lawt/provider.ts` with Ollama's local OpenAI-compatible endpoint:
+
+```ts
+export default {
+  baseURL: "http://localhost:11434/v1",
+  apiKey: "ollama",
+};
+```
+
+Ollama's local server does not require an API key; `lawt` needs a non-empty value for its OpenAI client, so `ollama` can be any string. If Ollama runs on another machine, replace `localhost` with that machine's address.
+
+Install or pull a model, then list the models Ollama provides and start a session with the chosen model ID:
+
+```bash
+ollama pull <model>
+lawt list
+lawt -m <model-id>
+```
+
+The configuration file overrides the default provider for both `lawt` and `lawt list`.
 
 ## Why this matters
 

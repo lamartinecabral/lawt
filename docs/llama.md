@@ -1,28 +1,18 @@
-# Running lawt with Llama for macOS
+# Running lawt with Llama
 
-Llama is a macOS menu bar app that runs local models and provides an OpenAI-compatible API. This guide connects `lawt` to that API and covers settings for longer sessions.
+Llama is the default provider for `lawt`. It is a macOS menu bar app that runs local models and provides an OpenAI-compatible API. Start Llama and install a model; `lawt` connects to its local API at `http://localhost:9931/v1` with no additional provider configuration.
 
 ## Connect lawt
 
 1. Install and launch [Llama](https://github.com/ggml-org/Llama-macOS). Install a model in the app and start its server.
-2. Create `~/.lawt/provider.ts` with the Llama API address:
-
-   ```ts
-   export default {
-     baseURL: "http://localhost:9931/v1",
-     apiKey: "llama",
-   };
-   ```
-
-   The local server does not require an API key; `lawt` requires a non-empty key for its OpenAI client, so the value can be any string.
-3. List the models Llama serves, then start `lawt` with the model ID shown:
+2. List the models Llama serves, then start `lawt` with the model ID shown:
 
    ```bash
    lawt list
    lawt -m <model-id>
    ```
 
-The server starts with Llama and listens on `http://localhost:9931/v1` by default. The app loads a model when requested and unloads it after its idle timeout.
+The server starts with Llama and listens on `http://localhost:9931/v1` by default. `lawt` supplies the API key value `llama.app`; the local server does not require an API key. The app loads a model when requested and unloads it after its idle timeout.
 
 ## Set a longer context
 
@@ -49,4 +39,4 @@ In Llama's settings, increase the timeout in **Unload when idle** if the model u
 - If the model loses earlier conversation details, raise `ctx-size` if your Mac has enough memory.
 - Tool use depends on the model's chat template and tool-calling support; try a model that supports tools if it only replies with text.
 
-See the [Llama macOS documentation](https://github.com/ggml-org/Llama-macOS/blob/main/readme.md) for installation, model configuration, and server details.
+See the [Llama documentation](https://github.com/ggml-org/Llama-macOS/blob/main/readme.md) for installation, model configuration, and server details.
