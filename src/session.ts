@@ -9,20 +9,22 @@ type Message = OpenAI.ChatCompletionMessageParam;
 export class Session {
   messages: Message[] = [];
   readonly resumed: boolean;
+  private pendingSaves = 0;
 
   constructor(messages: Message[], resume = false) {
     const lastMessages = (resume ? loadSession : () => {})();
     this.resumed = lastMessages !== undefined;
     this.messages = lastMessages ?? messages;
+    this.pendingSaves = this.resumed ? 0 : this.messages.length;
   }
   push = (message: Message) => {
-    // it should only save new messages after a response
-    let i = this.messages.length;
-    while (i > 0 && ["system", "user"].includes(this.messages[i - 1].role)) i--;
     this.messages.push(message);
+    this.pendingSaves++;
+    // it should only save new messages after a response
     if (message.role === "user") return;
-    if (i === 0) saveSession(this.messages);
-    else this.messages.slice(i).forEach(saveMessage);
+    if (this.pendingSaves === this.messages.length) saveSession(this.messages);
+    else this.messages.slice(-this.pendingSaves).forEach(saveMessage);
+    this.pendingSaves = 0;
   };
 }
 
