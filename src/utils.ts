@@ -19,6 +19,9 @@ export const Abortables = {
   },
 };
 
+export const sleep = async (ms: number) =>
+  new Promise((r) => setTimeout(r, ms));
+
 export const ellipsis = (str = "", len = 50, lines = 0) => {
   const result =
     len && str.length > len ? `${str.substring(0, len - 1)}…` : str;
