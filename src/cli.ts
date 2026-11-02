@@ -70,7 +70,6 @@ program
 
     if (session.resumed) printMessages(session.messages);
 
-    let stream = true;
     let usage: Awaited<ReturnType<typeof run>>["usage"];
 
     while (true) {
@@ -79,7 +78,6 @@ program
         modelId,
         session,
         reasoningEffort: thinking,
-        stream,
         otherSettings,
       });
       if (usageData) usage = usageData;
@@ -103,12 +101,6 @@ program
         await showAvailableModels({ client });
         finish();
         process.exit(0);
-      }
-      if (finishReason === "toggle_stream") {
-        stream = !stream;
-        console.log(
-          pc.green(`Streaming is now ${stream ? "enabled" : "disabled"}.`),
-        );
       }
     }
 

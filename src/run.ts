@@ -16,8 +16,7 @@ type FinishReason =
   | "cancelled"
   | "exit_command"
   | "export_command"
-  | "list_command"
-  | "toggle_stream";
+  | "list_command";
 
 type RunType = (_args: {
   client: OpenAI;
@@ -25,7 +24,6 @@ type RunType = (_args: {
   session: Session;
   reasoningEffort: string | null | undefined;
   otherSettings: Record<string, unknown>;
-  stream: boolean;
 }) => Promise<ReturnType<typeof done>>;
 
 export const run: RunType = async ({
@@ -34,7 +32,6 @@ export const run: RunType = async ({
   session,
   reasoningEffort,
   otherSettings,
-  stream: streamFlag,
 }) => {
   if (isUsersTurn(session)) {
     printMessage("user");
@@ -44,7 +41,6 @@ export const run: RunType = async ({
     if (["/exit", "/quit"].includes(prompt)) return done("exit_command");
     if (["/export"].includes(prompt)) return done("export_command");
     if (["/model"].includes(prompt)) return done("list_command");
-    if (["/stream"].includes(prompt)) return done("toggle_stream");
 
     session.push({ role: "user", content: prompt });
   }
@@ -75,7 +71,7 @@ export const run: RunType = async ({
         session,
         reasoningEffort,
         otherSettings,
-        stream: streamFlag,
+        stream: true,
         signal: controller.signal,
       });
     } catch (err) {
@@ -182,6 +178,7 @@ type GenerateParams = {
 type GenerateResult = Partial<
   { content: string } & Thinking & { tool_calls: ToolCall[] } & {
       finish_reason: string;
+    } & {
       usage?: OpenAI.Completions.CompletionUsage | null;
     }
 >;
@@ -215,6 +212,7 @@ async function* generate({
     const toolCalls: ToolCall[] = [];
 
     for await (const chunk of stream) {
+      if (chunk.usage) yield { usage: chunk.usage };
       if (!chunk.choices.length) continue;
       const { delta, finish_reason } = chunk.choices[0];
       if (getThinking(delta)) {
@@ -232,8 +230,7 @@ async function* generate({
         if (toolCalls.length) {
           yield { tool_calls: toolCalls };
         }
-        yield { finish_reason, usage: chunk.usage };
-        return;
+        yield { finish_reason };
       }
     }
   } else {
