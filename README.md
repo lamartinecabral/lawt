@@ -5,7 +5,7 @@
 
 **Local AI With Tools** is a small terminal assistant for OpenAI-compatible chat models. It can search and edit files in your current workspace, run shell commands, and look up web pages.
 
-Requires Node.js 24 or newer. The default provider is [Llama](./docs/llama.md), which should be running locally. LAWT also supports other OpenAI-compatible providers.
+Requires Node.js 24 or newer. The default provider is [Llama](https://llama.app), which should be running locally. LAWT also supports other OpenAI-compatible providers.
 
 `lawt` is intentionally a minimal implementation: the code should be easy for anyone to understand, own, and adapt to their own workflow. Its small surface area also keeps the context sent to local models clean and lightweight, leaving more room for the task at hand.
 
