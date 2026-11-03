@@ -120,7 +120,7 @@ const appendToolCalls = (
         ...extraContent(delta),
       });
     else {
-      const lastCall = toolCalls[toolCalls.length - 1].function;
+      const lastCall = toolCalls[toolCalls.length - 1]?.function;
       if (!lastCall) continue;
       if (!lastCall.arguments) lastCall.arguments = "";
       lastCall.arguments += delta.function?.arguments ?? "";
