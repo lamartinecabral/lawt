@@ -30,7 +30,7 @@ const samples = [
   {
     name: "openrouter",
     reasoningField: "reasoning",
-    expectedToolArguments: undefined,
+    expectedToolArguments: '{"path":"."}',
   },
 ] as const;
 
@@ -111,14 +111,10 @@ describe("generate stream samples", () => {
       );
       assert.equal(toolCalls.length, 1);
       assert.equal(toolCalls[0].function.name, "list_directory");
-      if (sample.expectedToolArguments) {
-        assert.equal(
-          toolCalls[0].function.arguments,
-          sample.expectedToolArguments,
-        );
-      } else {
-        assert.match(toolCalls[0].function.arguments, /path/);
-      }
+      assert.equal(
+        toolCalls[0].function.arguments,
+        sample.expectedToolArguments,
+      );
       assert.deepStrictEqual(
         results.filter((result) => result.finish_reason),
         [{ finish_reason: "tool_calls" }],
