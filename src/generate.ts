@@ -50,6 +50,7 @@ export async function* generate({
     );
 
     const toolCalls: ToolCall[] = [];
+    let finished = false;
 
     for await (const chunk of stream) {
       if (chunk.usage) yield { usage: chunk.usage };
@@ -66,11 +67,12 @@ export async function* generate({
       if (delta?.tool_calls?.length) {
         appendToolCalls(toolCalls, delta.tool_calls);
       }
-      if (finish_reason) {
+      if (finish_reason && !finished) {
         if (toolCalls.length) {
           yield { tool_calls: toolCalls };
         }
         yield { finish_reason };
+        finished = true;
       }
     }
   } else {
