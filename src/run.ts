@@ -13,7 +13,12 @@ import type { Session } from "./session.ts";
 import { executeToolCall, toolsToOpenAIFormat } from "./tools/index.ts";
 import { Abortables, sleep } from "./utils.ts";
 
-type FinishReason = "done" | "cancelled" | "exit_command" | "export_command";
+type FinishReason =
+  | "done"
+  | "cancelled"
+  | "exit_command"
+  | "export_command"
+  | "export_toolcalls_command";
 
 type RunType = (_args: {
   client: OpenAI;
@@ -36,7 +41,10 @@ export const run: RunType = async ({
     const prompt = (await input()).trim();
 
     if (["/exit", "/quit"].includes(prompt)) return done("exit_command");
-    if (["/export"].includes(prompt)) return done("export_command");
+    if (prompt.startsWith("/export"))
+      return prompt.includes("tool")
+        ? done("export_toolcalls_command")
+        : done("export_command");
 
     session.push({ role: "user", content: prompt });
   }

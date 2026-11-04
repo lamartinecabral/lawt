@@ -97,6 +97,25 @@ program
         );
         console.log(pc.green(`Messages exported to ${filename}`));
       }
+      if (finishReason === "export_toolcalls_command") {
+        const filename = `toolcalls-${Date.now()}.txt`;
+        await fsp.writeFile(
+          filename,
+          session.messages
+            .filter((a): a is OpenAI.ChatCompletionAssistantMessageParam => {
+              return a.role === "assistant";
+            })
+            .flatMap((a) => a.tool_calls)
+            .filter((a): a is OpenAI.ChatCompletionMessageFunctionToolCall => {
+              return !!a && a.type === "function";
+            })
+            .map((a) => a.function)
+            .map((a) => `${a.name}(${a.arguments})`)
+            .join("\n"),
+          "utf-8",
+        );
+        console.log(pc.green(`Tool calls exported to ${filename}`));
+      }
     }
 
     console.log(pc.dim("\nGoodbye!"));
@@ -106,6 +125,7 @@ program
 
 program
   .command("list")
+  .alias("ls")
   .description("list available models")
   .action(async () => {
     const client = new OpenAI(
