@@ -11,7 +11,7 @@ import {
 import { input, printMessage } from "./io.ts";
 import type { Session } from "./session.ts";
 import { executeToolCall, toolsToOpenAIFormat } from "./tools/index.ts";
-import { Abortables, sleep } from "./utils.ts";
+import { Abortables, RateLimiter, sleep } from "./utils.ts";
 
 type FinishReason =
   | "done"
@@ -27,6 +27,8 @@ type RunType = (_args: {
   reasoningEffort: string | null | undefined;
   otherSettings: Record<string, unknown>;
 }) => Promise<ReturnType<typeof done>>;
+
+const rateLimiter = new RateLimiter(1000);
 
 export const run: RunType = async ({
   client,
@@ -69,6 +71,7 @@ export const run: RunType = async ({
 
     let stream: ReturnType<typeof generate>;
     try {
+      await rateLimiter.wait();
       stream = generate({
         client,
         model: modelId,

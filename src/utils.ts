@@ -19,7 +19,7 @@ export const Abortables = {
   },
 };
 
-export const sleep = async (ms: number) =>
+export const sleep = async (ms: number): Promise<void> =>
   new Promise((r) => setTimeout(r, ms));
 
 export const ellipsis = (str = "", len = 50, lines = 0) => {
@@ -80,3 +80,19 @@ export const getProvider = async () => {
   })();
   return provider;
 };
+
+export class RateLimiter {
+  private nextAvailableTime = 0;
+  private minInterval: number;
+
+  constructor(minInterval: number) {
+    this.minInterval = minInterval;
+  }
+
+  wait(): Promise<void> {
+    const now = Date.now();
+    const waitTime = Math.max(0, this.nextAvailableTime - now);
+    this.nextAvailableTime = now + waitTime + this.minInterval;
+    return sleep(waitTime);
+  }
+}
