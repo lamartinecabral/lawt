@@ -18,18 +18,27 @@ type StreamChunk = {
 const sampleDir = path.join(import.meta.dirname, "samples");
 const samples = [
   {
+    name: "google",
+    reasoningField: undefined,
+    expectedToolName: "file_search",
+    expectedToolArguments: '{"query":"*"}',
+  },
+  {
     name: "llamacpp",
     reasoningField: "reasoning_content",
+    expectedToolName: "list_directory",
     expectedToolArguments: '{"path":"./"}',
   },
   {
     name: "ollama",
     reasoningField: "reasoning",
+    expectedToolName: "list_directory",
     expectedToolArguments: '{"path":"."}',
   },
   {
     name: "openrouter",
     reasoningField: "reasoning",
+    expectedToolName: "list_directory",
     expectedToolArguments: '{"path":"."}',
   },
 ] as const;
@@ -84,16 +93,28 @@ describe("generate stream samples", () => {
         results.push(result);
       }
 
-      const reasoning = chunks
-        .flatMap((chunk) => chunk.choices)
-        .map((choice) => choice.delta[sample.reasoningField])
-        .filter((value): value is string => typeof value === "string")
-        .join("");
-      const reasoningResults = results.filter(
-        (result) => result[sample.reasoningField],
-      );
       const toolCalls = results.flatMap((result) => result.tool_calls ?? []);
-      const usage = chunks.find((chunk) => chunk.usage)?.usage;
+      const usage = chunks.findLast((chunk) => chunk.usage)?.usage;
+      const finish_reason = chunks
+        .flatMap((chunk) => chunk.choices)
+        .find((choice) => choice.finish_reason)?.finish_reason;
+
+      if (sample.reasoningField) {
+        const reasoning = chunks
+          .flatMap((chunk) => chunk.choices)
+          .map((choice) => choice.delta[sample.reasoningField])
+          .filter((value): value is string => typeof value === "string")
+          .join("");
+        const reasoningResults = results.filter(
+          (result) => result[sample.reasoningField],
+        );
+        assert.equal(
+          reasoningResults
+            .map((result) => result[sample.reasoningField])
+            .join(""),
+          reasoning,
+        );
+      }
 
       assert.deepStrictEqual(getRequest(), {
         model: "test-model",
@@ -103,21 +124,15 @@ describe("generate stream samples", () => {
         stream_options: { include_usage: true },
         stream: true,
       });
-      assert.equal(
-        reasoningResults
-          .map((result) => result[sample.reasoningField])
-          .join(""),
-        reasoning,
-      );
       assert.equal(toolCalls.length, 1);
-      assert.equal(toolCalls[0].function.name, "list_directory");
+      assert.equal(toolCalls[0].function.name, sample.expectedToolName);
       assert.equal(
         toolCalls[0].function.arguments,
         sample.expectedToolArguments,
       );
       assert.deepStrictEqual(
         results.filter((result) => result.finish_reason),
-        [{ finish_reason: "tool_calls" }],
+        [{ finish_reason }],
       );
       assert.deepStrictEqual(
         results.find((result) => result.usage),

@@ -50,10 +50,11 @@ export async function* generate({
     );
 
     const toolCalls: ToolCall[] = [];
+    let usage: OpenAI.Completions.CompletionUsage | null = null;
     let finished = false;
 
     for await (const chunk of stream) {
-      if (chunk.usage) yield { usage: chunk.usage };
+      if (chunk.usage) usage = chunk.usage;
       if (!chunk.choices.length) continue;
       const { delta, finish_reason } = chunk.choices[0];
       if (getThinking(delta)) {
@@ -75,6 +76,7 @@ export async function* generate({
         finished = true;
       }
     }
+    if (usage) yield { usage };
   } else {
     const response = await client.chat.completions.create(
       { ...params, stream: false },
