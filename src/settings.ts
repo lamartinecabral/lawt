@@ -7,6 +7,7 @@ export type LawtSettings = {
   reasoningEffort?: string | null;
   temperature?: number;
   top_p?: number;
+  top_k?: number;
 };
 
 const settingsPath = () =>

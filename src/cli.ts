@@ -23,6 +23,7 @@ program
   .option("-c, --custom", "allow a custom model ID")
   .option("--temperature <temperature>", "set the temperature for the model")
   .option("--top-p <top_p>", "set the top_p for the model")
+  .option("--top-k <top_k>", "set the top_k for the model")
   .action(async (options) => {
     const client = new OpenAI(
       await loadProvider({
@@ -56,6 +57,7 @@ program
     if (options.temperature)
       otherSettings.temperature = parseFloat(options.temperature);
     if (options.topP) otherSettings.top_p = parseFloat(options.topP);
+    if (options.topK) otherSettings.top_k = parseFloat(options.topK);
 
     const thinking =
       options.think === undefined
