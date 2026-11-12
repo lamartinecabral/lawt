@@ -4,6 +4,7 @@ import { Command } from "commander";
 import OpenAI from "openai";
 import pc from "picocolors";
 import pkg from "../package.json" with { type: "json" };
+import type { Usage } from "./io.ts";
 import { finish, printMessages, printUsage } from "./io.ts";
 import { run } from "./run.ts";
 import { Session } from "./session.ts";
@@ -72,7 +73,10 @@ program
 
     if (session.resumed) printMessages(session.messages);
 
-    let usage: Awaited<ReturnType<typeof run>>["usage"];
+    const usage: Usage = {
+      total_completion_tokens: 0,
+      last_request: undefined,
+    };
 
     while (true) {
       const { finishReason, usage: usageData } = await run({
@@ -82,7 +86,12 @@ program
         reasoningEffort: thinking,
         otherSettings,
       });
-      if (usageData) usage = usageData;
+      if (usageData) {
+        usage.last_request = usageData;
+        usage.total_completion_tokens += Number(
+          usageData.completion_tokens ?? 0,
+        );
+      }
 
       if (!options.resume && options.exec && finishReason !== "cancelled") {
         finish();
@@ -118,10 +127,16 @@ program
         );
         console.log(pc.green(`Tool calls exported to ${filename}`));
       }
+      if (finishReason === "usage_command") {
+        const success = printUsage(usage);
+        if (!success) {
+          console.log(pc.dim("No usage data available for this session."));
+        }
+      }
     }
 
     console.log(pc.dim("\nGoodbye!"));
-    if (usage) printUsage(usage);
+    printUsage(usage, true);
     finish();
   });
 

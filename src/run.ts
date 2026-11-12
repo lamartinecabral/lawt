@@ -17,6 +17,7 @@ type FinishReason =
   | "done"
   | "cancelled"
   | "exit_command"
+  | "usage_command"
   | "export_command"
   | "export_toolcalls_command";
 
@@ -43,6 +44,7 @@ export const run: RunType = async ({
     const prompt = (await input()).trim();
 
     if (["/exit", "/quit"].includes(prompt)) return done("exit_command");
+    if (prompt === "/usage") return done("usage_command");
     if (prompt.startsWith("/export"))
       return prompt.includes("tool")
         ? done("export_toolcalls_command")

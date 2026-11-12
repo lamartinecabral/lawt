@@ -2,6 +2,7 @@ import readline from "node:readline";
 import type OpenAI from "openai";
 import pc from "picocolors";
 import { getThinking } from "./generate.ts";
+import type { run } from "./run.ts";
 import { Abortables, ellipsis, stringify } from "./utils.ts";
 
 const rl = readline.createInterface({
@@ -161,10 +162,27 @@ export const printMessages = (
   }
 };
 
-export const printUsage = (usage?: object | null) => {
-  if (!usage) return;
+export type Usage = {
+  last_request: Awaited<ReturnType<typeof run>>["usage"];
+  total_completion_tokens: number;
+};
+
+export const printUsage = (usage: Usage, short?: boolean) => {
+  if (!usage.total_completion_tokens && !usage.last_request) return false;
   console.log();
-  for (const [key, value] of Object.entries(usage)) {
-    console.log(pc.dim(`${key}: ${stringify(value)}`));
+  console.log(
+    pc.dim(`total_completion_tokens: ${usage.total_completion_tokens}`),
+  );
+  if (usage.last_request) {
+    if (short && usage.last_request.total_tokens) {
+      console.log(
+        pc.dim(`total_tokens: ${stringify(usage.last_request.total_tokens)}`),
+      );
+    } else {
+      for (const [key, value] of Object.entries(usage.last_request)) {
+        console.log(pc.dim(`${key}: ${stringify(value)}`));
+      }
+    }
   }
+  return true;
 };
