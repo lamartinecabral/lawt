@@ -35,7 +35,7 @@ export const sessionPath = () => {
   const workingDirectory = process.cwd();
   return path.join(
     sessionsDirectory(),
-    `${encodeURIComponent(path.resolve(workingDirectory))}.jsonl`,
+    `${encodeURIComponent(path.resolve(workingDirectory).replaceAll("/", " ").trim().replace(/\s+/g, "_"))}.jsonl`,
   );
 };
 
