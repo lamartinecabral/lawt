@@ -9,7 +9,7 @@ import { finish, printMessages, printUsage } from "./io.ts";
 import { run } from "./run.ts";
 import { Session } from "./session.ts";
 import { loadSettings, saveSettings } from "./settings.ts";
-import { getProvider } from "./utils.ts";
+import { getProviders, isRecord } from "./utils.ts";
 
 const program = new Command();
 
@@ -26,14 +26,10 @@ program
   .option("--top-p <top_p>", "set the top_p for the model")
   .option("--top-k <top_k>", "set the top_k for the model")
   .action(async (options) => {
-    const client = new OpenAI(
-      await loadProvider({
-        baseURL: "http://localhost:9931/v1",
-        apiKey: "llama.app",
-      }),
-    );
+    const { model, reasoningEffort, provider, ...otherSettings } =
+      await loadSettings();
 
-    const { model, reasoningEffort, ...otherSettings } = await loadSettings();
+    const client = new OpenAI(await loadProvider(provider?.inference));
 
     const modelId = options.custom
       ? String(options.model ?? model)
@@ -146,10 +142,7 @@ program
   .description("list available models")
   .action(async () => {
     const client = new OpenAI(
-      await loadProvider({
-        baseURL: "http://localhost:9931/v1",
-        apiKey: "llama.app",
-      }),
+      await loadProvider((await loadSettings()).provider?.inference),
     );
 
     await showAvailableModels({ client });
@@ -183,16 +176,27 @@ const loadSystemPrompt = async (defaultMessage: string) => {
   return systemMessage;
 };
 
-const loadProvider = async (defaultProvider: {
-  baseURL: string;
-  apiKey: string;
-}): Promise<typeof defaultProvider> => {
-  const provider = await getProvider();
-  if (provider.baseURL && provider.apiKey)
-    return {
-      baseURL: provider.baseURL,
-      apiKey: provider.apiKey,
-    };
+const defaultProvider = {
+  baseURL: "http://localhost:9931/v1",
+  apiKey: "llama.app",
+};
+
+const loadProvider = async (providerId: unknown) => {
+  if (typeof providerId === "string" && providerId !== "default") {
+    const provider = (await getProviders()).inference?.[providerId];
+    if (
+      isRecord(provider) &&
+      typeof provider.baseURL === "string" &&
+      provider.baseURL &&
+      typeof provider.apiKey === "string" &&
+      provider.apiKey
+    ) {
+      return {
+        baseURL: provider.baseURL,
+        apiKey: provider.apiKey,
+      };
+    }
+  }
   return defaultProvider;
 };
 

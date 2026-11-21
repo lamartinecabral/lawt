@@ -1,4 +1,6 @@
 import fs from "node:fs";
+import fsp from "node:fs/promises";
+import os from "node:os";
 import path from "node:path";
 
 type Abortable = { abort: () => unknown };
@@ -51,9 +53,13 @@ export const projectRoot = path.resolve(
   "..",
 );
 
-let provider: Promise<{
-  baseURL?: string;
-  apiKey?: string;
+export type InferenceProvider = {
+  baseURL: string;
+  apiKey: string;
+};
+
+export type Providers = {
+  inference?: Record<string, InferenceProvider>;
   webSearch?: {
     ollama?: {
       apiKey?: string;
@@ -65,20 +71,26 @@ let provider: Promise<{
       chromePath?: string;
     };
   };
-}>;
+};
 
-export const getProvider = async () => {
-  if (provider) return provider;
-  provider = (async () => {
+const providersPath = () =>
+  path.join(process.env.HOME || os.homedir(), ".lawt", "providers.json");
+
+let providers: Promise<Providers>;
+
+export const getProviders = async () => {
+  if (providers) return providers;
+  providers = (async () => {
     try {
-      const obj = (await import(`${process.env.HOME}/.lawt/provider.ts`))
-        .default;
-      return obj && typeof obj === "object" ? obj : {};
+      const value: unknown = JSON.parse(
+        await fsp.readFile(providersPath(), "utf8"),
+      );
+      return isRecord(value) ? (value as Providers) : {};
     } catch (_) {
       return {};
     }
   })();
-  return provider;
+  return providers;
 };
 
 export class RateLimiter {

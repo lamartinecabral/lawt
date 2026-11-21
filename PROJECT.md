@@ -62,31 +62,33 @@ By default, the system prompt is `You are an assistant with access to tools.` LA
 
 ### Provider configuration
 
-The default chat provider is Llama at `http://localhost:9931/v1` with the API key value `llama.app`. Start Llama and install a model; no provider configuration file is needed for this default. To use another provider, create `~/.lawt/provider.ts` and export a default object with a `baseURL` and `apiKey`:
+The default chat provider is Llama at `http://localhost:9931/v1` with the API key value `llama.app`. Start Llama and install a model; no provider configuration is needed for this default. To use another provider, add it to the `inference` object in `~/.lawt/providers.json`, then select its identifier in `~/.lawt/settings.json`:
 
-```ts
-export default {
-  baseURL: "https://api.example.com/v1",
-  apiKey: "your-api-key",
-};
-```
-
-The same file can configure the web-search backend. The supported configuration fields are shown below; configure the fields needed by your chosen backend:
-
-```ts
-export default {
-  baseURL: "https://api.example.com/v1",
-  apiKey: "your-api-key",
-  webSearch: {
-    puppeteer: { chromePath: "default" },
-    // Or configure Tavily or Ollama Cloud:
-    // tavily: { apiKey: "your-tavily-api-key" },
-    // ollama: { apiKey: "your-ollama-cloud-api-key" },
+```json
+{
+  "inference": {
+    "example": {
+      "baseURL": "https://api.example.com/v1",
+      "apiKey": "your-api-key"
+    }
   },
-};
+  "webSearch": {
+    "puppeteer": { "chromePath": "default" }
+  }
+}
 ```
 
-If either `baseURL` or `apiKey` is missing, LAWT uses its default Llama provider. Web search settings are optional. See the guides for [Llama](./docs/llama.md) and [Ollama](./docs/ollama.md) for provider-specific setup details.
+Save that object in `~/.lawt/providers.json`. The web-search fields are optional; configure `puppeteer.chromePath`, `tavily.apiKey`, or `ollama.apiKey` as needed.
+
+```json
+{
+  "provider": { "inference": "example" }
+}
+```
+
+Save the selected identifier in `~/.lawt/settings.json` under `provider.inference`.
+
+Each inference entry needs a `baseURL` and `apiKey`. If `settings.provider.inference` is missing, set to `"default"`, names an unknown provider, or selects an entry without both fields, LAWT uses the default Llama provider. The optional `webSearch` settings retain the existing `puppeteer.chromePath`, `tavily.apiKey`, and `ollama.apiKey` fields. See the guides for [Llama](./docs/llama.md) and [Ollama](./docs/ollama.md) for provider-specific setup details.
 
 ## Development
 

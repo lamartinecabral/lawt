@@ -1,10 +1,10 @@
 import { getWebSearchClient } from "@lamartinecabral/web-search";
 import z from "zod";
-import { getProvider } from "../utils.ts";
+import { getProviders } from "../utils.ts";
 import { fail, ok, tool } from "./utils.ts";
 
 export const getClient = async () => {
-  const provider = await getProvider();
+  const provider = await getProviders();
   return await getWebSearchClient({
     ollama: { apiKey: provider.webSearch?.ollama?.apiKey },
     tavily: { apiKey: provider.webSearch?.tavily?.apiKey },

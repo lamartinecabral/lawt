@@ -4,14 +4,28 @@ This guide explains how to configure Ollama as `lawt`'s provider and adjust Olla
 
 ## Configure lawt to use Ollama
 
-Llama is `lawt`'s default provider. To use Ollama, create `~/.lawt/provider.ts` with Ollama's local OpenAI-compatible endpoint:
+Llama is `lawt`'s default provider. To use Ollama, add its local OpenAI-compatible endpoint to `~/.lawt/providers.json` and select it in `~/.lawt/settings.json`:
 
-```ts
-export default {
-  baseURL: "http://localhost:11434/v1",
-  apiKey: "ollama",
-};
+```json
+{
+  "inference": {
+    "ollama": {
+      "baseURL": "http://localhost:11434/v1",
+      "apiKey": "ollama"
+    }
+  }
+}
 ```
+
+Save this object in `~/.lawt/providers.json`.
+
+```json
+{
+  "provider": { "inference": "ollama" }
+}
+```
+
+Save this setting in `~/.lawt/settings.json`.
 
 Ollama's local server does not require an API key; `lawt` needs a non-empty value for its OpenAI client, so `ollama` can be any string. If Ollama runs on another machine, replace `localhost` with that machine's address.
 
@@ -23,7 +37,7 @@ lawt list
 lawt -m <model-id>
 ```
 
-The configuration file overrides the default provider for both `lawt` and `lawt list`.
+The selected provider is used by both `lawt` and `lawt list`.
 
 ## Why this matters
 

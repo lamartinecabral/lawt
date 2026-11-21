@@ -8,7 +8,13 @@ export type LawtSettings = {
   temperature?: number;
   top_p?: number;
   top_k?: number;
+  provider?: {
+    inference?: string;
+  };
 };
+
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  !!value && typeof value === "object" && !Array.isArray(value);
 
 const settingsPath = () =>
   path.join(process.env.HOME || os.homedir(), ".lawt", "settings.json");
@@ -18,15 +24,17 @@ export const loadSettings = async (): Promise<LawtSettings> => {
     const value: unknown = JSON.parse(
       await fsp.readFile(settingsPath(), "utf8"),
     );
-    if (!value || typeof value !== "object" || Array.isArray(value)) return {};
+    if (!isRecord(value)) return {};
 
-    const settings = value as Record<string, unknown>;
-    const { model, reasoningEffort, ...rest } = settings;
+    const { model, reasoningEffort, provider, ...rest } = value;
     return {
       ...rest,
       ...(typeof model === "string" ? { model } : {}),
       ...(typeof reasoningEffort === "string" || reasoningEffort === null
         ? { reasoningEffort }
+        : {}),
+      ...(isRecord(provider) && typeof provider.inference === "string"
+        ? { provider: { inference: provider.inference } }
         : {}),
     };
   } catch (_) {
@@ -43,9 +51,7 @@ export const saveSettings = async (settings: {
 
   try {
     const value: unknown = JSON.parse(await fsp.readFile(filePath, "utf8"));
-    if (value && typeof value === "object" && !Array.isArray(value)) {
-      existing = value as Record<string, unknown>;
-    }
+    if (isRecord(value)) existing = value;
   } catch (_) {
     // A missing or malformed settings file can be replaced with valid settings.
   }
