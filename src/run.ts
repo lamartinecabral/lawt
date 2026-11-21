@@ -1,13 +1,14 @@
 import type OpenAI from "openai";
 import ora from "ora";
 import pc from "picocolors";
-import type { GenerateResult, Thinking, ToolCall } from "./generate.ts";
+import type { Thinking, ToolCall } from "./generate.ts";
 import {
   appendThinking,
   extraContent,
   generate,
   getThinking,
 } from "./generate.ts";
+import type { Usage } from "./io.ts";
 import { input, printMessage } from "./io.ts";
 import type { Session } from "./session.ts";
 import { executeToolCall, toolsToOpenAIFormat } from "./tools/index.ts";
@@ -52,6 +53,11 @@ export const run: RunType = async ({
 
     session.push({ role: "user", content: prompt });
   }
+
+  const usage: Usage = {
+    last_request: undefined,
+    total_completion_tokens: 0,
+  };
 
   while (true) {
     const spinner = ora().start();
@@ -100,7 +106,6 @@ export const run: RunType = async ({
     let content = "";
     const thinking: Thinking = {};
     const toolCalls: ToolCall[] = [];
-    let usage: GenerateResult["usage"];
 
     let mode = "";
     for await (const delta of stream) {
@@ -137,7 +142,10 @@ export const run: RunType = async ({
           if (delta.content) printMessage("bot", delta.content);
         }
       }
-      usage = delta.usage;
+      if (delta.usage) {
+        usage.last_request = delta.usage;
+        usage.total_completion_tokens += Number(delta.usage.completion_tokens);
+      }
     }
 
     Abortables.delete(controller);
@@ -172,7 +180,7 @@ export const run: RunType = async ({
   }
 };
 
-const done = (finishReason: FinishReason, usage?: GenerateResult["usage"]) => {
+const done = (finishReason: FinishReason, usage?: Usage) => {
   return { finishReason, usage };
 };
 

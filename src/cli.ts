@@ -87,9 +87,9 @@ program
         otherSettings,
       });
       if (usageData) {
-        usage.last_request = usageData;
+        usage.last_request = usageData.last_request;
         usage.total_completion_tokens += Number(
-          usageData.completion_tokens ?? 0,
+          usageData.total_completion_tokens ?? 0,
         );
       }
 

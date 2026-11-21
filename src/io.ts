@@ -1,8 +1,8 @@
 import readline from "node:readline";
 import type OpenAI from "openai";
 import pc from "picocolors";
+import type { GenerateResult } from "./generate.ts";
 import { getThinking } from "./generate.ts";
-import type { run } from "./run.ts";
 import { Abortables, ellipsis, stringify } from "./utils.ts";
 
 const rl = readline.createInterface({
@@ -163,7 +163,7 @@ export const printMessages = (
 };
 
 export type Usage = {
-  last_request: Awaited<ReturnType<typeof run>>["usage"];
+  last_request: GenerateResult["usage"];
   total_completion_tokens: number;
 };
 
