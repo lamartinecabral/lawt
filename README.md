@@ -12,6 +12,11 @@ Requires Node.js 24 or newer. The default provider is [Llama](https://llama.app)
 
 ![lawt screenshot](./docs/screenshot.png)
 
+> [!WARNING]
+> This project is under active development. Features and functionality
+> may change, be added, or be removed without prior notice.
+> Backward compatibility is not guaranteed.
+
 ## Quick start
 
 ```bash
