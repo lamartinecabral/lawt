@@ -161,6 +161,7 @@ const providerCommand = program
 
 providerCommand
   .command("list")
+  .alias("ls")
   .description("list configured inference providers")
   .action(
     withProviderAction(async () => {
@@ -197,6 +198,7 @@ providerCommand
 
 providerCommand
   .command("select <id>")
+  .alias("set")
   .description("select an inference provider (use 'default' for Llama)")
   .action(
     withProviderAction(async (id: string) => {

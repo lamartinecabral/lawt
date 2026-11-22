@@ -74,7 +74,7 @@ lawt provider select default
 
 `provider add` prompts for an ID, base URL, and API key. You can pass the ID as an argument, or supply `--base-url` and `--api-key` to skip those prompts. `provider list` marks the active provider and displays its endpoint without showing API keys. Deleting the selected provider switches the selection back to `default` (Llama). The `default` provider is built in and cannot be deleted.
 
-The commands update the `inference` object in `~/.lawt/providers.json` and the selected ID at `provider.inference` in `~/.lawt/settings.json`, preserving unrelated settings and web-search configuration. You can also configure providers by editing the files directly:
+The commands update the `inference` object in `~/.lawt/providers.json` and the selected ID at `provider.inference` in `~/.lawt/settings.json`, preserving unrelated settings and web-search configuration. API keys written by the CLI are deterministically encrypted with a fixed application password and decrypted when LAWT loads providers. Existing plaintext keys remain readable and are encrypted the next time the CLI saves the provider file. You can also configure providers by editing the files directly:
 
 ```json
 {

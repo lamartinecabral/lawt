@@ -2,6 +2,10 @@ import fs from "node:fs";
 import fsp from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
+import { decrypt, encrypt } from "@lamartinecabral/sekret";
+
+const inferenceApiKeyPrefix = "lawt:v1:";
+const inferenceApiKeyPassword = "lawt-inference-provider-api-key-sekret-v1";
 
 type Abortable = { abort: () => unknown };
 export const Abortables = {
@@ -77,22 +81,84 @@ const providersPath = () =>
   path.join(process.env.HOME || os.homedir(), ".lawt", "providers.json");
 
 export const getProviders = async (): Promise<Providers> => {
+  let value: unknown;
   try {
-    const value: unknown = JSON.parse(
-      await fsp.readFile(providersPath(), "utf8"),
-    );
-    return isRecord(value) ? (value as Providers) : {};
+    value = JSON.parse(await fsp.readFile(providersPath(), "utf8"));
   } catch (_) {
     return {};
   }
+
+  if (!isRecord(value)) return {};
+
+  const providers = value as Providers;
+  if (!isRecord(providers.inference)) return providers;
+
+  const inference = Object.fromEntries(
+    await Promise.all(
+      Object.entries(providers.inference).map(async ([id, provider]) => {
+        if (
+          !isRecord(provider) ||
+          typeof provider.apiKey !== "string" ||
+          !provider.apiKey.startsWith(inferenceApiKeyPrefix)
+        ) {
+          return [id, provider];
+        }
+
+        return [
+          id,
+          {
+            ...provider,
+            apiKey: await decrypt(
+              provider.apiKey.slice(inferenceApiKeyPrefix.length),
+              inferenceApiKeyPassword,
+            ),
+          },
+        ];
+      }),
+    ),
+  );
+
+  return { ...providers, inference } as Providers;
 };
 
 export const saveProviders = async (providers: Providers): Promise<void> => {
   const filePath = providersPath();
+  const inference = providers.inference
+    ? Object.fromEntries(
+        await Promise.all(
+          Object.entries(providers.inference).map(async ([id, provider]) => {
+            if (
+              !isRecord(provider) ||
+              typeof provider.apiKey !== "string" ||
+              provider.apiKey.startsWith(inferenceApiKeyPrefix)
+            ) {
+              return [id, provider];
+            }
+
+            return [
+              id,
+              {
+                ...provider,
+                apiKey: `${inferenceApiKeyPrefix}${await encrypt(
+                  provider.apiKey,
+                  inferenceApiKeyPassword,
+                  { deterministic: true },
+                )}`,
+              },
+            ];
+          }),
+        ),
+      )
+    : undefined;
+
   await fsp.mkdir(path.dirname(filePath), { recursive: true });
   await fsp.writeFile(
     filePath,
-    `${JSON.stringify(providers, null, 2)}\n`,
+    `${JSON.stringify(
+      { ...providers, ...(inference ? { inference } : {}) },
+      null,
+      2,
+    )}\n`,
     "utf8",
   );
 };

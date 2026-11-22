@@ -26,6 +26,7 @@
   ],
   "license": "MIT",
   "dependencies": {
+    "@lamartinecabral/sekret": "3.0.1",
     "@lamartinecabral/web-search": "2.0.1",
     "commander": "15.0.0",
     "openai": "7.15.0",
