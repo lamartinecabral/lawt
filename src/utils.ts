@@ -76,21 +76,25 @@ export type Providers = {
 const providersPath = () =>
   path.join(process.env.HOME || os.homedir(), ".lawt", "providers.json");
 
-let providers: Promise<Providers>;
+export const getProviders = async (): Promise<Providers> => {
+  try {
+    const value: unknown = JSON.parse(
+      await fsp.readFile(providersPath(), "utf8"),
+    );
+    return isRecord(value) ? (value as Providers) : {};
+  } catch (_) {
+    return {};
+  }
+};
 
-export const getProviders = async () => {
-  if (providers) return providers;
-  providers = (async () => {
-    try {
-      const value: unknown = JSON.parse(
-        await fsp.readFile(providersPath(), "utf8"),
-      );
-      return isRecord(value) ? (value as Providers) : {};
-    } catch (_) {
-      return {};
-    }
-  })();
-  return providers;
+export const saveProviders = async (providers: Providers): Promise<void> => {
+  const filePath = providersPath();
+  await fsp.mkdir(path.dirname(filePath), { recursive: true });
+  await fsp.writeFile(
+    filePath,
+    `${JSON.stringify(providers, null, 2)}\n`,
+    "utf8",
+  );
 };
 
 export class RateLimiter {

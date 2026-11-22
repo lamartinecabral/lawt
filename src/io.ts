@@ -84,6 +84,9 @@ export const input = async () => {
   return line;
 };
 
+export const prompt = (message: string): Promise<string> =>
+  new Promise<string>((resolve) => rl.question(message, resolve));
+
 export const printMessage = (
   label: "user" | "bot" | "thinking" | "tool",
   ...content: unknown[]

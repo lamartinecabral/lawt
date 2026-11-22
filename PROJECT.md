@@ -62,7 +62,19 @@ By default, the system prompt is `You are an assistant with access to tools.` LA
 
 ### Provider configuration
 
-The default chat provider is Llama at `http://localhost:9931/v1` with the API key value `llama.app`. Start Llama and install a model; no provider configuration is needed for this default. To use another provider, add it to the `inference` object in `~/.lawt/providers.json`, then select its identifier in `~/.lawt/settings.json`:
+The default chat provider is Llama at `http://localhost:9931/v1` with the API key value `llama.app`. Start Llama and install a model; no provider configuration is needed for this default. Manage other inference providers with the CLI:
+
+```bash
+lawt provider list
+lawt provider add
+lawt provider select example
+lawt provider delete example
+lawt provider select default
+```
+
+`provider add` prompts for an ID, base URL, and API key. You can pass the ID as an argument, or supply `--base-url` and `--api-key` to skip those prompts. `provider list` marks the active provider and displays its endpoint without showing API keys. Deleting the selected provider switches the selection back to `default` (Llama). The `default` provider is built in and cannot be deleted.
+
+The commands update the `inference` object in `~/.lawt/providers.json` and the selected ID at `provider.inference` in `~/.lawt/settings.json`, preserving unrelated settings and web-search configuration. You can also configure providers by editing the files directly:
 
 ```json
 {

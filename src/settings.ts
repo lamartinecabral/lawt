@@ -71,3 +71,29 @@ export const saveSettings = async (settings: {
     "utf8",
   );
 };
+
+export const setInferenceProvider = async (
+  providerId: string,
+): Promise<void> => {
+  const filePath = settingsPath();
+  let existing: Record<string, unknown> = {};
+
+  try {
+    const value: unknown = JSON.parse(await fsp.readFile(filePath, "utf8"));
+    if (isRecord(value)) existing = value;
+  } catch (_) {
+    // A missing or malformed settings file can be replaced with valid settings.
+  }
+
+  const provider = isRecord(existing.provider) ? existing.provider : {};
+  await fsp.mkdir(path.dirname(filePath), { recursive: true });
+  await fsp.writeFile(
+    filePath,
+    `${JSON.stringify(
+      { ...existing, provider: { ...provider, inference: providerId } },
+      null,
+      2,
+    )}\n`,
+    "utf8",
+  );
+};

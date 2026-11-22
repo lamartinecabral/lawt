@@ -24,6 +24,7 @@ npm install
 npm run install:lawt
 lawt list                 # show models available from the provider
 lawt --model <model-id>   # start an interactive session
+lawt provider list        # show configured inference providers
 ```
 
 Install a model in Llama before starting `lawt`. The app serves the model through its local API; no provider configuration is needed. See the [Llama setup guide](./docs/llama.md) for details.
