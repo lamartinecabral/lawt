@@ -12,7 +12,7 @@ import {
 import { setProviderCommand } from "./commands/provider.ts";
 import type { Usage } from "./io.ts";
 import { finish, printMessages, printUsage } from "./io.ts";
-import { run } from "./run.ts";
+import { run } from "./runner/index.ts";
 import { Session } from "./session.ts";
 import { loadSettings, saveSettings } from "./settings.ts";
 

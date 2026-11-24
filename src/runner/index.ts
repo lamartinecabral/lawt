@@ -1,6 +1,11 @@
 import type OpenAI from "openai";
 import ora from "ora";
 import pc from "picocolors";
+import type { Usage } from "../io.ts";
+import { input, printMessage } from "../io.ts";
+import type { Session } from "../session.ts";
+import { executeToolCall, toolsToOpenAIFormat } from "../tools/index.ts";
+import { Abortables, RateLimiter, sleep } from "../utils.ts";
 import type { Thinking, ToolCall } from "./generate.ts";
 import {
   appendThinking,
@@ -8,11 +13,6 @@ import {
   generate,
   getThinking,
 } from "./generate.ts";
-import type { Usage } from "./io.ts";
-import { input, printMessage } from "./io.ts";
-import type { Session } from "./session.ts";
-import { executeToolCall, toolsToOpenAIFormat } from "./tools/index.ts";
-import { Abortables, RateLimiter, sleep } from "./utils.ts";
 
 type FinishReason =
   | "done"

@@ -3,8 +3,8 @@ import fs from "node:fs";
 import path from "node:path";
 import { describe, it } from "node:test";
 import type OpenAI from "openai";
-import type { GenerateResult } from "../src/generate.ts";
-import { generate } from "../src/generate.ts";
+import type { GenerateResult } from "../src/runner/generate.ts";
+import { generate } from "../src/runner/generate.ts";
 import { Session } from "../src/session.ts";
 
 type StreamChunk = {

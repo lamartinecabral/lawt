@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { appendThinking, getThinking } from "../src/generate.ts";
+import { appendThinking, getThinking } from "../src/runner/generate.ts";
 import { ellipsis, stringify } from "../src/utils.ts";
 
 describe("thinking helpers", () => {

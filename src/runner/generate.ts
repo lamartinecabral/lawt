@@ -1,6 +1,6 @@
 import type OpenAI from "openai";
-import type { Session } from "./session.ts";
-import { isRecord } from "./utils.ts";
+import type { Session } from "../session.ts";
+import { isRecord } from "../utils.ts";
 
 type GenerateParams = {
   client: OpenAI;

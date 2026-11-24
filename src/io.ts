@@ -1,8 +1,8 @@
 import readline from "node:readline";
 import type OpenAI from "openai";
 import pc from "picocolors";
-import type { GenerateResult } from "./generate.ts";
-import { getThinking } from "./generate.ts";
+import type { GenerateResult } from "./runner/generate.ts";
+import { getThinking } from "./runner/generate.ts";
 import { Abortables, ellipsis, stringify } from "./utils.ts";
 
 const rl = readline.createInterface({
