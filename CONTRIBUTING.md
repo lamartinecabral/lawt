@@ -32,6 +32,15 @@ Tests use Node.js's built-in test runner. Add or update tests when changing beha
 
 The lint command uses Biome and the TypeScript check runs `tsc --noEmit`. Source files use TypeScript and explicit `.ts` extensions on local imports. Follow the existing formatting and nearby patterns; `npm run lint:fix` applies Biome's automatic fixes.
 
+## Source layout
+
+- `src/cli.ts` defines the CLI entry point and wires the application together.
+- `src/commands/` contains CLI subcommands.
+- `src/runner/` handles the interactive model and tool-call loop.
+- `src/tools/` contains tool implementations and their registration.
+- `src/utils/` contains shared helpers, terminal I/O, session persistence, and settings. General helpers and provider configuration are in `index.ts`; the other modules are `io.ts`, `session.ts`, and `settings.ts`.
+- `tests/` contains the Node.js test files and sample model responses.
+
 ## Documentation approach
 
 Project documentation has two levels:
