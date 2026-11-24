@@ -2,7 +2,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import type OpenAI from "openai";
-import { isRecord } from "./utils.ts";
+import { isRecord } from "./index.ts";
 
 type Message = OpenAI.ChatCompletionMessageParam;
 

@@ -10,11 +10,11 @@ import {
   showAvailableModels,
 } from "./commands/list.ts";
 import { setProviderCommand } from "./commands/provider.ts";
-import type { Usage } from "./io.ts";
-import { finish, printMessages, printUsage } from "./io.ts";
 import { run } from "./runner/index.ts";
-import { Session } from "./session.ts";
-import { loadSettings, saveSettings } from "./settings.ts";
+import type { Usage } from "./utils/io.ts";
+import { finish, printMessages, printUsage } from "./utils/io.ts";
+import { Session } from "./utils/session.ts";
+import { loadSettings, saveSettings } from "./utils/settings.ts";
 
 const program = new Command();
 

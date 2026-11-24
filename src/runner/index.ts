@@ -1,11 +1,11 @@
 import type OpenAI from "openai";
 import ora from "ora";
 import pc from "picocolors";
-import type { Usage } from "../io.ts";
-import { input, printMessage } from "../io.ts";
-import type { Session } from "../session.ts";
 import { executeToolCall, toolsToOpenAIFormat } from "../tools/index.ts";
-import { Abortables, RateLimiter, sleep } from "../utils.ts";
+import { Abortables, RateLimiter, sleep } from "../utils/index.ts";
+import type { Usage } from "../utils/io.ts";
+import { input, printMessage } from "../utils/io.ts";
+import type { Session } from "../utils/session.ts";
 import type { Thinking, ToolCall } from "./generate.ts";
 import {
   appendThinking,

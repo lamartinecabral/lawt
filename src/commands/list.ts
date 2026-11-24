@@ -1,9 +1,9 @@
 import type { Command } from "commander";
 import OpenAI from "openai";
 import pc from "picocolors";
-import { finish } from "../io.ts";
-import { loadSettings } from "../settings.ts";
-import { getProviders, isRecord } from "../utils.ts";
+import { getProviders, isRecord } from "../utils/index.ts";
+import { finish } from "../utils/io.ts";
+import { loadSettings } from "../utils/settings.ts";
 
 export const setListCommand = (program: Command) => {
   program

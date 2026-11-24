@@ -1,9 +1,9 @@
 import type { Command } from "commander";
 import pc from "picocolors";
-import { finish, prompt } from "../io.ts";
-import { loadSettings, setInferenceProvider } from "../settings.ts";
-import type { Providers } from "../utils.ts";
-import { getProviders, isRecord, saveProviders } from "../utils.ts";
+import type { Providers } from "../utils/index.ts";
+import { getProviders, isRecord, saveProviders } from "../utils/index.ts";
+import { finish, prompt } from "../utils/io.ts";
+import { loadSettings, setInferenceProvider } from "../utils/settings.ts";
 
 export const setProviderCommand = (program: Command) => {
   const providerCommand = program

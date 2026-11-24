@@ -4,7 +4,7 @@ import fsp from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { afterEach, beforeEach, describe, it } from "node:test";
-import { Session, sessionPath } from "../src/session.ts";
+import { Session, sessionPath } from "../src/utils/session.ts";
 
 const originalHome = process.env.HOME;
 const originalCwd = process.cwd();

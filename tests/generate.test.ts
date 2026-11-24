@@ -5,7 +5,7 @@ import { describe, it } from "node:test";
 import type OpenAI from "openai";
 import type { GenerateResult } from "../src/runner/generate.ts";
 import { generate } from "../src/runner/generate.ts";
-import { Session } from "../src/session.ts";
+import { Session } from "../src/utils/session.ts";
 
 type StreamChunk = {
   choices: Array<{

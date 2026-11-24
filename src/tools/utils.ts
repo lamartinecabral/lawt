@@ -2,7 +2,7 @@ import { spawn } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 import type z from "zod";
-import { ellipsis } from "../utils.ts";
+import { ellipsis } from "../utils/index.ts";
 
 export const TOOL_OUTPUT_LIMIT = 10000;
 

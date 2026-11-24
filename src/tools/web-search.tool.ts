@@ -1,6 +1,6 @@
 import { getWebSearchClient } from "@lamartinecabral/web-search";
 import z from "zod";
-import { getProviders } from "../utils.ts";
+import { getProviders } from "../utils/index.ts";
 import { fail, ok, tool } from "./utils.ts";
 
 export const getClient = async () => {

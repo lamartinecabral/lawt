@@ -3,7 +3,7 @@ import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { afterEach, beforeEach, describe, it } from "node:test";
-import { loadSettings, saveSettings } from "../src/settings.ts";
+import { loadSettings, saveSettings } from "../src/utils/settings.ts";
 
 const originalHome = process.env.HOME;
 let homeDir = "";
